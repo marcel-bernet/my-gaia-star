@@ -1,3 +1,5 @@
+// Leaflet map wrapper used by the main app. Emits clicks as lat/lon pairs
+// and renders any passed children (e.g., star overlays).
 import React, { forwardRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -35,15 +37,18 @@ const MapSelector = forwardRef<any, MapSelectorProps>(({ onLocationSelect, selec
       onLocationSelect(coords);
     }
   };
+  // react-leaflet types can mismatch across versions; cast components to any to avoid noise
+  const AnyMapContainer: any = MapContainer as any;
+  const AnyTileLayer: any = TileLayer as any;
   return (
-    <MapContainer ref={ref} center={selectedLocation || DEFAULT_POSITION} zoom={10} style={{ height: '100vh', width: '100vw' }}>
-      <TileLayer
+    <AnyMapContainer ref={ref} center={selectedLocation || DEFAULT_POSITION} zoom={10} style={{ height: '100vh', width: '100vw' }}>
+      <AnyTileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <LocationMarker onSelect={handleSelect} selected={selectedLocation} />
       {children}
-    </MapContainer>
+    </AnyMapContainer>
   );
 });
 

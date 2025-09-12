@@ -1,4 +1,10 @@
 /// <reference types="vite/client" />
+/**
+ * Client API for the GaiaMaps backend.
+ *
+ * - fetchStars: POST /get-stars → list of stars for a location/time
+ * - fetchStarPDF: POST /star-pdf → triggers a PDF download for a star
+ */
 import { StarData } from '../types/star';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';

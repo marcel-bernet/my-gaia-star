@@ -1,4 +1,14 @@
-from fastapi import FastAPI, Response, HTTPException
+"""FastAPI backend for GaiaMaps.
+
+Exposes two endpoints:
+- POST /get-stars: Query Gaia DR3 for stars above a given location/time.
+- POST /star-pdf: Generate a single-page PDF for a selected star.
+
+This module also contains small helpers for coordinate rotation to place
+stars relative to the local zenith in a simple ENU frame for the overlay.
+"""
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
@@ -8,18 +18,15 @@ import astropy.units as u
 import numpy as np
 from astroquery.gaia import Gaia
 from astropy import coordinates as coords
-from fpdf import FPDF
 from datetime import datetime, timezone
 import sys
-import os
 # No need to modify sys.path for backend-local import
 from generate_pdf import generate_pdf
 from fastapi.responses import StreamingResponse
 import io
 from fastapi.responses import JSONResponse
 
-# --- Helper functions for coordinate rotation ---
-import numpy as np  # ensure numpy available for helpers (already imported above but safe)
+# Helper functions for coordinate rotation
 
 def rodrigues(axis: np.ndarray, angle: float) -> np.ndarray:
     """Rodrigues' rotation formula for rotating around *axis* by *angle* (radians)."""
@@ -88,7 +95,7 @@ class BrightnessMode(str, Enum):
     naked_eye = "naked-eye"  # G < 6
     bright = "bright"        # G < 13
     faint = "faint"          # G < 19
-    all = "all"              # no limit
+    all = "all"              # no magnitude limit
 
 class StarRequest(BaseModel):
     lat: float = Field(..., ge=-90, le=90, description="Latitude in degrees")
@@ -97,7 +104,7 @@ class StarRequest(BaseModel):
     brightness_mode: BrightnessMode = BrightnessMode.all
     include_velocity: bool = False
     include_distance: bool = True
-    # fallback limit for custom clients
+    # Optional cap to bound results for custom clients
     limit: Optional[int] = Field(None, ge=1, le=10000, description="Override maximum number of stars to return")
 
 class PDFRequest(BaseModel):
@@ -122,7 +129,13 @@ class GetStarsResponse(BaseModel):
 
 @app.post("/get-stars", response_model=GetStarsResponse, summary="Get Gaia stars above a location at a given time")
 def get_stars(req: StarRequest):
-    """Returns Gaia stars above the given lat/lon at the specified UTC datetime, ordered by angular distance."""
+    """Return Gaia stars above the given lat/lon at the specified UTC datetime.
+
+    Stars are ordered by angular distance from the zenith. The query radius and
+    magnitude cuts are controlled by ``brightness_mode``. The response also
+    includes small offsets (``alt_diff``, ``az_diff``) used by the frontend to
+    place markers relative to the selected location.
+    """
     print(f"[LOG] /get-stars called with lat={req.lat}, lon={req.lon}, datetime_iso={req.datetime_iso}", file=sys.stderr)
     try:
         # Validate datetime

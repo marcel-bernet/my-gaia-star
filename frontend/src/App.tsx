@@ -1,3 +1,9 @@
+/**
+ * Main application shell.
+ *
+ * Manages navigation between the home view and the map, user settings,
+ * geolocation, calling the backend, and rendering star overlays.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import SettingsModal, { StarSettings } from './components/SettingsModal';
@@ -15,6 +21,7 @@ import { StarData } from './types/star';
 import TutorialModal from './components/TutorialModal';
 
 const DEFAULT_POSITION = [41.35168556332073, 2.1116924285888676];
+// Copy shown after finding the zenith star
 const EPIC_MESSAGE = `You are probably the first human in all of history to ever contemplate this star from this place, at this moment. The universe is vast, and tonight, this star belongs to you.`;
 
 type Mode = 'aboveYou' | 'specialStar';
@@ -80,6 +87,7 @@ const App: React.FC = () => {
     setSelectedLocation(latlng);
   };
 
+  // Query the backend for stars above the selected location/date
   const handleGetStars = async () => {
     if (!selectedLocation) {
       setError('Please select a location on the map.');

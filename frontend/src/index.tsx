@@ -1,4 +1,5 @@
-  import React, { Suspense } from 'react';
+// App bootstrap and React suspense boundary.
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './tailwind.output.css';
 import App from './App';

@@ -1,3 +1,4 @@
+// Small wrapper around the browser Geolocation API with loading/error state.
 import { useState, useCallback } from 'react';
 
 interface GeolocationState {

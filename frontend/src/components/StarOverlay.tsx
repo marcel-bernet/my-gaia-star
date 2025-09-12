@@ -1,3 +1,5 @@
+// Renders stars as colored circle markers and a popup with details.
+// Uses BP-RP to estimate color temperature and sizes markers by G magnitude.
 import React from 'react';
 import { Marker, Popup, Polyline, CircleMarker } from 'react-leaflet';
 import { StarData } from '../types/star';
