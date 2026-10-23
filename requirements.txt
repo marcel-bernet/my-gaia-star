@@ -1,5 +1,0 @@
-reportlab
-pillow
-matplotlib
-numpy
-astropy

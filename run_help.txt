@@ -1,6 +1,0 @@
-in backend:
-uvicorn main:app --reload
-
-
-in frontend:
-npm run dev

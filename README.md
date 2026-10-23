@@ -1,45 +1,57 @@
- 
-## Deploying
+# Gaia Maps
 
-This project is set up for deployment to [Railway](https://railway.com) as two separate services:
+Find the star that is — or was — straight above you, from ESA's Gaia catalogue of almost two billion stars. Then make a certificate of it.
 
-### Backend (FastAPI)
-- Go to the `backend/` folder and create a new Railway service.
-- Add the following as your start command (or use the included `Procfile`):
-  ```
-  uvicorn main:app --host 0.0.0.0 --port $PORT
-  ```
-- Ensure all dependencies are in `requirements.txt`.
-- Railway will automatically use the `PORT` environment variable.
+Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and Gaia Maps draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, and download an A4 certificate (PDF or PNG) with a chart of the sky above, its place on Gaia's colour–magnitude diagram, and its position in the Milky Way. Every result is a shareable link.
 
-### Frontend (Vite/React)
-- Go to the `frontend/` folder and create a new Railway service.
-- Railway will auto-detect the build and serve scripts from `package.json`.
-- The static site will be served from the `dist/` directory after build.
+It is a **static site**: no backend, no accounts, nothing to keep running.
 
-### Configuration
-- Frontend expects `VITE_API_URL` to point to the backend base URL (e.g., `https://api.example.com`). If not set, it defaults to `http://localhost:8000`.
-- CORS is enabled to allow the frontend to communicate with the backend.
+## How it works
 
-### Notes
-- You can connect both services to the same Railway project for easy management.
-- Set up CORS in the backend (already enabled for all origins).
-- For custom domains, use Railway’s dashboard after deployment. 
+| Job | Where it happens |
+|---|---|
+| Zenith at a place and time (precession, nutation, aberration) | In the browser, with [astronomy-engine](https://github.com/cosinekitty/astronomy). Checked against astropy to ≈5″ (`src/sky/zenith.test.ts`). |
+| Local time at the chosen place, including historical DST | `@photostructure/tz-lookup` + `Intl` (`src/sky/time.ts`) |
+| Gaia DR3 stars around the zenith | [CDS VizieR](https://vizier.cds.unistra.fr/) cone search (`I/355/gaiadr3`), falling back to [GAVO](https://dc.g-vo.org/) TAP (`gaia.dr3lite`) if VizieR is down (`src/sky/gaia.ts`) |
+| Naked-eye stars (G < 6) | Bundled: `public/naked-eye.json` |
+| HR diagram background | Bundled: `public/hr-density.png`, a 2-D histogram of 1.9 M Gaia stars within 200 pc |
+| Certificate | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
+| Place names | OpenStreetMap Nominatim |
 
-### Local Development
-Backend
-1. Create a virtual environment and install `backend/requirements.txt`.
-2. Run:
-   ```
-   uvicorn main:app --reload
-   ```
+Why not the ESA Gaia archive directly? It sends no CORS headers, so browsers can't call it. VizieR's *TAP* endpoint is unusable from browsers too (it sends `Access-Control-Allow-Origin` twice). Wide magnitude-limited cones are slow on every mirror, which is why the naked-eye stars ship with the site and the "bright" depth probes a small cone before choosing its radius.
 
-Frontend
-1. From `frontend/`, install dependencies:
-   ```
-   npm install
-   ```
-2. Start dev server:
-   ```
-   npm run dev
-   ```
+### Search depths
+
+| Depth | Stars | Typical time |
+|---|---|---|
+| Eye | G < 6 within 20° (bundled) | instant |
+| Bright | the 400 nearest with G < 13 | 1–4 s |
+| Faint | the 400 nearest with G < 19, within 0.3° | 0.6–1.5 s |
+| Deepest | the 400 nearest of any brightness, within 400″ | < 1 s |
+
+"Your star" is the nearest star to the zenith whose Gaia parallax is good to 20% and which has a colour — so its certificate can place it on the HR diagram and in the Galaxy.
+
+## Develop
+
+```bash
+npm install
+npm run dev        # http://localhost:5173/gaia-maps/
+npm test           # unit tests (offline)
+LIVE=1 npx vitest run gaia.live   # also query the real Gaia services
+npm run build      # static site in dist/
+```
+
+The two bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `numpy` and `pillow`):
+
+```bash
+python3 scripts/naked_eye_stars.py
+python3 scripts/hr_density.py
+```
+
+## Deploy
+
+Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`). One-time setup: **Settings → Pages → Source: GitHub Actions**. The site is served from `/gaia-maps/`; for a custom domain, build with `BASE_PATH=/`.
+
+## Credits
+
+Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). Map data © OpenStreetMap contributors. This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).

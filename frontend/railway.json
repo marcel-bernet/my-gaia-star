@@ -1,8 +1,0 @@
-{
-  "build": {
-    "command": "npm run build"
-  },
-  "start": {
-    "command": "npx serve -s dist -l $PORT -H 0.0.0.0"
-  }
-} 
