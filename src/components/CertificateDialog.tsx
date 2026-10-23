@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Result } from '../App';
-import { downloadPdf, downloadPng, renderCertificate } from '../certificate/render';
+import { downloadPdf, downloadPng, renderCertificate, type Dr4Summary } from '../certificate/render';
+import { fitFiveParameters, transitPoints } from '../dr4/epoch';
+import { DR4_RELEASE, epochAstrometryFor } from '../dr4/source';
+import type { Literature } from '../sky/simbad';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import { formatMoment } from '../sky/time';
@@ -10,16 +13,31 @@ interface Props {
   star: Star;
   result: Result;
   placeName: string;
+  /** SIMBAD result; null if it couldn't be checked, and the page then hedges. */
+  literature: Literature | null;
   onClose: () => void;
 }
 
-export default function CertificateDialog({ star, result, placeName, onClose }: Props) {
+export default function CertificateDialog({ star, result, placeName, literature, onClose }: Props) {
   const { t, lang } = useI18n();
   const [title, setTitle] = useState(t('cert.defaultTitle'));
   const [dedication, setDedication] = useState('');
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [busy, setBusy] = useState(false);
   const preview = useRef<HTMLDivElement>(null);
+  // The star's own DR4 passes, once DR4 is out and reachable; otherwise the page says when they arrive.
+  const [dr4, setDr4] = useState<Dr4Summary | null>(null);
+  useEffect(() => {
+    let live = true;
+    epochAstrometryFor(star).then(r => {
+      if (!live || r.kind !== 'live') return;
+      const fit = fitFiveParameters(r.data);
+      if (fit) setDr4({ years: transitPoints(r.data).map(p => p.year), parallax: fit.parallax, parallaxErr: fit.errors[2] });
+    });
+    return () => {
+      live = false;
+    };
+  }, [star]);
 
   // Redraw shortly after typing stops.
   useEffect(() => {
@@ -30,6 +48,10 @@ export default function CertificateDialog({ star, result, placeName, onClose }: 
         frame: result.frame,
         title: title.trim() || t('cert.defaultTitle'),
         dedication,
+        literature,
+        dr4,
+        dr4Date: new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE),
+        made: new Date(),
         subtitle: `${formatMoment(result.frame.date, result.zone, lang)} · ${placeName}`,
         t,
         lang,
@@ -40,7 +62,7 @@ export default function CertificateDialog({ star, result, placeName, onClose }: 
       live = false;
       clearTimeout(id);
     };
-  }, [star, result, title, dedication, placeName, t, lang]);
+  }, [star, result, title, dedication, placeName, literature, dr4, t, lang]);
 
   useEffect(() => {
     const host = preview.current;

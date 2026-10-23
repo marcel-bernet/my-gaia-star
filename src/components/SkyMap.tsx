@@ -21,7 +21,8 @@ interface Props {
 }
 
 const placeIcon = L.divIcon({ className: 'place-pin', html: '<span></span>', iconSize: [28, 28] });
-const zenithIcon = L.divIcon({ className: 'zenith-pin', html: '<span></span>', iconSize: [44, 44] });
+// A reticle rather than a glow: ring plus four ticks.
+const zenithIcon = L.divIcon({ className: 'zenith-pin', html: '<span></span><i></i><i></i><i></i><i></i>', iconSize: [44, 44] });
 const selectedIcon = L.divIcon({ className: 'selected-pin', html: '<span></span>', iconSize: [34, 34] });
 
 const KM_PER_DEG = 111.32;
@@ -46,10 +47,8 @@ function FollowView({ place, result, radiusDeg }: { place: Props['place']; resul
           [Math.max(-85, lat - r), lon - r / cos],
           [Math.min(85, lat + r), lon + r / cos],
         ],
-        // Keep the stars clear of the panel: on the left on desktop, at the bottom on phones.
-        wide()
-          ? { duration: 1.4, paddingTopLeft: [440, 32], paddingBottomRight: [32, 32] }
-          : { duration: 1.4, paddingTopLeft: [16, 16], paddingBottomRight: [16, window.innerHeight * 0.5] },
+        // The panel sits beside the map now, not over it; leave room for the readout.
+        { duration: 1.4, paddingTopLeft: [24, wide() ? 72 : 48], paddingBottomRight: [24, 24] },
       );
     }
   }, [map, result, radiusDeg]);
@@ -106,7 +105,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
         <Circle
           center={[result.frame.lat, result.frame.lon]}
           radius={radiusDeg * KM_PER_DEG * 1000}
-          pathOptions={{ color: '#e8c98f', weight: 1, opacity: 0.35, dashArray: '4 6', fill: false }}
+          pathOptions={{ color: '#e9e7e2', weight: 1, opacity: 0.25, dashArray: '2 5', fill: false }}
           interactive={false}
         />
       )}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Result } from '../App';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
@@ -9,19 +9,70 @@ import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
+import type { Literature } from '../sky/simbad';
 import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
+import Dr4Section from './Dr4Section';
 
 interface Props {
   star: Star;
   result: Result;
   placeName: string | null;
+  literature: Literature | 'loading' | 'error' | null;
   onBackToZenith: () => void;
   onCertificate: () => void;
 }
 
-export default function StarCard({ star, result, placeName, onBackToZenith, onCertificate }: Props) {
+export function Figure({ n, title, children, caption }: { n: number; title: string; children: ReactNode; caption?: ReactNode }) {
+  const { t } = useI18n();
+  return (
+    <figure className="fig">
+      <figcaption className="fig-title">
+        <span className="fig-num mono">{t('fig', { n })}</span> {title}
+      </figcaption>
+      {children}
+      {caption && <p className="fig-caption">{caption}</p>}
+    </figure>
+  );
+}
+
+function FirstLook({ literature, id }: { literature: Props['literature']; id: string }) {
+  const { t } = useI18n();
+  if (literature === null || literature === 'loading') {
+    return (
+      <div className="first-look pending" aria-live="polite">
+        <span className="spinner" aria-hidden /> {t('first.checking')}
+      </div>
+    );
+  }
+  if (literature === 'error') {
+    return <div className="first-look pending">{t('first.error')}</div>;
+  }
+  if (!literature.known) {
+    return (
+      <div className="first-look unknown" aria-live="polite">
+        <p className="badge mono">{t('first.badge')}</p>
+        <p className="first-title">{t('first.unknown.title')}</p>
+        <p className="first-body">{t('first.unknown.body')}</p>
+      </div>
+    );
+  }
+  const papers = literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers });
+  return (
+    <div className="first-look known" aria-live="polite">
+      <p className="first-title">{t('first.known.title', { name: literature.name })}</p>
+      <p className="first-body">
+        {t('first.known.body', { papers })}{' '}
+        <a href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${id}`)}`} target="_blank" rel="noreferrer">
+          SIMBAD ↗
+        </a>
+      </p>
+    </div>
+  );
+}
+
+export default function StarCard({ star, result, placeName, literature, onBackToZenith, onCertificate }: Props) {
   const { t, lang } = useI18n();
   const [copied, setCopied] = useState(false);
   const isZenith = star.id === result.zenithId;
@@ -76,14 +127,9 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
     [sky, abbr, star, t],
   );
 
-  // Bring a fresh result into view inside the scrolling panel.
-  // Waits out the bottom sheet's height transition on phones.
+  // Bring a fresh result into view (the panel scrolls on desktop, the page on phones).
   useEffect(() => {
-    const id = setTimeout(() => {
-      const card = ref.current;
-      const body = card?.closest('.panel-body') as HTMLElement | null;
-      if (card && body) body.scrollTo({ top: card.offsetTop - body.offsetTop - 8, behavior: 'smooth' });
-    }, 320);
+    const id = setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
     return () => clearTimeout(id);
   }, [result, star.id]);
 
@@ -98,67 +144,88 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
     setTimeout(() => setCopied(false), 2000);
   };
 
+  let fig = 0;
   return (
-    <article className="star-card" ref={ref}>
-      <p className="meta">
-        {t('result.count', { n: result.stars.length, place: where })}
-        <br />
-        {formatMoment(result.frame.date, result.zone, lang)}
-      </p>
-      <div className="star-head">
-        <span className="swatch" style={{ background: starColor(star), boxShadow: `0 0 18px ${starColor(star)}` }} />
-        <div>
-          <p className="eyebrow">{isZenith ? t('result.zenith') : t('result.selected')}</p>
+    <article className="dossier" ref={ref}>
+      <header className="dossier-head">
+        <p className="kicker">
+          {isZenith ? t('result.zenith') : t('result.selected')} · {t('result.count', { n: result.stars.length, place: where })}
+        </p>
+        <div className="star-head">
+          <span className="swatch" style={{ background: starColor(star) }} aria-hidden />
           <h2>{kind ? t(`kind.${kind.kind}`) : t('fact.id')}</h2>
-          <p className="star-id">
-            {t('fact.id')} {star.id}
-          </p>
         </div>
-      </div>
+        <p className="star-id mono">
+          {t('fact.id')} {star.id}
+        </p>
+        <p className="moment">{formatMoment(result.frame.date, result.zone, lang)}</p>
+      </header>
+
+      <FirstLook literature={literature} id={star.id} />
+
       <div className="actions">
-        <button className="secondary" onClick={onCertificate}>
+        <button className="primary" onClick={onCertificate}>
           {t('action.certificate')}
         </button>
         <button className="secondary" onClick={share}>
           {copied ? t('action.copied') : t('action.share')}
         </button>
       </div>
+
       {kind && (
-        <section className="card-section">
-          <h3 className="label">{t('card.kind')}</h3>
+        <Figure
+          n={++fig}
+          title={t('card.kind')}
+          caption={
+            <>
+              {kind.sure ? t(`kind.${kind.kind}.about` as Key) : t('kind.colourOnly')}
+              {kind.radiusSun !== null && <> {t('kind.size', { x: formatRatio(kind.radiusSun, lang) })}.</>}
+            </>
+          }
+        >
           <CanvasArt width={340} height={130} draw={drawPortrait} label={t(`kind.${kind.kind}`)} />
-          <p className="about">{kind.sure ? t(`kind.${kind.kind}.about` as Key) : t('kind.colourOnly')}</p>
-          {kind.radiusSun !== null && <p className="hint">{t('kind.size', { x: formatRatio(kind.radiusSun, lang) })}</p>}
-        </section>
+        </Figure>
       )}
-      <section className="card-section">
-        <h3 className="label">{t('card.where')}</h3>
-        <p className="con-name">{sky ? sky.constellations[abbr].names[lang] : '…'}</p>
-        <div className="chart-frame">
+
+      <Figure n={++fig} title={`${t('card.where')} — ${sky ? sky.constellations[abbr].names[lang] : '…'}`} caption={`${t('fact.see')}: ${t(`see.${visibility(star)}`)}.`}>
+        <div className="plate">
           <CanvasArt width={352} height={250} draw={drawChart} label={t('card.where')} />
         </div>
-        <p className="hint">{`${t('fact.see')}: ${t(`see.${visibility(star)}`)}`}</p>
-      </section>
-      <section className="card-section">
-        <h3 className="label">{t('card.galaxy')}</h3>
-        <div className="galaxy-face">
-          <CanvasArt width={300} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
-        </div>
-        <CanvasArt width={352} height={84} draw={drawEdgeOn} label={t('cert.edge')} />
-        <p className="hint">
-          {height === null
+      </Figure>
+
+      <Figure
+        n={++fig}
+        title={t('card.galaxy')}
+        caption={
+          height === null
             ? t('fact.height.unknown')
-            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })}
-        </p>
-      </section>
-      <dl className="facts">
-        {facts.map(f => (
-          <div key={f.label}>
-            <dt>{f.label}</dt>
-            <dd>{f.value}</dd>
+            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })
+        }
+      >
+        <div className="plate">
+          <div className="galaxy-face">
+            <CanvasArt width={300} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
           </div>
-        ))}
-      </dl>
+          <CanvasArt width={352} height={84} draw={drawEdgeOn} label={t('cert.edge')} />
+        </div>
+      </Figure>
+
+      <section className="table-block">
+        <h3 className="fig-title">
+          <span className="fig-num mono">{t('table', { n: 1 })}</span> {t('table.measurements')}
+        </h3>
+        <dl className="facts">
+          {facts.map(f => (
+            <div key={f.label}>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <Dr4Section star={star} firstFig={fig + 1} />
+
       <div className="actions small">
         {!isZenith && (
           <button className="link" onClick={onBackToZenith}>

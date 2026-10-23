@@ -34,7 +34,34 @@ export async function searchPlace(query: string, lang: string): Promise<Place | 
   return r ? { lat: Number(r.lat), lon: Number(r.lon), name: shortName(r) } : null;
 }
 
-export async function placeName(lat: number, lon: number, lang: string): Promise<string | null> {
+// Reverse lookups are cached (≈100 m cells) so re-tapping or reloading a shared
+// link doesn't ask Nominatim again: the 1 request/s limit is for the whole site.
+const names = new Map<string, Promise<string | null>>();
+
+export function placeName(lat: number, lon: number, lang: string): Promise<string | null> {
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)},${lang}`;
+  try {
+    const saved = sessionStorage.getItem(`place:${key}`);
+    if (saved !== null) return Promise.resolve(saved || null);
+  } catch {
+    /* storage blocked */
+  }
+  let p = names.get(key);
+  if (!p) {
+    p = reverse(lat, lon, lang).then(name => {
+      try {
+        sessionStorage.setItem(`place:${key}`, name ?? '');
+      } catch {
+        /* storage blocked */
+      }
+      return name;
+    });
+    names.set(key, p);
+  }
+  return p;
+}
+
+async function reverse(lat: number, lon: number, lang: string): Promise<string | null> {
   const params = new URLSearchParams({
     lat: lat.toFixed(5),
     lon: lon.toFixed(5),

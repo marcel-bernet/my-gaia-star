@@ -8,6 +8,7 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
       <div className="prose">
         <p>{t('about.p1')}</p>
         <p>{t('about.p2')}</p>
+        <p>{t('about.p4')}</p>
         <p>{t('about.p3')}</p>
         <p className="hint">{t('independent')}</p>
         <p className="hint">
