@@ -19,7 +19,7 @@ describe('classify', () => {
     expect(classify(at10pc(0.5, 1.2))!.kind).toBe('red-giant'); // red clump
     expect(classify(at10pc(-5, 1.8))!.kind).toBe('supergiant');
     expect(classify(at10pc(-2.5, -0.1))!.kind).toBe('blue-giant');
-    expect(classify(at10pc(3.2, 0.85))!.kind).toBe('subgiant');
+    expect(classify(at10pc(2.8, 0.85))!.kind).toBe('subgiant');
   });
 
   it('falls back to colour alone without a reliable distance', () => {

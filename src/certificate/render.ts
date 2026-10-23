@@ -8,7 +8,7 @@ import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { hasDistance, timesTooFaint } from '../sky/physics';
+import { hasDistance, visibility } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
 import { drawHr, drawMilkyWay, drawStarPortrait, rng } from './panels';
 import { CREAM, GOLD, INK, MUTED } from './theme';
@@ -162,7 +162,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.font = `italic 400 26px ${SERIF}`;
   ctx.fillStyle = MUTED;
   ctx.textAlign = 'center';
-  ctx.fillText(timesTooFaint(star) <= 1 ? t('chart.visible') : t('chart.faint'), cx, chartBottom + 44);
+  ctx.fillText(`${t('fact.see')}: ${t(`see.${visibility(star)}`)}`, cx, chartBottom + 44);
 
   // Narrative.
   ctx.font = `italic 400 34px ${SERIF}`;
@@ -171,7 +171,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
 
   // Facts: three columns, two rows.
   const facts = starFacts(star, frame.date, t, lang)
-    .filter(f => f.label !== t('fact.position') && f.label !== t('fact.rv'))
+    .filter(f => ![t('fact.position'), t('fact.rv'), t('fact.see')].includes(f.label))
     .slice(0, 6);
   const colW = (PAGE_W - 2 * M) / 3;
   facts.forEach((f, i) => {

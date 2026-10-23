@@ -8,7 +8,7 @@ import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { starColor, timesTooFaint } from '../sky/physics';
+import { starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
 
@@ -108,7 +108,7 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
         <div className="chart-frame">
           <CanvasArt width={352} height={250} draw={drawChart} label={t('card.where')} />
         </div>
-        <p className="hint">{timesTooFaint(star) <= 1 ? t('chart.visible') : t('chart.faint')}</p>
+        <p className="hint">{`${t('fact.see')}: ${t(`see.${visibility(star)}`)}`}</p>
       </section>
       <dl className="facts">
         {facts.map(f => (

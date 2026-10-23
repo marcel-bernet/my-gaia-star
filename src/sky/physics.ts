@@ -74,8 +74,11 @@ export function properMotion(star: Pick<Star, 'pmRa' | 'pmDec'>): number | null 
   return star.pmRa === null || star.pmDec === null ? null : Math.hypot(star.pmRa, star.pmDec);
 }
 
-/** Coarse spectral class (e.g. "G2") from temperature. */
-export function spectralClass(star: Pick<Star, 'teff' | 'bpRp'>): string | null {
+/**
+ * Coarse spectral class (e.g. "G2") from temperature. Giants are cooler than
+ * dwarfs of the same type (a G9.5 III star is ~4 900 K), so they get their own scale.
+ */
+export function spectralClass(star: Pick<Star, 'teff' | 'bpRp'>, giant = false): string | null {
   const t = temperature(star);
   if (t === null) return null;
   // Lower edge of each class, hottest first, with the subclass span.
@@ -84,9 +87,9 @@ export function spectralClass(star: Pick<Star, 'teff' | 'bpRp'>): string | null 
     ['B', 10000, 30000],
     ['A', 7500, 10000],
     ['F', 6000, 7500],
-    ['G', 5200, 6000],
-    ['K', 3700, 5200],
-    ['M', 2400, 3700],
+    giant ? ['G', 4900, 6000] : ['G', 5200, 6000],
+    giant ? ['K', 3850, 4900] : ['K', 3700, 5200],
+    giant ? ['M', 2400, 3850] : ['M', 2400, 3700],
   ];
   for (const [name, lo, hi] of classes) {
     if (t >= lo) {
@@ -95,11 +98,6 @@ export function spectralClass(star: Pick<Star, 'teff' | 'bpRp'>): string | null 
     }
   }
   return 'M9';
-}
-
-/** How many times fainter than the faintest star visible to the naked eye (G≈6.5). */
-export function timesTooFaint(star: Pick<Star, 'g'>): number {
-  return Math.pow(10, (star.g - 6.5) / 2.5);
 }
 
 /** ICRS → galactic (l, b) in degrees. */
@@ -131,3 +129,29 @@ export function galacticPlanePosition(star: WithParallax & Pick<Star, 'ra' | 'de
   const d = (pc / 1000) * Math.cos(b * DEG);
   return { x: -d * Math.sin(l * DEG), y: -SUN_GALACTOCENTRIC_KPC + d * Math.cos(l * DEG) };
 }
+
+/**
+ * Johnson V magnitude — what naked-eye limits are quoted in — from Gaia G and
+ * BP−RP (Riello et al. 2021, valid for −0.5 < BP−RP < 2.75; clamped outside).
+ * Red stars look brighter to Gaia than to the eye, so this matters for them.
+ */
+export function vMagnitude(star: Pick<Star, 'g' | 'bpRp'>): number {
+  const c = Math.max(-0.5, Math.min(2.75, star.bpRp ?? 0.8));
+  return star.g - (-0.02704 + 0.01424 * c - 0.2156 * c * c + 0.01426 * c * c * c);
+}
+
+export type Visibility = 'city' | 'suburbs' | 'rural' | 'dark' | 'binoculars' | 'telescope' | 'large-telescope';
+
+/** What it takes to see the star yourself, by its V magnitude. */
+export function visibility(star: Pick<Star, 'g' | 'bpRp'>): Visibility {
+  const v = vMagnitude(star);
+  if (v < 2.5) return 'city';
+  if (v < 4) return 'suburbs';
+  if (v < 5.5) return 'rural';
+  if (v < 6.5) return 'dark';
+  if (v < 10) return 'binoculars';
+  if (v < 14) return 'telescope';
+  return 'large-telescope';
+}
+
+export const nakedEye = (v: Visibility) => v === 'city' || v === 'suburbs' || v === 'rural' || v === 'dark';

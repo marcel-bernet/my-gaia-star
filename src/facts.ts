@@ -1,5 +1,6 @@
 /** Human-readable facts about a star, shared by the star card and the certificate. */
 import type { T } from './i18n';
+import { classify } from './sky/classify';
 import type { Star } from './sky/gaia';
 import {
   distanceLy,
@@ -8,7 +9,8 @@ import {
   properMotion,
   spectralClass,
   temperature,
-  timesTooFaint,
+  visibility,
+  vMagnitude,
 } from './sky/physics';
 
 export interface Fact {
@@ -61,18 +63,13 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
     });
   }
   const temp = temperature(star);
-  const cls = spectralClass(star);
+  const kind = classify(star)?.kind;
+  const cls = spectralClass(star, kind === 'giant' || kind === 'red-giant' || kind === 'supergiant' || kind === 'subgiant');
   if (temp !== null && cls) {
     facts.push({ label: t('fact.colour'), value: t('fact.colour.value', { temp: fmt(locale, Math.round(temp / 50) * 50), cls }) });
   }
-  const faint = timesTooFaint(star);
-  facts.push({
-    label: t('fact.brightness'),
-    value:
-      faint <= 1
-        ? t('fact.brightness.visible', { g: fmt(locale, star.g, 1) })
-        : t('fact.brightness.faint', { g: fmt(locale, star.g, 1), x: sig(locale, faint) }),
-  });
+  facts.push({ label: t('fact.brightness'), value: t('fact.brightness.value', { v: fmt(locale, vMagnitude(star), 1) }) });
+  facts.push({ label: t('fact.see'), value: t(`see.${visibility(star)}`) });
   const lum = luminositySun(star);
   if (lum !== null) facts.push({ label: t('fact.luminosity'), value: t('fact.luminosity.value', { x: sig(locale, lum) }) });
   const pm = properMotion(star);
