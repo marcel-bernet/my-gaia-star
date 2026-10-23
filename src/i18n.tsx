@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 const en = {
-  'brand': 'Gaia Maps',
+  'brand': 'My Gaia Star',
   'tagline': 'Find the star right above you',
   'intro':
     'Gaia has charted almost two billion stars. One of them is right above you — and you are probably the first person ever to look for it.',
@@ -91,7 +91,7 @@ const en = {
   'cert.mw.sun': 'Sun',
   'cert.mw.centre': 'centre',
   'cert.chart': 'The sky straight above',
-  'cert.footer': 'Data: ESA/Gaia/DPAC, Gaia DR3 · Made with Gaia Maps',
+  'cert.footer': 'Data: ESA/Gaia/DPAC, Gaia DR3 · Made with My Gaia Star · Independent project, not affiliated with ESA',
   'kind.white-dwarf': 'White dwarf',
   'kind.white-dwarf.about': 'The hot, Earth-sized core left behind when a Sun-like star dies. It no longer shines by fusion; it just slowly cools.',
   'kind.red-dwarf': 'Red dwarf',
@@ -142,10 +142,16 @@ const en = {
   'fact.height.below': '{ly} light-years below the Milky Way’s plane',
   'fact.height.unknown': 'Its distance is unknown, so its height is too: it lies along the dashed line.',
   'card.galaxy': 'In the Milky Way',
+  'arm.sagittarius': 'Sagittarius Arm',
+  'arm.scutum': 'Scutum–Centaurus Arm',
+  'arm.norma': 'Norma–Outer Arm',
+  'arm.perseus': 'Perseus Arm',
+  'arm.local': 'Local Arm',
+  'independent': 'An independent project using ESA Gaia data; not affiliated with or endorsed by ESA.',
   'about': 'About',
-  'about.title': 'About Gaia Maps',
+  'about.title': 'About My Gaia Star',
   'about.p1':
-    'The European Space Agency’s Gaia mission measured the position, brightness, colour and distance of almost two billion stars. Gaia Maps looks up which of them was directly overhead at a given place and time.',
+    'The European Space Agency’s Gaia mission measured the position, brightness, colour and distance of almost two billion stars. My Gaia Star looks up which of them was directly overhead at a given place and time.',
   'about.p2':
     'Stars are drawn on the map beneath where they shine: one degree of sky away from the zenith becomes one degree on the ground, in the same compass direction.',
   'about.p3':
@@ -158,7 +164,7 @@ export type Key = keyof typeof en;
 type Dict = Record<Key, string>;
 
 const es: Dict = {
-  'brand': 'Gaia Maps',
+  'brand': 'My Gaia Star',
   'tagline': 'Encuentra la estrella justo encima de ti',
   'intro':
     'Gaia ha cartografiado casi dos mil millones de estrellas. Una de ellas está justo encima de ti, y probablemente seas la primera persona que la busca.',
@@ -248,7 +254,7 @@ const es: Dict = {
   'cert.mw.sun': 'Sol',
   'cert.mw.centre': 'centro',
   'cert.chart': 'El cielo justo encima',
-  'cert.footer': 'Datos: ESA/Gaia/DPAC, Gaia DR3 · Hecho con Gaia Maps',
+  'cert.footer': 'Datos: ESA/Gaia/DPAC, Gaia DR3 · Hecho con My Gaia Star · Proyecto independiente, sin relación con la ESA',
   'kind.white-dwarf': 'Enana blanca',
   'kind.white-dwarf.about': 'El núcleo caliente, del tamaño de la Tierra, que queda cuando muere una estrella como el Sol. Ya no brilla por fusión: simplemente se enfría poco a poco.',
   'kind.red-dwarf': 'Enana roja',
@@ -299,10 +305,16 @@ const es: Dict = {
   'fact.height.below': '{ly} años luz por debajo del plano de la Vía Láctea',
   'fact.height.unknown': 'Su distancia es desconocida, y por tanto su altura: está en algún punto de la línea discontinua.',
   'card.galaxy': 'En la Vía Láctea',
+  'arm.sagittarius': 'Brazo de Sagitario',
+  'arm.scutum': 'Brazo de Escudo-Centauro',
+  'arm.norma': 'Brazo de Norma-Exterior',
+  'arm.perseus': 'Brazo de Perseo',
+  'arm.local': 'Brazo Local',
+  'independent': 'Un proyecto independiente que usa datos de Gaia de la ESA; no está afiliado a la ESA ni respaldado por ella.',
   'about': 'Acerca de',
-  'about.title': 'Acerca de Gaia Maps',
+  'about.title': 'Acerca de My Gaia Star',
   'about.p1':
-    'La misión Gaia de la Agencia Espacial Europea midió la posición, el brillo, el color y la distancia de casi dos mil millones de estrellas. Gaia Maps busca cuál de ellas estaba justo encima de un lugar en un momento dado.',
+    'La misión Gaia de la Agencia Espacial Europea midió la posición, el brillo, el color y la distancia de casi dos mil millones de estrellas. My Gaia Star busca cuál de ellas estaba justo encima de un lugar en un momento dado.',
   'about.p2':
     'Las estrellas se dibujan en el mapa debajo de donde brillan: un grado de cielo desde el cenit se convierte en un grado sobre el terreno, en la misma dirección.',
   'about.p3':
@@ -312,7 +324,7 @@ const es: Dict = {
 };
 
 const ca: Dict = {
-  'brand': 'Gaia Maps',
+  'brand': 'My Gaia Star',
   'tagline': 'Troba l’estel just damunt teu',
   'intro':
     'Gaia ha cartografiat gairebé dos mil milions d’estels. Un d’ells és just damunt teu, i probablement ets la primera persona que el busca.',
@@ -402,7 +414,7 @@ const ca: Dict = {
   'cert.mw.sun': 'Sol',
   'cert.mw.centre': 'centre',
   'cert.chart': 'El cel just damunt',
-  'cert.footer': 'Dades: ESA/Gaia/DPAC, Gaia DR3 · Fet amb Gaia Maps',
+  'cert.footer': 'Dades: ESA/Gaia/DPAC, Gaia DR3 · Fet amb My Gaia Star · Projecte independent, sense relació amb l’ESA',
   'kind.white-dwarf': 'Nana blanca',
   'kind.white-dwarf.about': 'El nucli calent, de la mida de la Terra, que queda quan mor un estel com el Sol. Ja no brilla per fusió: simplement es refreda a poc a poc.',
   'kind.red-dwarf': 'Nana vermella',
@@ -453,10 +465,16 @@ const ca: Dict = {
   'fact.height.below': '{ly} anys llum per sota del pla de la Via Làctia',
   'fact.height.unknown': 'La seva distància és desconeguda, i per tant la seva alçada: és en algun punt de la línia discontínua.',
   'card.galaxy': 'A la Via Làctia',
+  'arm.sagittarius': 'Braç de Sagitari',
+  'arm.scutum': 'Braç de l’Escut-Centaure',
+  'arm.norma': 'Braç de l’Escaire-Exterior',
+  'arm.perseus': 'Braç de Perseu',
+  'arm.local': 'Braç Local',
+  'independent': 'Un projecte independent que fa servir dades de Gaia de l’ESA; no està afiliat a l’ESA ni avalat per ella.',
   'about': 'Quant a',
-  'about.title': 'Quant a Gaia Maps',
+  'about.title': 'Quant a My Gaia Star',
   'about.p1':
-    'La missió Gaia de l’Agència Espacial Europea va mesurar la posició, la brillantor, el color i la distància de gairebé dos mil milions d’estels. Gaia Maps cerca quin d’ells era just damunt d’un lloc en un moment donat.',
+    'La missió Gaia de l’Agència Espacial Europea va mesurar la posició, la brillantor, el color i la distància de gairebé dos mil milions d’estels. My Gaia Star cerca quin d’ells era just damunt d’un lloc en un moment donat.',
   'about.p2':
     'Els estels es dibuixen al mapa a sota d’on brillen: un grau de cel des del zenit esdevé un grau sobre el terreny, en la mateixa direcció.',
   'about.p3':

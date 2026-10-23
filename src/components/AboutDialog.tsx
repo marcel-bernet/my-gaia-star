@@ -9,9 +9,10 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
         <p>{t('about.p1')}</p>
         <p>{t('about.p2')}</p>
         <p>{t('about.p3')}</p>
+        <p className="hint">{t('independent')}</p>
         <p className="hint">
-          <a href="https://github.com/marcelbernet/gaia-maps" target="_blank" rel="noreferrer">
-            github.com/marcelbernet/gaia-maps
+          <a href="https://github.com/marcelbernet/my-gaia-star" target="_blank" rel="noreferrer">
+            github.com/marcelbernet/my-gaia-star
           </a>
         </p>
       </div>

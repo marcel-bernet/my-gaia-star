@@ -218,6 +218,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     centre: t('galaxy.centre'),
     scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
     stretched: x => t('galaxy.stretched', { x }),
+    arm: name => t(`arm.${name}`),
   };
   drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top, w: side, h: side }, star, galaxyLabels);
 

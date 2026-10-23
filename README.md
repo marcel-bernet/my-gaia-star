@@ -1,8 +1,8 @@
-# Gaia Maps
+# My Gaia Star
 
 Find the star that is — or was — straight above you, from ESA's Gaia catalogue of almost two billion stars. Then make a certificate of it.
 
-Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and Gaia Maps draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
+Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
 
 It is a **static site**: no backend, no accounts, nothing to keep running.
 
@@ -37,7 +37,7 @@ Why not the ESA Gaia archive directly? It sends no CORS headers, so browsers can
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173/gaia-maps/
+npm run dev        # http://localhost:5173/my-gaia-star/
 npm test           # unit tests (offline)
 LIVE=1 npx vitest run gaia.live   # also query the real Gaia services
 npm run build      # static site in dist/
@@ -53,8 +53,11 @@ python3 scripts/sky_chart.py
 
 ## Deploy
 
-Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`). One-time setup: **Settings → Pages → Source: GitHub Actions**. The site is served from `/gaia-maps/`; for a custom domain, build with `BASE_PATH=/`.
+Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`). One-time setup: **Settings → Pages → Source: GitHub Actions**. The site is served from `/my-gaia-star/`; for a custom domain, build with `BASE_PATH=/`.
 
 ## Credits
+
+An independent project using ESA Gaia data; not affiliated with or endorsed by ESA.
+
 
 Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). Map data © OpenStreetMap contributors. Constellation figures, boundaries, names and the Hipparcos chart stars come from [d3-celestial](https://github.com/ofrohn/d3-celestial) © Olaf Frohn (BSD 3-clause). This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).

@@ -26,13 +26,25 @@ type Ctx = CanvasRenderingContext2D;
 const SANS = '"Inter Variable", system-ui, sans-serif';
 const DEG = Math.PI / 180;
 const PITCH = 12 * DEG;
+const K = Math.tan(PITCH);
 const ARMS = 4;
-const ARM_PHASE = 0.4;
 const DISC_SCALE_KPC = 3.5;
 const DISC_EDGE_KPC = 16;
 /** Closer than this, the views zoom in on the Sun and the star. */
 const CLOSE_UP_KPC = 4;
+/** A close-up never shows less than this radius, so the nearby arms fit. */
+const MIN_CLOSE_UP_KPC = 3;
 const LY_PER_KPC = LY_PER_PC * 1000;
+
+// Arms are placed to match the Milky Way along the Sun's line to the centre
+// (cf. Reid et al. 2019): Sagittarius–Carina ~1.6 kpc inside the Sun,
+// Perseus ~1 kpc outside, Scutum–Centaurus further in, Norma–Outer beyond.
+const SUN_THETA = -Math.PI / 2;
+const ARM_PHASE = SUN_THETA - Math.log(6.6 / 3) / K; // arm 0 crosses the Sun's line at 6.6 kpc
+export type ArmName = 'sagittarius' | 'scutum' | 'norma' | 'perseus' | 'local';
+const ARM_NAMES: ArmName[] = ['sagittarius', 'scutum', 'norma', 'perseus'];
+// The Sun sits in the Local Arm (Orion Spur), a short, weaker arm segment.
+const LOCAL = { r: 8.3, pitch: 11.4 * DEG, span: 0.42, strength: 0.75 };
 
 export interface GalaxyLabels {
   sun: string;
@@ -42,6 +54,17 @@ export interface GalaxyLabels {
   scale: (ly: number) => string;
   /** Shown only if heights aren't to scale, e.g. "vertical scale ×0.4". */
   stretched: (x: number) => string;
+  arm: (name: ArmName) => string;
+}
+
+const armWidth = (r: number) => 0.3 + 0.04 * r;
+
+function armTheta(a: number, r: number) {
+  return Math.log(r / 3) / K + (a * 2 * Math.PI) / ARMS + ARM_PHASE;
+}
+
+function localArmRadius(theta: number) {
+  return LOCAL.r * Math.exp(Math.tan(LOCAL.pitch) * (theta - SUN_THETA));
 }
 
 /** How strongly a point lies on a spiral arm (0…1). */
@@ -49,16 +72,21 @@ function armStrength(x: number, y: number): number {
   const r = Math.hypot(x, y);
   if (r < 3) return 0;
   const theta = Math.atan2(y, x);
-  const k = Math.tan(PITCH);
   let best = Math.PI;
   for (let a = 0; a < ARMS; a++) {
-    const armTheta = Math.log(r / 3) / k + (a * 2 * Math.PI) / ARMS + ARM_PHASE;
-    const d = Math.abs(((((theta - armTheta) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
+    const d = Math.abs(((((theta - armTheta(a, r)) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
     best = Math.min(best, d);
   }
   const across = r * best * Math.sin(PITCH); // kpc, perpendicular to the arm
-  const width = 0.3 + 0.04 * r;
-  return Math.exp(-((across / width) ** 2));
+  let strength = Math.exp(-((across / armWidth(r)) ** 2));
+  // Local Arm: radial distance to the segment, tapered at its ends.
+  const dTheta = ((theta - SUN_THETA + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+  if (Math.abs(dTheta) < LOCAL.span * 1.6) {
+    const acrossLocal = Math.abs(r - localArmRadius(dTheta + SUN_THETA)) * Math.cos(LOCAL.pitch);
+    const taper = Math.exp(-((dTheta / LOCAL.span) ** 4));
+    strength = Math.max(strength, LOCAL.strength * taper * Math.exp(-((acrossLocal / 0.3) ** 2)));
+  }
+  return strength;
 }
 
 function discDensity(x: number, y: number): { d: number; arm: number } {
@@ -66,6 +94,25 @@ function discDensity(x: number, y: number): { d: number; arm: number } {
   const arm = armStrength(x, y);
   const edge = r > DISC_EDGE_KPC ? Math.exp(-(r - DISC_EDGE_KPC) * 2) : 1;
   return { d: (0.22 + arm) * Math.exp(-r / DISC_SCALE_KPC) * edge, arm };
+}
+
+/** Points along each named arm, kpc. */
+function armCurves(): { name: ArmName; pts: [number, number][] }[] {
+  const curves: { name: ArmName; pts: [number, number][] }[] = ARM_NAMES.map((name, a) => {
+    const pts: [number, number][] = [];
+    for (let r = 3; r <= DISC_EDGE_KPC; r += 0.05) {
+      const th = armTheta(a, r);
+      pts.push([r * Math.cos(th), r * Math.sin(th)]);
+    }
+    return { name, pts };
+  });
+  const local: [number, number][] = [];
+  for (let d = -LOCAL.span; d <= LOCAL.span; d += 0.01) {
+    const r = localArmRadius(SUN_THETA + d);
+    local.push([r * Math.cos(SUN_THETA + d), r * Math.sin(SUN_THETA + d)]);
+  }
+  curves.push({ name: 'local', pts: local });
+  return curves;
 }
 
 interface View {
@@ -94,6 +141,29 @@ function paintFaceOn(ctx: Ctx, cx: number, cy: number, R: number, view: View, co
   halo.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = halo;
   ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
+
+  // A soft glow along each arm, so the arms read at any zoom.
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const { name, pts } of armCurves()) {
+    for (const [w, alpha] of [
+      [2.2, 0.05],
+      [1.2, 0.07],
+    ] as const) {
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => {
+        const [px, py] = toPx(x, y);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      const r = Math.hypot(...pts[Math.floor(pts.length / 2)]);
+      ctx.lineWidth = Math.max(1, armWidth(r) * w * s);
+      ctx.strokeStyle = `rgba(150,170,240,${(name === 'local' ? 0.7 : 1) * alpha})`;
+      ctx.stroke();
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
 
   // Rejection-sample the disc inside the view, normalised to the densest
   // point the view can contain, so a close-up is as rich as the full view.
@@ -170,7 +240,7 @@ function viewFor(star: Star): { view: View; zoom: boolean } {
   if (p) {
     const d = Math.hypot(p.x, p.y - sunY);
     if (d < CLOSE_UP_KPC) {
-      return { view: { x: p.x / 2, y: (p.y + sunY) / 2, r: Math.max(0.25, d * 0.85 + 0.15) }, zoom: true };
+      return { view: { x: p.x / 2, y: (p.y + sunY) / 2, r: Math.max(MIN_CLOSE_UP_KPC, d * 0.85 + 0.6) }, zoom: true };
     }
   }
   return { view: { x: 0, y: 0, r: 17 }, zoom: false };
@@ -178,6 +248,47 @@ function viewFor(star: Star): { view: View; zoom: boolean } {
 
 export function isCloseUp(star: Star): boolean {
   return viewFor(star).zoom;
+}
+
+/** Names the arms crossing a close-up, written along each arm. */
+function labelArms(
+  ctx: Ctx,
+  cx: number,
+  cy: number,
+  R: number,
+  toPx: (x: number, y: number) => [number, number],
+  labels: GalaxyLabels,
+  fontPx: number,
+) {
+  ctx.save();
+  ctx.font = `italic 500 ${Math.round(fontPx * 0.8)}px ${SANS}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const { name, pts } of armCurves()) {
+    // The point on the arm closest to 60% of the way out, away from the Sun at the centre.
+    let best: { i: number; score: number } | null = null;
+    pts.forEach(([x, y], i) => {
+      const [px, py] = toPx(x, y);
+      const f = Math.hypot(px - cx, py - cy) / R;
+      if (f > 0.85 || i === 0 || i === pts.length - 1) return;
+      const score = Math.abs(f - 0.6);
+      if (!best || score < best.score) best = { i, score };
+    });
+    if (!best) continue;
+    const { i } = best;
+    const [ax, ay] = toPx(...pts[i - 1]);
+    const [bx, by] = toPx(...pts[i + 1]);
+    const [px, py] = toPx(...pts[i]);
+    let angle = Math.atan2(by - ay, bx - ax);
+    if (angle > Math.PI / 2) angle -= Math.PI;
+    if (angle < -Math.PI / 2) angle += Math.PI;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(angle);
+    haloText(ctx, labels.arm(name), 0, 0, 'rgba(200,210,240,0.85)');
+    ctx.restore();
+  }
+  ctx.restore();
 }
 
 /** The Galaxy seen from above, with the Sun and the star marked. */
@@ -243,6 +354,8 @@ export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
     haloText(ctx, labels.yourStar, lx, ly, GOLD);
   }
 
+  if (zoom) labelArms(ctx, cx, cy, R, toPx, labels, fontPx);
+
   if (zoom) {
     // Which way the centre is, a scale, and where this patch sits in the Galaxy.
     ctx.font = `500 ${Math.round(fontPx * 0.85)}px ${SANS}`;
@@ -283,7 +396,7 @@ export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
  */
 export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyLabels) {
   const fontPx = Math.max(11, Math.round(box.h / 7));
-  const { zoom } = viewFor(star);
+  const { view, zoom } = viewFor(star);
   const p = galacticPlanePosition(star);
   const z = galacticHeightKpc(star);
   const aspect = box.w / box.h;
@@ -292,13 +405,15 @@ export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
   let V: number;
   let H: number;
   if (zoom) {
-    V = Math.max(z !== null ? Math.abs(z) * 1.4 : 0, 0.45);
-    H = Math.min(17, V * aspect);
+    // Same horizontal zoom as the face-on close-up, and zoomed vertically too,
+    // onto the star's height (labelled when that stretches heights).
+    H = view.r;
+    V = Math.max(z !== null ? Math.abs(z) * 1.6 : 0, SUN_HEIGHT_KPC * 3);
   } else {
     H = 17;
     V = Math.max((H / aspect), z !== null ? Math.abs(z) * 1.4 : 0);
   }
-  const midX = zoom && p ? (p.y - SUN_GALACTOCENTRIC_KPC) / 2 : 0;
+  const midX = zoom ? view.y : 0;
   const sxPer = box.w / 2 / H;
   const szPer = box.h / 2 / V;
   const exaggeration = szPer / sxPer; // 1 = true scale
