@@ -7,9 +7,11 @@ import { placeName } from './geo';
 import { useI18n } from './i18n';
 import { CatalogueUnavailable, starsAround, type Depth, type Star } from './sky/gaia';
 import { hasDistance } from './sky/physics';
+import { literatureFor, type Literature } from './sky/simbad';
 import { instantToWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
 import { skyFrame } from './sky/zenith';
 import { readUrl, writeUrl } from './urlState';
+import Readout from './components/Readout';
 
 export interface Place {
   lat: number;
@@ -46,6 +48,7 @@ export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [literature, setLiterature] = useState<Literature | 'loading' | 'error' | null>(null);
   const abort = useRef<AbortController | null>(null);
 
   const zone = place ? timeZoneAt(place.lat, place.lon) : null;
@@ -54,11 +57,15 @@ export default function App() {
   useEffect(() => {
     if (!place || place.name !== null) return;
     let live = true;
-    placeName(place.lat, place.lon, lang).then(name => {
-      if (live) setPlace(p => (p && p.lat === place.lat && p.lon === place.lon ? { ...p, name: name ?? '' } : p));
-    });
+    // Wait for the clicking to settle: Nominatim allows one request per second for the whole site.
+    const id = setTimeout(() => {
+      placeName(place.lat, place.lon, lang).then(name => {
+        if (live) setPlace(p => (p && p.lat === place.lat && p.lon === place.lon ? { ...p, name: name ?? '' } : p));
+      });
+    }, 700);
     return () => {
       live = false;
+      clearTimeout(id);
     };
   }, [place, lang]);
 
@@ -124,17 +131,35 @@ export default function App() {
   };
 
   const selected: Star | null = result?.stars.find(s => s.id === selectedId) ?? null;
+
+  // Has anyone written about the selected star? Debounced: tapping across the
+  // map should not fire a SIMBAD query per star.
+  useEffect(() => {
+    if (!selected) return;
+    const ctl = new AbortController();
+    setLiterature('loading');
+    const id = setTimeout(() => {
+      literatureFor(selected.id, ctl.signal).then(setLiterature, () => !ctl.signal.aborted && setLiterature('error'));
+    }, 350);
+    return () => {
+      clearTimeout(id);
+      ctl.abort();
+    };
+  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const resultPlace = result && place && result.place.lat === place.lat && result.place.lon === place.lon ? place : result?.place;
 
   return (
     <div className="app">
-      <SkyMap
-        place={place}
-        result={result}
-        selectedId={selectedId}
-        onPick={(lat, lon) => pick(lat, lon)}
-        onSelectStar={setSelectedId}
-      />
+      <div className="stage">
+        <SkyMap
+          place={place}
+          result={result}
+          selectedId={selectedId}
+          onPick={(lat, lon) => pick(lat, lon)}
+          onSelectStar={setSelectedId}
+        />
+        {result && <Readout result={result} />}
+      </div>
       <Panel
         place={place}
         onPlace={pick}
@@ -150,6 +175,7 @@ export default function App() {
         result={result}
         resultPlaceName={resultPlace?.name ?? null}
         selected={selected}
+        literature={literature}
         onBackToZenith={() => result && setSelectedId(result.zenithId)}
         onCertificate={() => setCertOpen(true)}
         onAbout={() => setAboutOpen(true)}
@@ -159,6 +185,7 @@ export default function App() {
           star={selected}
           result={result}
           placeName={resultPlace?.name || t('place.unnamed')}
+          literature={literature && typeof literature === 'object' ? literature : null}
           onClose={() => setCertOpen(false)}
         />
       )}

@@ -6,11 +6,14 @@ export default function CanvasArt({
   height,
   draw,
   label,
+  onPick,
 }: {
   width: number;
   height: number;
   draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void | Promise<void>;
   label: string;
+  /** Called with the x of a click/tap, in drawing units (0…width). */
+  onPick?: (x: number) => void;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -23,5 +26,19 @@ export default function CanvasArt({
     ctx.clearRect(0, 0, width, height);
     void draw(ctx, width, height);
   }, [width, height, draw]);
-  return <canvas ref={ref} role="img" aria-label={label} style={{ width: '100%', aspectRatio: `${width} / ${height}`, display: 'block' }} />;
+  return (
+    <canvas
+      ref={ref}
+      role="img"
+      aria-label={label}
+      style={{ width: '100%', aspectRatio: `${width} / ${height}`, display: 'block', cursor: onPick ? 'pointer' : undefined }}
+      onPointerDown={
+        onPick &&
+        (e => {
+          const r = e.currentTarget.getBoundingClientRect();
+          onPick(((e.clientX - r.left) / r.width) * width);
+        })
+      }
+    />
+  );
 }

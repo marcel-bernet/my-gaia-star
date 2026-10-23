@@ -1,6 +1,8 @@
 # My Gaia Star
 
-Find the star that is — or was — straight above you, from ESA's Gaia catalogue of almost two billion stars. Then make a certificate of it.
+**Above you is a star no one has ever looked at.** ESA's Gaia has measured almost two billion stars, and only a tiny fraction has ever been singled out in a paper. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether anyone has written about it, and lets you make a certificate of it.
+
+When Gaia DR4 comes out (2 December 2026) it will publish, for the first time, the raw measurements behind the catalogue: every pass Gaia made over every star, and the pixels it recorded. Each star's page already has a DR4 section, filled for now with real data from ESA's June 2026 pre-release; see [docs/DATA_ACCESS.md](docs/DATA_ACCESS.md) for how it switches to each star's own data, and for what could rate-limit a public deployment.
 
 Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
 
@@ -15,6 +17,8 @@ It is a **static site**: no backend, no accounts, nothing to keep running.
 | Gaia DR3 stars around the zenith | [CDS VizieR](https://vizier.cds.unistra.fr/) cone search (`I/355/gaiadr3`), falling back to [GAVO](https://dc.g-vo.org/) TAP (`gaia.dr3lite`) if VizieR is down (`src/sky/gaia.ts`) |
 | Naked-eye stars (G < 6) | Bundled: `public/naked-eye.json` |
 | HR diagram background | Bundled: `public/hr-density.png`, a 2-D histogram of 1.9 M Gaia stars within 200 pc |
+| Has anyone written about it? | SIMBAD TAP (CDS): is `Gaia DR3 <id>` an identifier of a catalogued object, and in how many papers (`src/sky/simbad.ts`) |
+| DR4 epoch astrometry | Today: ESA's DR4 pre-release, bundled (`public/dr4-preview.json`). After 2 Dec 2026: ESA DataLink through `proxy/worker.js`. Parsed and fitted (position, parallax, proper motion) in the browser (`src/dr4/`) |
 | Kind of star and size | From its position relative to the main sequence on the HR diagram; radius from luminosity and temperature (`src/sky/classify.ts`) |
 | Constellation | IAU boundaries via astronomy-engine; finder chart from bundled `public/sky-chart.json` (`src/sky/constellation.ts`) |
 | Certificate | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
@@ -49,6 +53,7 @@ The bundled data files are built once and committed. To rebuild them (needs Pyth
 python3 scripts/naked_eye_stars.py
 python3 scripts/hr_density.py
 python3 scripts/sky_chart.py
+python3 scripts/dr4_prerelease.py path/to/GAIA_DR4_PRERELEASE_EPOCH_ASTROMETRY_RAW.xml   # see the script for the download
 ```
 
 ## Deploy
@@ -60,4 +65,4 @@ Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deplo
 An independent project using ESA Gaia data; not affiliated with or endorsed by ESA.
 
 
-Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). Map data © OpenStreetMap contributors. Constellation figures, boundaries, names and the Hipparcos chart stars come from [d3-celestial](https://github.com/ofrohn/d3-celestial) © Olaf Frohn (BSD 3-clause). This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).
+Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). DR4 preview: ESA/Gaia/DPAC, Gaia DR4 pre-release (June 2026). Literature: SIMBAD, CDS, Strasbourg. Map data © OpenStreetMap contributors. Constellation figures, boundaries, names and the Hipparcos chart stars come from [d3-celestial](https://github.com/ofrohn/d3-celestial) © Olaf Frohn (BSD 3-clause). This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).
