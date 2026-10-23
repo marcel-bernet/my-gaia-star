@@ -4,6 +4,7 @@ import { classify } from './sky/classify';
 import type { Star } from './sky/gaia';
 import {
   distanceLy,
+  galacticHeightKpc,
   lightDepartureYear,
   luminositySun,
   properMotion,
@@ -61,6 +62,11 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
           ? t('fact.light.value', { year: String(year) })
           : t('fact.light.valueBce', { year: fmt(locale, Math.round((1 - year) / 10) * 10) }),
     });
+  }
+  const z = galacticHeightKpc(star);
+  if (z !== null) {
+    const ly = sig(locale, Math.abs(z) * 3261.56);
+    facts.push({ label: t('fact.height'), value: t(z >= 0 ? 'fact.height.above' : 'fact.height.below', { ly }) });
   }
   const temp = temperature(star);
   const kind = classify(star)?.kind;

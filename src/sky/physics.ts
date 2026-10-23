@@ -155,3 +155,14 @@ export function visibility(star: Pick<Star, 'g' | 'bpRp'>): Visibility {
 }
 
 export const nakedEye = (v: Visibility) => v === 'city' || v === 'suburbs' || v === 'rural' || v === 'dark';
+
+/** The Sun sits ~21 pc above the Galactic mid-plane (Bennett & Bovy 2019). */
+export const SUN_HEIGHT_KPC = 0.0208;
+
+/** Height above (+) or below (−) the Galaxy's mid-plane, kpc. */
+export function galacticHeightKpc(star: WithParallax & Pick<Star, 'ra' | 'dec'>): number | null {
+  const pc = distancePc(star);
+  if (pc === null) return null;
+  const { b } = toGalactic(star.ra, star.dec);
+  return (pc / 1000) * Math.sin(b * DEG) + SUN_HEIGHT_KPC;
+}

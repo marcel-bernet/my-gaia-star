@@ -2,15 +2,8 @@
 import type { Classification } from '../sky/classify';
 import { drawTargetMarker } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import {
-  absoluteMag,
-  galacticPlanePosition,
-  starColor,
-  SUN_GALACTOCENTRIC_KPC,
-  temperatureToRgb,
-  toGalactic,
-} from '../sky/physics';
-import { CREAM, GOLD, MUTED } from './theme';
+import { absoluteMag, starColor, temperatureToRgb } from '../sky/physics';
+import { GOLD, MUTED } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -35,12 +28,12 @@ export function rng(seed: number) {
   };
 }
 
-function gauss(r: () => number) {
+export function gauss(r: () => number) {
   return Math.sqrt(-2 * Math.log(r() + 1e-12)) * Math.cos(2 * Math.PI * r());
 }
 
 /** Text with a dark outline so it reads over busy backgrounds. */
-function haloText(ctx: Ctx, text: string, x: number, y: number, fill: string) {
+export function haloText(ctx: Ctx, text: string, x: number, y: number, fill: string) {
   ctx.save();
   ctx.lineJoin = 'round';
   ctx.strokeStyle = 'rgba(4,6,14,0.9)';
@@ -52,7 +45,7 @@ function haloText(ctx: Ctx, text: string, x: number, y: number, fill: string) {
 }
 
 /** Marker plus a "Your star" label on a short leader line, pointing up-left or up-right. */
-function markWithLabel(ctx: Ctx, x: number, y: number, size: number, label: string, fontPx: number, box: Box) {
+export function markWithLabel(ctx: Ctx, x: number, y: number, size: number, label: string, fontPx: number, box: Box) {
   drawTargetMarker(ctx, x, y, size, GOLD);
   const right = x < box.x + box.w * 0.62;
   const lx = x + (right ? 1 : -1) * size * 3.2;
@@ -184,131 +177,6 @@ export async function drawHr(ctx: Ctx, box: Box, star: Star, labels: HrLabels) {
     ctx.textAlign = x < box.x + box.w * 0.6 ? 'left' : 'right';
     ctx.textBaseline = 'top';
     haloText(ctx, labels.yourStar, x + (ctx.textAlign === 'left' ? 8 : -8), plot.y + 6, GOLD);
-  }
-}
-
-// ---- Milky Way ------------------------------------------------------------
-
-export interface MwLabels {
-  sun: string;
-  yourStar: string;
-}
-
-/**
- * The Milky Way seen face-on from the north Galactic pole — drawn, not
- * photographed: a bar and four logarithmic spiral arms at a 12° pitch.
- */
-export function drawMilkyWay(ctx: Ctx, box: Box, star: Star, labels: MwLabels) {
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
-  const R = Math.min(box.w, box.h) / 2;
-  const kpc = R / 17; // ±17 kpc fills the box
-  const rand = rng(1977);
-  const fontPx = Math.max(13, Math.round(box.w / 18));
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.clip();
-  const disc = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-  disc.addColorStop(0, 'rgba(120,130,190,0.25)');
-  disc.addColorStop(0.6, 'rgba(60,70,130,0.08)');
-  disc.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = disc;
-  ctx.fillRect(box.x, box.y, box.w, box.h);
-
-  ctx.globalCompositeOperation = 'lighter';
-  const pitch = Math.tan((12 * Math.PI) / 180);
-  const arms = 4;
-  const px = Math.max(1, R / 110);
-  for (let i = 0; i < 30000; i++) {
-    const arm = i % arms;
-    const r = 3 + Math.pow(rand(), 0.8) * 13; // kpc
-    const theta = Math.log(r / 3) / pitch + (arm * 2 * Math.PI) / arms + 0.4;
-    const spread = 0.35 + r * 0.05;
-    const x = r * Math.cos(theta) + gauss(rand) * spread;
-    const y = r * Math.sin(theta) + gauss(rand) * spread;
-    const fade = Math.max(0, 1 - r / 16);
-    const pink = rand() < 0.04;
-    ctx.fillStyle = pink ? `rgba(255,140,180,${0.6 * fade})` : `rgba(170,190,255,${0.16 * fade})`;
-    const s = (pink ? 1.5 : 1) * px;
-    ctx.fillRect(cx + x * kpc, cy - y * kpc, s, s);
-  }
-  // Bar, tilted ~27° to the Sun–centre line.
-  ctx.translate(cx, cy);
-  ctx.rotate((-27 * Math.PI) / 180);
-  for (let i = 0; i < 5000; i++) {
-    ctx.fillStyle = 'rgba(255,225,170,0.12)';
-    ctx.fillRect(gauss(rand) * 2.2 * kpc, gauss(rand) * 0.7 * kpc, px, px);
-  }
-  ctx.restore();
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.clip();
-  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 3.5 * kpc);
-  core.addColorStop(0, 'rgba(255,236,200,0.9)');
-  core.addColorStop(0.3, 'rgba(255,210,150,0.35)');
-  core.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = core;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3.5 * kpc, 0, Math.PI * 2);
-  ctx.fill();
-
-  const sx = cx;
-  const sy = cy + SUN_GALACTOCENTRIC_KPC * kpc;
-  const p = galacticPlanePosition(star);
-  // Distance unknown, direction known: a sight-line from the Sun to the disc's edge.
-  const { l } = toGalactic(star.ra, star.dec);
-  const dir = { x: -Math.sin((l * Math.PI) / 180), y: -Math.cos((l * Math.PI) / 180) }; // canvas coords
-  const ox = sx - cx;
-  const oy = sy - cy;
-  const b = ox * dir.x + oy * dir.y;
-  const reach = -b + Math.sqrt(b * b - (ox * ox + oy * oy - R * R)); // where it leaves the circle
-  if (!p) {
-    ctx.setLineDash([R / 30, R / 40]);
-    ctx.strokeStyle = GOLD;
-    ctx.lineWidth = Math.max(2, R / 70);
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + dir.x * reach, sy + dir.y * reach);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  ctx.restore();
-
-  ctx.save();
-  ctx.strokeStyle = CREAM;
-  ctx.lineWidth = Math.max(1.5, R / 110);
-  ctx.beginPath();
-  ctx.arc(sx, sy, R / 40, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.font = `500 ${fontPx}px ${SANS}`;
-  if (!p && dir.y > 0.3) {
-    // The sight-line runs downwards; label the Sun to its side instead.
-    ctx.textAlign = dir.x > 0 ? 'right' : 'left';
-    ctx.textBaseline = 'middle';
-    haloText(ctx, labels.sun, sx + (dir.x > 0 ? -1 : 1) * R * 0.07, sy, CREAM);
-  } else {
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    // Below the marker's bottom tick, which often sits on the Sun.
-    haloText(ctx, labels.sun, sx, sy + R * 0.19, CREAM);
-  }
-  ctx.restore();
-
-  if (p) {
-    markWithLabel(ctx, cx + p.x * kpc, cy - p.y * kpc, R / 16, labels.yourStar, Math.round(fontPx * 1.05), box);
-  } else {
-    // Halfway along the sight-line, nudged to one side of it.
-    const side = dir.x <= 0 ? 1 : -1;
-    const lx = sx + dir.x * reach * 0.55 + -dir.y * side * fontPx * 0.9;
-    const ly = sy + dir.y * reach * 0.55 + dir.x * side * fontPx * 0.9;
-    ctx.font = `600 ${fontPx}px ${SANS}`;
-    ctx.textAlign = side > 0 ? 'left' : 'right';
-    ctx.textBaseline = 'middle';
-    haloText(ctx, labels.yourStar, lx, ly, GOLD);
   }
 }
 

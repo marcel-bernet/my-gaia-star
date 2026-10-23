@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { absoluteMag, hasDistance, distanceLy, galacticPlanePosition, lightDepartureYear, spectralClass, toGalactic } from './physics';
+import { absoluteMag, galacticHeightKpc, hasDistance, distanceLy, galacticPlanePosition, lightDepartureYear, spectralClass, toGalactic } from './physics';
 
 describe('physics', () => {
   it('puts the Galactic Centre at l=0, b=0', () => {
@@ -31,5 +31,11 @@ describe('physics', () => {
     const p = galacticPlanePosition({ ra: 266.41683, dec: -29.00781, plx: 0.25 })!; // 4 kpc
     expect(p.x).toBeCloseTo(0, 1);
     expect(p.y).toBeCloseTo(-4.2, 1);
+  });
+
+  it('puts a star towards the north Galactic pole above the plane', () => {
+    // NGP: RA 192.86°, Dec +27.13°; 1 kpc away.
+    expect(galacticHeightKpc({ ra: 192.85948, dec: 27.12825, plx: 1 })).toBeCloseTo(1.0208, 3);
+    expect(galacticHeightKpc({ ra: 12.85948, dec: -27.12825, plx: 1 })).toBeCloseTo(-0.9792, 3);
   });
 });

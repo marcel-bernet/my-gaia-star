@@ -8,9 +8,10 @@ import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { hasDistance, visibility } from '../sky/physics';
+import { galacticHeightKpc, hasDistance, visibility } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
-import { drawHr, drawMilkyWay, drawStarPortrait, rng } from './panels';
+import { drawGalaxyEdgeOn, drawGalaxyFaceOn, isCloseUp, type GalaxyLabels } from './galaxy';
+import { drawHr, drawStarPortrait, rng } from './panels';
 import { CREAM, GOLD, INK, MUTED } from './theme';
 
 export interface CertificateInput {
@@ -137,9 +138,9 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.fillText(input.subtitle, cx, y);
 
   // Fixed blocks, laid out from the bottom up.
-  const panelLabelY = PAGE_H - 640;
-  const factsY = panelLabelY - 300;
-  const narrativeY = factsY - 140;
+  const panelLabelY = PAGE_H - 790;
+  const factsY = panelLabelY - 280;
+  const narrativeY = factsY - 132;
 
   // Constellation finder chart fills whatever space is left above.
   const abbr = constellationOf(star.ra, star.dec);
@@ -150,7 +151,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.textAlign = 'center';
   ctx.fillText(conName, cx, y + 148);
   const chartTop = y + 175;
-  const chartBottom = narrativeY - 120;
+  const chartBottom = narrativeY - 110;
   drawConstellation(
     ctx,
     { x: M, y: chartTop, w: PAGE_W - 2 * M, h: chartBottom - chartTop },
@@ -189,7 +190,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   // Three panels: what kind of star, HR diagram, Milky Way.
   const gap = 40;
   const pw = (PAGE_W - 2 * M - 2 * gap) / 3;
-  const ph = 360;
+  const ph = 320;
   const px = [M, M + pw + gap, M + 2 * (pw + gap)];
   const top = panelLabelY + 30;
   const kind = classify(star);
@@ -211,17 +212,33 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     brighter: t('cert.hr.brighter'),
     yourStar: t('chart.yourStar'),
   });
-  drawMilkyWay(ctx, { x: px[2] + (pw - side) / 2, y: top, w: side, h: side }, star, {
+  const galaxyLabels: GalaxyLabels = {
     sun: t('cert.mw.sun'),
     yourStar: t('chart.yourStar'),
-  });
+    centre: t('galaxy.centre'),
+    scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
+    stretched: x => t('galaxy.stretched', { x }),
+  };
+  drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top, w: side, h: side }, star, galaxyLabels);
 
   const capY = top + ph + 46;
   const sizeText =
     kind?.radiusSun != null ? t('kind.size', { x: formatRatio(kind.radiusSun, lang) }) : kind && !kind.sure ? t('kind.colourOnly') : t('kind.sizeUnknown');
   caption(ctx, sizeText, px[0] + pw / 2, capY, pw - 10);
   caption(ctx, hasDistance(star) ? t('cert.hr.caption') : t('cert.hr.unknown'), px[1] + pw / 2, capY, pw - 10);
-  caption(ctx, hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown'), px[2] + pw / 2, capY, pw - 10);
+  const mwCaption = isCloseUp(star) ? t('cert.mw.closeup') : hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown');
+  caption(ctx, mwCaption, px[2] + pw / 2, capY, pw - 10);
+
+  // The Galaxy edge-on, full width: how high above the plane it sits.
+  const edgeLabelY = capY + 3 * 29 + 26;
+  eyebrow(ctx, t('cert.edge'), cx, edgeLabelY);
+  drawGalaxyEdgeOn(ctx, { x: M, y: edgeLabelY + 18, w: PAGE_W - 2 * M, h: 100 }, star, galaxyLabels);
+  const z = galacticHeightKpc(star);
+  const heightText =
+    z === null
+      ? t('fact.height.unknown')
+      : t(z >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(z) * 3261.56, lang) });
+  caption(ctx, heightText, cx, edgeLabelY + 18 + 100 + 34, PAGE_W - 2 * M);
 
   ctx.font = `400 19px ${SANS}`;
   ctx.fillStyle = 'rgba(143,151,173,0.7)';

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Result } from '../App';
+import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
 import { formatRatio } from '../certificate/render';
 import { CREAM, GOLD, MUTED } from '../certificate/theme';
@@ -8,7 +9,7 @@ import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { starColor, visibility } from '../sky/physics';
+import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
 
@@ -40,6 +41,25 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
       drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
     [star, kind, t],
   );
+  const galaxyLabels = useMemo<GalaxyLabels>(
+    () => ({
+      sun: t('cert.mw.sun'),
+      yourStar: t('chart.yourStar'),
+      centre: t('galaxy.centre'),
+      scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
+      stretched: x => t('galaxy.stretched', { x }),
+    }),
+    [t, lang],
+  );
+  const drawFaceOn = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
+    [star, galaxyLabels],
+  );
+  const drawEdgeOn = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
+    [star, galaxyLabels],
+  );
+  const height = galacticHeightKpc(star);
   const drawChart = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
       if (sky) {
@@ -117,6 +137,18 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
           <CanvasArt width={352} height={250} draw={drawChart} label={t('card.where')} />
         </div>
         <p className="hint">{`${t('fact.see')}: ${t(`see.${visibility(star)}`)}`}</p>
+      </section>
+      <section className="card-section">
+        <h3 className="label">{t('card.galaxy')}</h3>
+        <div className="galaxy-face">
+          <CanvasArt width={300} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
+        </div>
+        <CanvasArt width={352} height={84} draw={drawEdgeOn} label={t('cert.edge')} />
+        <p className="hint">
+          {height === null
+            ? t('fact.height.unknown')
+            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })}
+        </p>
       </section>
       <dl className="facts">
         {facts.map(f => (

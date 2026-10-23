@@ -533,6 +533,11 @@ textarea {
   font: 400 22px/1.2 var(--serif);
 }
 
+.galaxy-face {
+  width: min(100%, 300px);
+  align-self: center;
+}
+
 .chart-frame {
   border: 1px solid var(--line);
   border-radius: 12px;
