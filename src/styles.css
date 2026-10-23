@@ -651,6 +651,7 @@ textarea {
     width: auto;
     max-height: 72dvh;
     border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
     border-bottom: 0;
     padding-bottom: env(safe-area-inset-bottom);
     transition: max-height 0.25s ease;
@@ -661,19 +662,58 @@ textarea {
     max-height: 48dvh;
   }
 
-  .panel.is-collapsed {
-    max-height: 132px;
+  .panel.sheet-full {
+    max-height: calc(100dvh - 48px);
   }
 
-  .panel.is-collapsed .panel-body,
-  .panel.is-collapsed .panel-foot {
+  .panel.sheet-peek {
+    max-height: 104px;
+  }
+
+  .panel.sheet-peek .panel-body,
+  .panel.sheet-peek .panel-foot {
     display: none;
+  }
+
+  .sheet-handle {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+  }
+
+  /* The headline is for first-time visitors; results need the room. */
+  .panel.has-result .panel-head h1 {
+    display: none;
+  }
+
+  /* 16px stops iOS Safari zooming the page when a field is focused. */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  .dialog,
+  .dialog.wide {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+  }
+
+  .dialog-inner {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
   .panel-grip {
     display: grid;
     place-items: center;
-    height: 22px;
+    width: 100%;
+    height: 26px;
     border: 0;
     background: transparent;
     cursor: pointer;
@@ -754,8 +794,9 @@ textarea {
     padding: 18px 16px;
   }
 
-  /* Attribution is required; keep it above the sheet's top edge. */
+  /* Attribution is required; keep it in the top corner, clear of the sheet. */
   .leaflet-bottom.leaflet-right {
-    bottom: 132px;
+    top: env(safe-area-inset-top);
+    bottom: auto;
   }
 }

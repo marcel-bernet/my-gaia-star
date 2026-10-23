@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent, type PointerEvent } from 'react';
 import type { Place, Result, Status } from '../App';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Lang } from '../i18n';
@@ -6,6 +6,7 @@ import { DEPTHS, type Depth, type Star } from '../sky/gaia';
 import StarCard from './StarCard';
 
 export type Mode = 'now' | 'moment';
+type Sheet = 'peek' | 'half' | 'full';
 
 interface Props {
   place: Place | null;
@@ -32,7 +33,42 @@ export default function Panel(p: Props) {
   const [query, setQuery] = useState('');
   const [placeMsg, setPlaceMsg] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Phone bottom-sheet height: drag the grip/header, or tap the grip to step through.
+  const [sheet, setSheet] = useState<Sheet>('half');
+  const aside = useRef<HTMLElement>(null);
+
+  // Window listeners for the drag, so it keeps tracking wherever the finger goes
+  // and a plain tap still reaches the grip's onClick.
+  const onDragStart = (e: PointerEvent) => {
+    const el = aside.current;
+    if (!el || window.matchMedia('(min-width: 761px)').matches) return;
+    if ((e.target as HTMLElement).closest('.langs')) return;
+    const y0 = e.clientY;
+    const h0 = el.getBoundingClientRect().height;
+    let moved = false;
+    const move = (ev: globalThis.PointerEvent) => {
+      const dy = ev.clientY - y0;
+      if (!moved && Math.abs(dy) < 8) return;
+      moved = true;
+      el.style.transition = 'none';
+      el.style.maxHeight = `${Math.max(110, Math.min(window.innerHeight - 40, h0 - dy))}px`;
+    };
+    const up = (ev: globalThis.PointerEvent) => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      el.style.maxHeight = '';
+      el.style.transition = '';
+      if (!moved) return;
+      const dy = ev.clientY - y0;
+      const order: Sheet[] = ['peek', 'half', 'full'];
+      const steps = Math.round(-dy / 160) || (dy < 0 ? 1 : -1);
+      setSheet(cur => order[Math.max(0, Math.min(2, order.indexOf(cur) + steps))]);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  };
 
   const submitSearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -65,8 +101,13 @@ export default function Panel(p: Props) {
   const hasResult = !!p.result && !!p.selected;
 
   return (
-    <aside className={`panel${collapsed ? ' is-collapsed' : ''}${hasResult ? ' has-result' : ''}`} aria-label={t('brand')}>
-      <button className="panel-grip" onClick={() => setCollapsed(c => !c)} aria-label="Toggle panel" aria-expanded={!collapsed}>
+    <aside ref={aside} className={`panel sheet-${sheet}${hasResult ? ' has-result' : ''}`} aria-label={t('brand')}>
+      <div className="sheet-handle" onPointerDown={onDragStart}>
+      <button
+        className="panel-grip"
+        onClick={() => setSheet(s => (s === 'half' ? 'full' : s === 'full' ? 'peek' : 'half'))}
+        aria-label="Resize panel"
+      >
         <span />
       </button>
       <header className="panel-head">
@@ -82,6 +123,7 @@ export default function Panel(p: Props) {
         </div>
         <h1>{t('tagline')}</h1>
       </header>
+      </div>
 
       <div className="panel-body">
         {!hasResult && <p className="intro">{t('intro')}</p>}

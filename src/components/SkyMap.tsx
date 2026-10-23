@@ -25,6 +25,8 @@ const zenithIcon = L.divIcon({ className: 'zenith-pin', html: '<span></span>', i
 const selectedIcon = L.divIcon({ className: 'selected-pin', html: '<span></span>', iconSize: [34, 34] });
 
 const KM_PER_DEG = 111.32;
+// Star dots are a few pixels across; give fingers a wider catch area.
+const renderer = L.canvas({ tolerance: window.matchMedia('(pointer: coarse)').matches ? 12 : 3 });
 const wide = () => window.matchMedia('(min-width: 761px)').matches;
 
 function ClickToPick({ onPick }: { onPick: Props['onPick'] }) {
@@ -88,6 +90,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
       minZoom={2}
       worldCopyJump
       preferCanvas
+      renderer={renderer}
       zoomControl={false}
       attributionControl
     >

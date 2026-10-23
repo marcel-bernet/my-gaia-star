@@ -240,17 +240,27 @@ export function formatRatio(x: number, locale: string) {
 
 export async function downloadPng(canvas: HTMLCanvasElement, filename: string) {
   const blob = await new Promise<Blob>(r => canvas.toBlob(b => r(b!), 'image/png'));
-  save(blob, filename);
+  await save(blob, filename, 'image/png');
 }
 
 export async function downloadPdf(canvas: HTMLCanvasElement, filename: string) {
   const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
-  save(pdf.output('blob'), filename);
+  await save(pdf.output('blob'), filename, 'application/pdf');
 }
 
-function save(blob: Blob, filename: string) {
+/** On phones, hand the file to the share sheet (save to Photos/Files, send…); elsewhere, download it. */
+async function save(blob: Blob, filename: string, type: string) {
+  const file = new File([blob], filename, { type });
+  if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      return;
+    } catch (e) {
+      if ((e as DOMException).name === 'AbortError') return; // user closed the sheet
+    }
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

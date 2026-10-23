@@ -94,6 +94,14 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
           </p>
         </div>
       </div>
+      <div className="actions">
+        <button className="secondary" onClick={onCertificate}>
+          {t('action.certificate')}
+        </button>
+        <button className="secondary" onClick={share}>
+          {copied ? t('action.copied') : t('action.share')}
+        </button>
+      </div>
       {kind && (
         <section className="card-section">
           <h3 className="label">{t('card.kind')}</h3>
@@ -118,14 +126,6 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
           </div>
         ))}
       </dl>
-      <div className="actions">
-        <button className="secondary" onClick={onCertificate}>
-          {t('action.certificate')}
-        </button>
-        <button className="secondary" onClick={share}>
-          {copied ? t('action.copied') : t('action.share')}
-        </button>
-      </div>
       <div className="actions small">
         {!isZenith && (
           <button className="link" onClick={onBackToZenith}>
