@@ -27,13 +27,12 @@ export default function CertificateDialog({ star, result, placeName, onClose }: 
     const id = setTimeout(async () => {
       const c = await renderCertificate({
         star,
-        stars: result.stars,
         frame: result.frame,
         title: title.trim() || t('cert.defaultTitle'),
         dedication,
         subtitle: `${formatMoment(result.frame.date, result.zone, lang)} · ${placeName}`,
         t,
-        locale: lang,
+        lang,
       });
       if (live) setCanvas(c);
     }, 250);

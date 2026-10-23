@@ -2,7 +2,7 @@
 
 Find the star that is — or was — straight above you, from ESA's Gaia catalogue of almost two billion stars. Then make a certificate of it.
 
-Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and Gaia Maps draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, and download an A4 certificate (PDF or PNG) with a chart of the sky above, its place on Gaia's colour–magnitude diagram, and its position in the Milky Way. Every result is a shareable link.
+Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and Gaia Maps draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
 
 It is a **static site**: no backend, no accounts, nothing to keep running.
 
@@ -15,6 +15,8 @@ It is a **static site**: no backend, no accounts, nothing to keep running.
 | Gaia DR3 stars around the zenith | [CDS VizieR](https://vizier.cds.unistra.fr/) cone search (`I/355/gaiadr3`), falling back to [GAVO](https://dc.g-vo.org/) TAP (`gaia.dr3lite`) if VizieR is down (`src/sky/gaia.ts`) |
 | Naked-eye stars (G < 6) | Bundled: `public/naked-eye.json` |
 | HR diagram background | Bundled: `public/hr-density.png`, a 2-D histogram of 1.9 M Gaia stars within 200 pc |
+| Kind of star and size | From its position relative to the main sequence on the HR diagram; radius from luminosity and temperature (`src/sky/classify.ts`) |
+| Constellation | IAU boundaries via astronomy-engine; finder chart from bundled `public/sky-chart.json` (`src/sky/constellation.ts`) |
 | Certificate | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
 | Place names | OpenStreetMap Nominatim |
 
@@ -41,11 +43,12 @@ LIVE=1 npx vitest run gaia.live   # also query the real Gaia services
 npm run build      # static site in dist/
 ```
 
-The two bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `numpy` and `pillow`):
+The bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `numpy` and `pillow`):
 
 ```bash
 python3 scripts/naked_eye_stars.py
 python3 scripts/hr_density.py
+python3 scripts/sky_chart.py
 ```
 
 ## Deploy
@@ -54,4 +57,4 @@ Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deplo
 
 ## Credits
 
-Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). Map data © OpenStreetMap contributors. This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).
+Star data: ESA/Gaia/DPAC, Gaia DR3 — served by CDS VizieR (Strasbourg) and GAVO (Heidelberg). Map data © OpenStreetMap contributors. Constellation figures, boundaries, names and the Hipparcos chart stars come from [d3-celestial](https://github.com/ofrohn/d3-celestial) © Olaf Frohn (BSD 3-clause). This work has made use of data from the European Space Agency (ESA) mission Gaia, processed by the Gaia Data Processing and Analysis Consortium (DPAC).

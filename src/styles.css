@@ -138,6 +138,43 @@ a {
   padding: 24px 24px 8px;
 }
 
+.brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.langs {
+  display: flex;
+  gap: 2px;
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.langs button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.langs button[aria-pressed='true'] {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.credit {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .panel-head h1 {
   font: 400 30px/1.12 var(--serif);
   font-variation-settings: 'opsz' 72;
@@ -178,16 +215,6 @@ a {
   border-top: 1px solid var(--line);
 }
 
-.panel-foot select {
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.panel-foot select option {
-  background: var(--ink-2);
-}
 
 /* Controls ------------------------------------------------------------- */
 
@@ -485,6 +512,34 @@ textarea {
   grid-column: 1 / -1;
 }
 
+.card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-section h3 {
+  margin: 0;
+}
+
+.card-section .about {
+  margin: 0;
+  color: #cfd3df;
+  font-size: 14px;
+}
+
+.con-name {
+  margin: 0;
+  font: 400 22px/1.2 var(--serif);
+}
+
+.chart-frame {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #10172f, var(--ink));
+}
+
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -636,7 +691,44 @@ textarea {
     padding: 2px 16px 6px;
   }
 
-  .panel-head h1 {
+  .brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.langs {
+  display: flex;
+  gap: 2px;
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.langs button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.langs button[aria-pressed='true'] {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.credit {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.panel-head h1 {
     font-size: 24px;
   }
 

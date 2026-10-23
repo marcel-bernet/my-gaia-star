@@ -70,10 +70,17 @@ export default function Panel(p: Props) {
         <span />
       </button>
       <header className="panel-head">
-        <div>
+        <div className="brand-row">
           <p className="eyebrow">{t('brand')}</p>
-          <h1>{t('tagline')}</h1>
+          <div className="langs" role="group" aria-label={t('language')}>
+            {(Object.keys(LANGS) as Lang[]).map(l => (
+              <button key={l} lang={l} aria-pressed={lang === l} title={LANGS[l]} onClick={() => setLang(l)}>
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
+        <h1>{t('tagline')}</h1>
       </header>
 
       <div className="panel-body">
@@ -174,13 +181,7 @@ export default function Panel(p: Props) {
         <button className="link" onClick={p.onAbout}>
           {t('about')}
         </button>
-        <select value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label={t('language')}>
-          {Object.entries(LANGS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
+        <span className="credit">ESA · Gaia DR3</span>
       </footer>
     </aside>
   );

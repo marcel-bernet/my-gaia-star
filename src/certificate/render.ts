@@ -3,24 +3,25 @@
  * Drawn rather than templated so it looks identical everywhere and needs
  * no server.
  */
-import type { T } from '../i18n';
 import { starFacts } from '../facts';
+import type { Lang, T } from '../i18n';
+import { classify } from '../sky/classify';
+import { constellationOf, drawConstellation, loadSkyChart } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { hasDistance } from '../sky/physics';
+import { hasDistance, timesTooFaint } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
-import { drawHr, drawMilkyWay, drawSkyChart, rng, type Box } from './panels';
+import { drawHr, drawMilkyWay, drawStarPortrait, rng } from './panels';
 import { CREAM, GOLD, INK, MUTED } from './theme';
 
 export interface CertificateInput {
   star: Star;
-  stars: Star[];
   frame: SkyFrame;
   title: string;
   dedication: string;
   /** Already formatted: "28 July 2025, 12:29 · Barcelona, Spain". */
   subtitle: string;
   t: T;
-  locale: string;
+  lang: Lang;
 }
 
 // A4 at 200 dpi.
@@ -66,9 +67,22 @@ function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
   }
 }
 
+function eyebrow(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+  ctx.font = `600 22px ${SANS}`;
+  ctx.fillStyle = MUTED;
+  spaced(ctx, text.toUpperCase(), x, y, 4);
+}
+
+function caption(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number) {
+  ctx.font = `400 21px ${SANS}`;
+  ctx.fillStyle = MUTED;
+  ctx.textAlign = 'center';
+  wrap(ctx, text, width).slice(0, 3).forEach((l, k) => ctx.fillText(l, x, y + k * 29));
+}
+
 export async function renderCertificate(input: CertificateInput): Promise<HTMLCanvasElement> {
-  await fontsReady();
-  const { star, stars, frame, t, locale } = input;
+  const [, sky] = await Promise.all([fontsReady(), loadSkyChart()]);
+  const { star, frame, t, lang } = input;
   const canvas = document.createElement('canvas');
   canvas.width = PAGE_W;
   canvas.height = PAGE_H;
@@ -84,124 +98,144 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, PAGE_W, PAGE_H);
   const rand = rng(Number(BigInt(star.id) % 2147483647n));
-  for (let i = 0; i < 260; i++) {
-    ctx.fillStyle = `rgba(239,232,218,${0.08 + rand() * 0.35})`;
-    const r = 0.6 + rand() * 1.6;
+  for (let i = 0; i < 220; i++) {
+    ctx.fillStyle = `rgba(239,232,218,${0.06 + rand() * 0.3})`;
     ctx.beginPath();
-    ctx.arc(rand() * PAGE_W, rand() * PAGE_H, r, 0, Math.PI * 2);
+    ctx.arc(rand() * PAGE_W, rand() * PAGE_H, 0.6 + rand() * 1.5, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Thin gold frame.
   ctx.strokeStyle = 'rgba(232,201,143,0.35)';
   ctx.lineWidth = 2;
   ctx.strokeRect(60, 60, PAGE_W - 120, PAGE_H - 120);
 
+  // Header.
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = GOLD;
   ctx.font = `600 24px ${SANS}`;
-  spaced(ctx, `GAIA DR3 ${star.id}`, cx, 175, 6);
-
-  let y = 290;
+  spaced(ctx, `GAIA DR3 ${star.id}`, cx, 165, 6);
+  let y = 270;
   ctx.fillStyle = CREAM;
   ctx.textAlign = 'center';
-  ctx.font = `400 92px ${SERIF}`;
+  ctx.font = `400 88px ${SERIF}`;
   for (const line of wrap(ctx, input.title, PAGE_W - 2 * M - 80).slice(0, 2)) {
     ctx.fillText(line, cx, y);
-    y += 104;
+    y += 98;
   }
   y -= 30;
   if (input.dedication.trim()) {
-    ctx.font = `italic 400 42px ${SERIF}`;
+    ctx.font = `italic 400 40px ${SERIF}`;
     ctx.fillStyle = GOLD;
     for (const line of wrap(ctx, input.dedication.trim(), PAGE_W - 2 * M - 160).slice(0, 2)) {
-      y += 56;
+      y += 54;
       ctx.fillText(line, cx, y);
     }
-    y += 14;
+    y += 10;
   }
-  y += 56;
-  ctx.font = `400 32px ${SANS}`;
+  y += 52;
+  ctx.font = `400 30px ${SANS}`;
   ctx.fillStyle = MUTED;
   ctx.fillText(input.subtitle, cx, y);
 
-  // Sky chart.
-  const chartTop = y + 70;
-  const chartSize = Math.min(600, 1200 - chartTop);
-  drawSkyChart(
-    ctx,
-    { x: cx - chartSize / 2, y: chartTop, w: chartSize, h: chartSize },
-    frame,
-    stars,
-    star,
-    { n: 'N', e: 'E' },
-  );
-  y = chartTop + chartSize + 50;
-  ctx.font = `600 22px ${SANS}`;
-  ctx.fillStyle = MUTED;
-  spaced(ctx, t('cert.chart').toUpperCase(), cx, y, 4);
+  // Fixed blocks, laid out from the bottom up.
+  const panelLabelY = PAGE_H - 640;
+  const factsY = panelLabelY - 300;
+  const narrativeY = factsY - 140;
 
-  // Narrative.
-  y += 70;
-  ctx.font = `italic 400 34px ${SERIF}`;
+  // Constellation finder chart fills whatever space is left above.
+  const abbr = constellationOf(star.ra, star.dec);
+  const conName = sky.constellations[abbr].names[lang];
+  eyebrow(ctx, t('cert.constellation'), cx, y + 82);
+  ctx.font = `400 56px ${SERIF}`;
   ctx.fillStyle = CREAM;
   ctx.textAlign = 'center';
-  for (const line of wrap(ctx, t('cert.narrative'), 1150)) {
-    ctx.fillText(line, cx, y);
-    y += 50;
-  }
+  ctx.fillText(conName, cx, y + 148);
+  const chartTop = y + 175;
+  const chartBottom = narrativeY - 120;
+  drawConstellation(
+    ctx,
+    { x: M, y: chartTop, w: PAGE_W - 2 * M, h: chartBottom - chartTop },
+    sky,
+    abbr,
+    { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
+    { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 2.4 },
+  );
+  ctx.font = `italic 400 26px ${SERIF}`;
+  ctx.fillStyle = MUTED;
+  ctx.textAlign = 'center';
+  ctx.fillText(timesTooFaint(star) <= 1 ? t('chart.visible') : t('chart.faint'), cx, chartBottom + 44);
 
-  // Facts: three columns.
-  y += 40;
-  const facts = starFacts(star, frame.date, t, locale).filter(f => f.label !== t('fact.position')).slice(0, 6);
+  // Narrative.
+  ctx.font = `italic 400 34px ${SERIF}`;
+  ctx.fillStyle = CREAM;
+  wrap(ctx, t('cert.narrative'), 1150).slice(0, 2).forEach((l, k) => ctx.fillText(l, cx, narrativeY + k * 48));
+
+  // Facts: three columns, two rows.
+  const facts = starFacts(star, frame.date, t, lang)
+    .filter(f => f.label !== t('fact.position') && f.label !== t('fact.rv'))
+    .slice(0, 6);
   const colW = (PAGE_W - 2 * M) / 3;
   facts.forEach((f, i) => {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const fx = M + col * colW + colW / 2;
-    const fy = y + row * 120;
-    ctx.textAlign = 'center';
+    const fx = M + (i % 3) * colW + colW / 2;
+    const fy = factsY + Math.floor(i / 3) * 128;
     ctx.font = `600 20px ${SANS}`;
     ctx.fillStyle = MUTED;
     spaced(ctx, f.label.toUpperCase(), fx, fy, 3);
-    ctx.font = `400 32px ${SANS}`;
+    ctx.font = `400 31px ${SANS}`;
     ctx.fillStyle = CREAM;
     ctx.textAlign = 'center';
-    const lines = wrap(ctx, f.value, colW - 30);
-    lines.slice(0, 2).forEach((l, k) => ctx.fillText(l, fx, fy + 46 + k * 38));
+    wrap(ctx, f.value, colW - 30).slice(0, 2).forEach((l, k) => ctx.fillText(l, fx, fy + 44 + k * 36));
   });
-  y += Math.ceil(facts.length / 3) * 120 + 40;
 
-  // Two diagrams side by side.
-  const panelTop = y;
-  const panelH = PAGE_H - 160 - panelTop - 120;
-  const colX = [M + 40, cx + 40];
-  const panelW = cx - M - 80;
-  const side = Math.min(panelW, panelH);
+  // Three panels: what kind of star, HR diagram, Milky Way.
+  const gap = 40;
+  const pw = (PAGE_W - 2 * M - 2 * gap) / 3;
+  const ph = 360;
+  const px = [M, M + pw + gap, M + 2 * (pw + gap)];
+  const top = panelLabelY + 30;
+  const kind = classify(star);
+  eyebrow(ctx, t('cert.kind'), px[0] + pw / 2, panelLabelY);
+  eyebrow(ctx, t('cert.hr'), px[1] + pw / 2, panelLabelY);
+  eyebrow(ctx, t('cert.mw'), px[2] + pw / 2, panelLabelY);
 
-  ctx.font = `600 22px ${SANS}`;
-  ctx.fillStyle = MUTED;
-  spaced(ctx, t('cert.hr').toUpperCase(), colX[0] + panelW / 2, panelTop, 4);
-  spaced(ctx, t('cert.mw').toUpperCase(), colX[1] + panelW / 2, panelTop, 4);
+  drawStarPortrait(ctx, { x: px[0], y: top, w: pw, h: ph - 70 }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') });
+  if (kind) {
+    ctx.font = `400 40px ${SERIF}`;
+    ctx.fillStyle = CREAM;
+    ctx.textAlign = 'center';
+    ctx.fillText(t(`kind.${kind.kind}`), px[0] + pw / 2, top + ph - 18);
+  }
+  const side = Math.min(pw, ph);
+  await drawHr(ctx, { x: px[1] + (pw - side * 0.86) / 2, y: top, w: side * 0.86, h: side }, star, {
+    hotter: t('cert.hr.hotter'),
+    cooler: t('cert.hr.cooler'),
+    brighter: t('cert.hr.brighter'),
+    yourStar: t('chart.yourStar'),
+  });
+  drawMilkyWay(ctx, { x: px[2] + (pw - side) / 2, y: top, w: side, h: side }, star, {
+    sun: t('cert.mw.sun'),
+    yourStar: t('chart.yourStar'),
+  });
 
-  const hrBox: Box = { x: colX[0] + (panelW - side * 0.9) / 2, y: panelTop + 34, w: side * 0.9, h: side };
-  await drawHr(ctx, hrBox, star, { hotter: t('cert.hr.hotter'), cooler: t('cert.hr.cooler'), brighter: t('cert.hr.brighter') });
-  const mwBox: Box = { x: colX[1] + (panelW - side) / 2, y: panelTop + 34, w: side, h: side };
-  drawMilkyWay(ctx, mwBox, star, { sun: t('cert.mw.sun'), centre: t('cert.mw.centre') });
+  const capY = top + ph + 46;
+  const sizeText =
+    kind?.radiusSun != null ? t('kind.size', { x: formatRatio(kind.radiusSun, lang) }) : kind && !kind.sure ? t('kind.colourOnly') : t('kind.sizeUnknown');
+  caption(ctx, sizeText, px[0] + pw / 2, capY, pw - 10);
+  caption(ctx, hasDistance(star) ? t('cert.hr.caption') : t('cert.hr.unknown'), px[1] + pw / 2, capY, pw - 10);
+  caption(ctx, hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown'), px[2] + pw / 2, capY, pw - 10);
 
-  ctx.font = `400 22px ${SANS}`;
-  ctx.fillStyle = MUTED;
-  ctx.textAlign = 'center';
-  const capY = panelTop + 34 + side + 48;
-  const mwCaption = hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown');
-  wrap(ctx, t('cert.hr.caption'), panelW - 20).forEach((l, k) => ctx.fillText(l, colX[0] + panelW / 2, capY + k * 30));
-  wrap(ctx, mwCaption, panelW - 20).forEach((l, k) => ctx.fillText(l, colX[1] + panelW / 2, capY + k * 30));
-
-  ctx.font = `400 20px ${SANS}`;
+  ctx.font = `400 19px ${SANS}`;
   ctx.fillStyle = 'rgba(143,151,173,0.7)';
-  ctx.fillText(t('cert.footer'), cx, PAGE_H - 100);
+  ctx.textAlign = 'center';
+  ctx.fillText(t('cert.footer'), cx, PAGE_H - 92);
 
   return canvas;
+}
+
+/** "3.4", "0.012", "1,200" — two significant figures. */
+export function formatRatio(x: number, locale: string) {
+  return x >= 100
+    ? new Intl.NumberFormat(locale).format(Number(x.toPrecision(2)))
+    : new Intl.NumberFormat(locale, { maximumSignificantDigits: 2 }).format(x);
 }
 
 export async function downloadPng(canvas: HTMLCanvasElement, filename: string) {

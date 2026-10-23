@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Result } from '../App';
+import { drawStarPortrait } from '../certificate/panels';
+import { formatRatio } from '../certificate/render';
+import { CREAM, GOLD, MUTED } from '../certificate/theme';
 import { starFacts } from '../facts';
-import { useI18n } from '../i18n';
+import { useI18n, type Key } from '../i18n';
+import { classify } from '../sky/classify';
+import { constellationOf, drawConstellation, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
-import { starColor } from '../sky/physics';
+import { starColor, timesTooFaint } from '../sky/physics';
 import { formatMoment } from '../sky/time';
+import CanvasArt from './CanvasArt';
 
 interface Props {
   star: Star;
@@ -21,6 +27,33 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
   const facts = starFacts(star, result.frame.date, t, lang);
   const where = placeName || t('place.unnamed');
   const ref = useRef<HTMLElement>(null);
+  const kind = useMemo(() => classify(star), [star]);
+  const abbr = useMemo(() => constellationOf(star.ra, star.dec), [star]);
+  const [sky, setSky] = useState<SkyChartData | null>(null);
+
+  useEffect(() => {
+    loadSkyChart().then(setSky, e => console.error(e));
+  }, []);
+
+  const drawPortrait = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) =>
+      drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
+    [star, kind, t],
+  );
+  const drawChart = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      if (sky) {
+        drawConstellation(ctx, { x: 0, y: 0, w, h }, sky, abbr, { ra: star.ra, dec: star.dec, label: t('chart.yourStar') }, {
+          gold: GOLD,
+          cream: CREAM,
+          muted: MUTED,
+          font: '"Inter Variable", system-ui, sans-serif',
+          scale: 0.9,
+        });
+      }
+    },
+    [sky, abbr, star, t],
+  );
 
   // Bring a fresh result into view inside the scrolling panel.
   // Waits out the bottom sheet's height transition on phones.
@@ -55,10 +88,28 @@ export default function StarCard({ star, result, placeName, onBackToZenith, onCe
         <span className="swatch" style={{ background: starColor(star), boxShadow: `0 0 18px ${starColor(star)}` }} />
         <div>
           <p className="eyebrow">{isZenith ? t('result.zenith') : t('result.selected')}</p>
-          <h2>{t('fact.id')}</h2>
-          <p className="star-id">{star.id}</p>
+          <h2>{kind ? t(`kind.${kind.kind}`) : t('fact.id')}</h2>
+          <p className="star-id">
+            {t('fact.id')} {star.id}
+          </p>
         </div>
       </div>
+      {kind && (
+        <section className="card-section">
+          <h3 className="label">{t('card.kind')}</h3>
+          <CanvasArt width={340} height={130} draw={drawPortrait} label={t(`kind.${kind.kind}`)} />
+          <p className="about">{kind.sure ? t(`kind.${kind.kind}.about` as Key) : t('kind.colourOnly')}</p>
+          {kind.radiusSun !== null && <p className="hint">{t('kind.size', { x: formatRatio(kind.radiusSun, lang) })}</p>}
+        </section>
+      )}
+      <section className="card-section">
+        <h3 className="label">{t('card.where')}</h3>
+        <p className="con-name">{sky ? sky.constellations[abbr].names[lang] : '…'}</p>
+        <div className="chart-frame">
+          <CanvasArt width={352} height={250} draw={drawChart} label={t('card.where')} />
+        </div>
+        <p className="hint">{timesTooFaint(star) <= 1 ? t('chart.visible') : t('chart.faint')}</p>
+      </section>
       <dl className="facts">
         {facts.map(f => (
           <div key={f.label}>
