@@ -112,27 +112,29 @@ async function vizierCone(ra: number, dec: number, cone: Cone, signal?: AbortSig
   });
   if (cone.maxMag !== null) params.set('Gmag', `<${cone.maxMag}`);
   const res = await get(`${VIZIER_CONE}?${params}`, signal);
-  return parseTsv(await res.text()).flatMap(r => {
-    const ra = num(r.RA_ICRS);
-    const dec = num(r.DE_ICRS);
-    const g = num(r.Gmag);
-    if (ra === null || dec === null || g === null) return [];
-    return [
-      {
-        id: r.Source.trim(),
-        ra,
-        dec,
-        g,
-        bpRp: num(r['BP-RP']),
-        plx: num(r.Plx),
-        plxErr: num(r.e_Plx),
-        pmRa: num(r.pmRA),
-        pmDec: num(r.pmDE),
-        rv: num(r.RV),
-        teff: num(r.Teff),
-      },
-    ];
-  });
+  return parseTsv(await res.text()).flatMap(toStar);
+}
+
+function toStar(r: Record<string, string>): Star[] {
+  const ra = num(r.RA_ICRS);
+  const dec = num(r.DE_ICRS);
+  const g = num(r.Gmag);
+  if (ra === null || dec === null || g === null) return [];
+  return [
+    {
+      id: r.Source.trim(),
+      ra,
+      dec,
+      g,
+      bpRp: num(r['BP-RP']),
+      plx: num(r.Plx),
+      plxErr: num(r.e_Plx),
+      pmRa: num(r.pmRA),
+      pmDec: num(r.pmDE),
+      rv: num(r.RV),
+      teff: num(r.Teff),
+    },
+  ];
 }
 
 async function gavoCone(ra: number, dec: number, cone: Cone, signal?: AbortSignal): Promise<Star[]> {
@@ -146,27 +148,29 @@ async function gavoCone(ra: number, dec: number, cone: Cone, signal?: AbortSigna
   // CSV rather than JSON: JSON numbers would round the 19-digit Gaia IDs.
   const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
   const res = await get(`${GAVO_TAP}?${params}`, signal);
-  return parseCsv(await res.text()).flatMap(r => {
-    const ra = num(r.ra);
-    const dec = num(r.dec);
-    const g = num(r.phot_g_mean_mag);
-    if (ra === null || dec === null || g === null) return [];
-    return [
-      {
-        id: r.source_id.trim(),
-        ra,
-        dec,
-        g,
-        bpRp: num(r.bp_rp),
-        plx: num(r.parallax),
-        plxErr: num(r.parallax_error),
-        pmRa: num(r.pmra),
-        pmDec: num(r.pmdec),
-        rv: num(r.radial_velocity),
-        teff: null,
-      },
-    ];
-  });
+  return parseCsv(await res.text()).flatMap(fromGavo);
+}
+
+function fromGavo(r: Record<string, string>): Star[] {
+  const ra = num(r.ra);
+  const dec = num(r.dec);
+  const g = num(r.phot_g_mean_mag);
+  if (ra === null || dec === null || g === null) return [];
+  return [
+    {
+      id: r.source_id.trim(),
+      ra,
+      dec,
+      g,
+      bpRp: num(r.bp_rp),
+      plx: num(r.parallax),
+      plxErr: num(r.parallax_error),
+      pmRa: num(r.pmra),
+      pmDec: num(r.pmdec),
+      rv: num(r.radial_velocity),
+      teff: null,
+    },
+  ];
 }
 
 /** VizieR first; GAVO if VizieR is down. */
@@ -230,6 +234,24 @@ export async function starsAround(ra: number, dec: number, depth: Depth, signal?
     .map(s => ({ s, d: sepDeg(ra, dec, s.ra, s.dec) }))
     .sort((a, b) => a.d - b.d)
     .map(x => x.s);
+}
+
+/** One star by its Gaia DR3 source_id, or null if there is none. VizieR first; GAVO if VizieR is down. */
+export async function starById(id: string, signal?: AbortSignal): Promise<Star | null> {
+  if (!/^\d{1,19}$/.test(id)) return null;
+  try {
+    const params = new URLSearchParams({ '-source': 'I/355/gaiadr3', Source: id, '-out': VIZIER_COLUMNS.join(','), '-out.max': '1' });
+    const res = await get(`${VIZIER_CONE}?${params}`, signal);
+    return parseTsv(await res.text()).flatMap(r => toStar(r)).find(s => s.id === id) ?? null;
+  } catch (e) {
+    if (!(e instanceof CatalogueUnavailable)) throw e;
+    const adql =
+      'SELECT source_id,ra,dec,phot_g_mean_mag,phot_bp_mean_mag-phot_rp_mean_mag AS bp_rp,' +
+      `parallax,parallax_error,pmra,pmdec,radial_velocity FROM gaia.dr3lite WHERE source_id=${id}`;
+    const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
+    const res = await get(`${GAVO_TAP}?${params}`, signal);
+    return parseCsv(await res.text()).flatMap(r => fromGavo(r))[0] ?? null;
+  }
 }
 
 /** For tests: query one service directly. */

@@ -1,10 +1,10 @@
 # My Gaia Star
 
-**Above you is a star no one has ever looked at.** ESA's Gaia has measured almost two billion stars, and only a tiny fraction has ever been singled out in a paper. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether anyone has written about it, and lets you make a certificate of it.
+**Above you is a star no one has ever looked at closely.** ESA's Gaia has measured almost two billion stars. Nearly all of them are points in a catalogue — counted in statistics, plotted by the million — and only a tiny fraction has ever been studied on its own. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether anyone has ever singled it out, and lets you make a certificate of it.
 
 When Gaia DR4 comes out (2 December 2026) it will publish, for the first time, the raw measurements behind the catalogue: every pass Gaia made over every star, and the pixels it recorded. Each star's page already has a DR4 section, filled for now with real data from ESA's June 2026 pre-release; see [docs/DATA_ACCESS.md](docs/DATA_ACCESS.md) for how it switches to each star's own data, and for what could rate-limit a public deployment.
 
-Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
+Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Every star also gets a name: a sentence made from its Gaia number (*Seven wise dolphins climb gracefully beyond the red mirror of the giant sky, under the full moon*), the same star in English, Spanish and Catalan. Type a Gaia ID or a name, and the site takes you to wherever on Earth that star is overhead, now or at any moment. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
 
 It is a **static site**: no backend, no accounts, nothing to keep running.
 
@@ -20,7 +20,9 @@ It is a **static site**: no backend, no accounts, nothing to keep running.
 | Has anyone written about it? | SIMBAD TAP (CDS): is `Gaia DR3 <id>` an identifier of a catalogued object, and in how many papers (`src/sky/simbad.ts`) |
 | DR4 epoch astrometry | Today: ESA's DR4 pre-release, bundled (`public/dr4-preview.json`). After 2 Dec 2026: ESA DataLink through `proxy/worker.js`. Parsed and fitted (position, parallax, proper motion) in the browser (`src/dr4/`) |
 | Kind of star and size | From its position relative to the main sequence on the HR diagram; radius from luminosity and temperature (`src/sky/classify.ts`) |
-| Constellation | IAU boundaries via astronomy-engine; finder chart from bundled `public/sky-chart.json` (`src/sky/constellation.ts`) |
+| Constellation | IAU boundaries via astronomy-engine; finder chart from bundled `public/sky-chart.json` (`src/sky/constellation.ts`), with the country below drawn under it (Natural Earth 1:50m via `world-atlas`, `src/sky/country.ts`); it can also be laid on the map at true size |
+| Star names | The 63-bit source_id, scrambled reversibly and split into eleven word choices (32 × 16 × 64⁹ = 2⁶³ sentences, one per ID), with Spanish and Catalan agreement (`src/names/`) |
+| Find a star again | Gaia DR3 lookup by source_id (VizieR, GAVO fallback), then the point on Earth where it is at the zenith (`subStellarPoint` in `src/sky/zenith.ts`) |
 | Certificate | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
 | Place names | OpenStreetMap Nominatim |
 

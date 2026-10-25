@@ -79,7 +79,10 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
   const lum = luminositySun(star);
   if (lum !== null) facts.push({ label: t('fact.luminosity'), value: t('fact.luminosity.value', { x: sig(locale, lum) }) });
   const pm = properMotion(star);
-  if (pm !== null) facts.push({ label: t('fact.motion'), value: t('fact.motion.value', { pm: fmt(locale, pm, 1) }) });
+  // 1° = 3.6 million mas: how long the star takes to drift one degree across the sky.
+  if (pm !== null && pm > 0.05) {
+    facts.push({ label: t('fact.motion'), value: t('fact.motion.value', { pm: fmt(locale, pm, 1), years: sig(locale, 3.6e6 / pm) }) });
+  }
   if (star.rv !== null) {
     facts.push({
       label: t('fact.rv'),

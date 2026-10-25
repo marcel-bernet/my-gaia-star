@@ -129,6 +129,17 @@ a:hover {
   color: var(--text-2) !important;
 }
 
+.constellation-label span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font: italic 500 15px var(--serif);
+  letter-spacing: 0.04em;
+  color: var(--star);
+  text-shadow: 0 0 4px #000, 0 0 10px #000;
+  pointer-events: none;
+}
+
 .place-pin span,
 .selected-pin span,
 .zenith-pin span {
@@ -704,12 +715,64 @@ textarea {
 }
 
 .plate.pixels {
-  padding: 8px 0;
+  padding: 10px 0 4px;
 }
 
-.galaxy-face {
-  width: min(100%, 300px);
-  margin: 0 auto;
+.panel-label {
+  margin: 0;
+  padding: 8px 12px 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+
+.plate + .plate {
+  margin-top: 2px;
+}
+
+/* The one figure that is the star itself. */
+.fig.hero {
+  padding: 18px 18px 20px;
+  margin: 0 -18px;
+  border-left: 2px solid var(--star);
+  background: var(--bg);
+}
+
+.fig.hero .badge {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--star);
+}
+
+.fig.hero .fig-title {
+  font: 500 23px/1.2 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.fig.hero .fig-num {
+  font: 400 11.5px var(--mono);
+}
+
+.fig.hero .plate {
+  border-color: rgba(232, 201, 143, 0.28);
+}
+
+.fig.hero .fig-caption {
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.fig-tools {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fig-tools .hint {
+  margin: 0;
 }
 
 .table-block {
@@ -1011,4 +1074,193 @@ textarea {
     height: auto;
     width: 100%;
   }
+}
+
+.secondary.small {
+  flex: none;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.secondary.small[aria-pressed='true'] {
+  border-color: var(--star);
+  color: var(--star);
+}
+
+/* Find a star by ID or name --------------------------------------------- */
+
+.finder {
+  border-top: 1px solid var(--rule);
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.finder summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.finder summary::-webkit-details-marker {
+  display: none;
+}
+
+.finder summary::after {
+  content: '+';
+  font: 400 18px var(--mono);
+  color: var(--text-3);
+}
+
+.finder[open] summary::after {
+  content: '−';
+}
+
+.finder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 14px;
+}
+
+.finder-body > .hint {
+  margin: 0;
+}
+
+/* The name as a sentence of choices. */
+.madlib {
+  margin: 0;
+  font: 400 17px/2.1 var(--serif);
+  color: var(--text-2);
+}
+
+/* Each choice reads as the word itself; an invisible select on top picks it. */
+.madlib .choice {
+  position: relative;
+  display: inline-block;
+  color: var(--star);
+  border-bottom: 1px dashed rgba(232, 201, 143, 0.4);
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.madlib .choice:hover,
+.madlib .choice:focus-within {
+  border-bottom-style: solid;
+  border-bottom-color: var(--star);
+}
+
+.madlib select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.madlib option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.finder-for {
+  margin: -6px 0 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+.name-block {
+  padding: 16px 18px;
+  border: 1px solid rgba(232, 201, 143, 0.25);
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+.name-block .badge {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--star);
+}
+
+.star-name {
+  margin: 0;
+  font: italic 400 20px/1.4 var(--serif);
+  color: var(--star);
+  text-wrap: pretty;
+}
+
+.name-block .star-id {
+  margin-top: 10px;
+}
+
+.name-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 14px;
+}
+
+.name-actions .link {
+  margin-left: auto;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.name-table {
+  width: 100%;
+  margin: 4px 0 12px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.name-table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--text-3);
+  padding: 0 8px 6px 0;
+}
+
+.name-table td {
+  padding: 6px 8px 6px 0;
+  border-top: 1px solid var(--rule);
+  color: var(--text-2);
+}
+
+.name-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.name-table .word {
+  font: italic 400 15px var(--serif);
+  color: var(--star);
+}
+
+.name-langs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.name-langs li {
+  font: italic 400 15px/1.45 var(--serif);
+  color: var(--text);
+}
+
+.name-langs .mono {
+  font: normal 400 11px var(--mono);
+  color: var(--text-3);
+  margin-right: 6px;
 }

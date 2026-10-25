@@ -1,9 +1,9 @@
 /**
  * The Milky Way, drawn (not photographed) from a simple density model: an
- * exponential disc with four logarithmic spiral arms at a 12° pitch, a bar
- * and a bulge. Because the model is a density, it can be sampled at any zoom:
- * the whole Galaxy face-on, a close-up of the Sun's neighbourhood, or the
- * disc seen edge-on.
+ * exponential disc with four logarithmic spiral arms at a 12° pitch, the
+ * short Local Arm, a bar and a bulge. Because the model is a density, it is
+ * rendered pixel by pixel at any zoom: the whole Galaxy face-on, a close-up
+ * of the Sun's neighbourhood, or the disc seen edge-on.
  *
  * Face-on coordinates (kpc): Galactic Centre at the origin, Sun at (0, −8.2),
  * seen from the north Galactic pole. Edge-on: horizontal is the face-on y axis
@@ -18,23 +18,26 @@ import {
   SUN_HEIGHT_KPC,
   toGalactic,
 } from '../sky/physics';
-import { gauss, haloText, markWithLabel, rng, type Box } from './panels';
-import { CREAM, GOLD, INK, MUTED } from './theme';
+import { haloText, markWithLabel, rng, type Box } from './panels';
+import { CREAM, GOLD, MUTED } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
 const SANS = '"Inter Variable", system-ui, sans-serif';
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const DEG = Math.PI / 180;
 const PITCH = 12 * DEG;
 const K = Math.tan(PITCH);
 const ARMS = 4;
 const DISC_SCALE_KPC = 3.5;
 const DISC_EDGE_KPC = 16;
+const THIN_KPC = 0.3;
+const THICK_KPC = 0.9;
 /** Closer than this, the views zoom in on the Sun and the star. */
-const CLOSE_UP_KPC = 4;
-/** A close-up never shows less than this radius, so the nearby arms fit. */
-const MIN_CLOSE_UP_KPC = 3;
+const CLOSE_UP_KPC = 5;
+const FULL_VIEW_KPC = 16.5;
 const LY_PER_KPC = LY_PER_PC * 1000;
+const SUN = { x: 0, y: -SUN_GALACTOCENTRIC_KPC };
 
 // Arms are placed to match the Milky Way along the Sun's line to the centre
 // (cf. Reid et al. 2019): Sagittarius–Carina ~1.6 kpc inside the Sun,
@@ -52,8 +55,10 @@ export interface GalaxyLabels {
   centre: string;
   /** Formats a scale-bar length, e.g. 1000 → "1,000 light-years". */
   scale: (ly: number) => string;
-  /** Shown only if heights aren't to scale, e.g. "vertical scale ×0.4". */
-  stretched: (x: number) => string;
+  /** Short form for axis ticks, e.g. 1000 → "1,000 ly". */
+  ly: (ly: number) => string;
+  /** "Galactic plane". */
+  plane: string;
   arm: (name: ArmName) => string;
 }
 
@@ -89,11 +94,21 @@ function armStrength(x: number, y: number): number {
   return strength;
 }
 
-function discDensity(x: number, y: number): { d: number; arm: number } {
+/** Stellar density of the disc, the bar and the bulge, face-on (arbitrary units). */
+function faceDensity(x: number, y: number): { d: number; arm: number; warm: number } {
   const r = Math.hypot(x, y);
   const arm = armStrength(x, y);
   const edge = r > DISC_EDGE_KPC ? Math.exp(-(r - DISC_EDGE_KPC) * 2) : 1;
-  return { d: (0.22 + arm) * Math.exp(-r / DISC_SCALE_KPC) * edge, arm };
+  const disc = (0.06 + 1.2 * arm ** 1.5) * Math.exp(-r / DISC_SCALE_KPC) * edge;
+  // Bar, tilted ~27° to the Sun–centre line, and the bulge.
+  const c = Math.cos(27 * DEG);
+  const s = Math.sin(27 * DEG);
+  const bx = x * c + y * s;
+  const by = -x * s + y * c;
+  const bar = 1.1 * Math.exp(-((bx / 3.2) ** 2 + (by / 1.1) ** 2));
+  const bulge = 2.2 * Math.exp(-((r / 1.1) ** 2));
+  const d = disc + bar + bulge;
+  return { d, arm, warm: (bar + bulge) / (d || 1) };
 }
 
 /** Points along each named arm, kpc. */
@@ -118,94 +133,113 @@ function armCurves(): { name: ArmName; pts: [number, number][] }[] {
 interface View {
   x: number;
   y: number;
-  /** Half-width of the view, kpc. */
+  /** Half the shorter side of the picture, kpc. */
   r: number;
 }
 
-/** Fills a circle with the face-on Galaxy as seen through `view`. */
-function paintFaceOn(ctx: Ctx, cx: number, cy: number, R: number, view: View, count: number, seed: number) {
-  const s = R / view.r;
-  const rand = rng(seed);
-  const toPx = (x: number, y: number): [number, number] => [cx + (x - view.x) * s, cy - (y - view.y) * s];
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.fillStyle = 'rgba(8,11,24,0.9)';
-  ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
-  const [gx, gy] = toPx(0, 0);
-  const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, 15 * s);
-  halo.addColorStop(0, 'rgba(120,130,190,0.28)');
-  halo.addColorStop(0.6, 'rgba(60,70,130,0.08)');
-  halo.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = halo;
-  ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
-
-  // A soft glow along each arm, so the arms read at any zoom.
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  for (const { name, pts } of armCurves()) {
-    for (const [w, alpha] of [
-      [2.2, 0.05],
-      [1.2, 0.07],
-    ] as const) {
-      ctx.beginPath();
-      pts.forEach(([x, y], i) => {
-        const [px, py] = toPx(x, y);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      const r = Math.hypot(...pts[Math.floor(pts.length / 2)]);
-      ctx.lineWidth = Math.max(1, armWidth(r) * w * s);
-      ctx.strokeStyle = `rgba(150,170,240,${(name === 'local' ? 0.7 : 1) * alpha})`;
-      ctx.stroke();
+/**
+ * The view both pictures share. Close to the Sun it frames the Sun and the
+ * star with room around them, and widens until at least two of the major
+ * arms are in the picture, so the star is always shown among the arms.
+ */
+function viewFor(star: Star): { view: View; zoom: boolean } {
+  const p = galacticPlanePosition(star);
+  if (p) {
+    const d = Math.hypot(p.x - SUN.x, p.y - SUN.y);
+    if (d < CLOSE_UP_KPC) {
+      const cx = (p.x + SUN.x) / 2;
+      const cy = (p.y + SUN.y) / 2;
+      const room = d / 2 / 0.6 + 0.25;
+      const armDist = ARM_NAMES.map((_, a) => {
+        let best = Infinity;
+        for (const [x, y] of armCurves()[a].pts) best = Math.min(best, Math.hypot(x - cx, y - cy));
+        return best;
+      }).sort((a, b) => a - b);
+      const arms = armDist[1] + 0.45;
+      return { view: { x: cx, y: cy, r: Math.min(FULL_VIEW_KPC, Math.max(room, arms, 1.2)) }, zoom: true };
     }
   }
-  ctx.globalCompositeOperation = 'source-over';
+  return { view: { x: 0, y: 0, r: FULL_VIEW_KPC }, zoom: false };
+}
 
-  // Rejection-sample the disc inside the view, normalised to the densest
-  // point the view can contain, so a close-up is as rich as the full view.
-  const nearest = Math.max(0, Math.hypot(view.x, view.y) - view.r * Math.SQRT2);
-  const dMax = 1.22 * Math.exp(-nearest / DISC_SCALE_KPC);
-  const dot = Math.max(1, R / 150);
+export function isCloseUp(star: Star): boolean {
+  return viewFor(star).zoom;
+}
+
+/** A canvas to paint pixels into, then draw scaled (so it honours the target's transform). */
+function scratch(w: number, h: number) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w));
+  c.height = Math.max(1, Math.round(h));
+  return c;
+}
+
+/** Density → colour: night blue, through the arms' blue-white, to the bulge's warm white. */
+function tone(v: number, warm: number, arm: number, grain: number): [number, number, number] {
+  const i = (1 - Math.exp(-v * 1.25)) * grain;
+  const cool: [number, number, number] = [120 + 90 * arm, 140 + 80 * arm, 215 + 30 * arm];
+  const hot: [number, number, number] = [255, 226, 180];
+  const c = cool.map((cv, k) => cv + (hot[k] - cv) * Math.min(1, warm * 1.4)) as [number, number, number];
+  return [9 + c[0] * i, 11 + c[1] * i, 22 + c[2] * i];
+}
+
+function roundedClip(ctx: Ctx, b: Box, r: number) {
+  ctx.beginPath();
+  ctx.roundRect(b.x, b.y, b.w, b.h, r);
+  ctx.clip();
+}
+
+/** Paints the face-on Galaxy into a box as seen through `view`; returns kpc → px. */
+function paintFaceOn(ctx: Ctx, b: Box, view: View, seed: number, resolution = 1) {
+  const s = Math.min(b.w, b.h) / 2 / view.r; // px per kpc
+  const toPx = (x: number, y: number): [number, number] => [b.x + b.w / 2 + (x - view.x) * s, b.y + b.h / 2 - (y - view.y) * s];
+  const W = Math.round(b.w * resolution);
+  const H = Math.round(b.h * resolution);
+  const c = scratch(W, H);
+  const g = c.getContext('2d')!;
+  const img = g.createImageData(W, H);
+  const rand = rng(seed);
+  // Normalise to the densest disc point in view, so a close-up is as rich as the whole Galaxy.
+  const nearest = Math.max(0, Math.hypot(view.x, view.y) - view.r * 1.5);
+  const norm = 1 / Math.max(0.12, Math.exp(-nearest / DISC_SCALE_KPC) * 1.15);
+  for (let j = 0; j < H; j++) {
+    for (let i = 0; i < W; i++) {
+      const x = view.x + ((i + 0.5) / resolution - b.w / 2) / s;
+      const y = view.y - ((j + 0.5) / resolution - b.h / 2) / s;
+      const { d, arm, warm } = faceDensity(x, y);
+      const grain = 0.82 + 0.36 * rand();
+      const [r, gg, bb] = tone(Math.min(d * norm, 3), warm, arm, grain);
+      const k = (j * W + i) * 4;
+      img.data[k] = r;
+      img.data[k + 1] = gg;
+      img.data[k + 2] = bb;
+      img.data[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  ctx.save();
+  roundedClip(ctx, b, Math.min(10, b.w / 30));
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(c, b.x, b.y, b.w, b.h);
+
+  // Stars resolved on top, more of them along the arms; a few pink star-forming knots.
   ctx.globalCompositeOperation = 'lighter';
-  let placed = 0;
-  for (let tries = 0; placed < count && tries < count * 60; tries++) {
-    const x = view.x + (rand() * 2 - 1) * view.r;
-    const y = view.y + (rand() * 2 - 1) * view.r;
-    const { d, arm } = discDensity(x, y);
-    if (rand() * dMax > d) continue;
-    placed++;
-    const pink = rand() < 0.06 * arm;
-    ctx.fillStyle = pink ? 'rgba(255,140,180,0.7)' : `rgba(170,190,255,${0.18 + 0.22 * arm})`;
+  const count = Math.round((b.w * b.h) / 90);
+  const dot = Math.max(0.8, Math.min(b.w, b.h) / 320);
+  for (let n = 0, tries = 0; n < count && tries < count * 30; tries++) {
+    const x = view.x + (rand() * 2 - 1) * (b.w / 2 / s);
+    const y = view.y + (rand() * 2 - 1) * (b.h / 2 / s);
+    const { d, arm } = faceDensity(x, y);
+    if (rand() > Math.min(1, d * norm * 0.9)) continue;
+    n++;
     const [px, py] = toPx(x, y);
-    const sz = pink ? dot * 1.6 : dot;
+    const pink = arm > 0.5 && rand() < 0.04;
+    ctx.fillStyle = pink ? 'rgba(255,150,190,0.55)' : `rgba(210,220,255,${(0.12 + 0.3 * rand()).toFixed(2)})`;
+    const sz = pink ? dot * 2 : dot * (0.6 + rand() * 0.8);
     ctx.fillRect(px, py, sz, sz);
   }
-  // Bar, tilted ~27° to the Sun–centre line, and the bulge glow.
-  if (Math.hypot(view.x, view.y) < view.r * 1.5 + 4) {
-    const c = Math.cos(27 * DEG);
-    const sn = Math.sin(27 * DEG);
-    for (let i = 0; i < count / 5; i++) {
-      const bx = gauss(rand) * 2.2;
-      const by = gauss(rand) * 0.7;
-      const [px, py] = toPx(bx * c - by * sn, bx * sn + by * c);
-      ctx.fillStyle = 'rgba(255,225,170,0.14)';
-      ctx.fillRect(px, py, dot, dot);
-    }
-    const core = ctx.createRadialGradient(gx, gy, 0, gx, gy, 3.5 * s);
-    core.addColorStop(0, 'rgba(255,236,200,0.9)');
-    core.addColorStop(0.3, 'rgba(255,210,150,0.35)');
-    core.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = core;
-    ctx.beginPath();
-    ctx.arc(gx, gy, 3.5 * s, 0, Math.PI * 2);
-    ctx.fill();
-  }
   ctx.restore();
-  return toPx;
+  return { toPx, s };
 }
 
 /** A round number of light-years about `target` long. */
@@ -219,59 +253,70 @@ function scaleBar(ctx: Ctx, x: number, y: number, kpcToPx: number, targetLy: num
   const w = (ly / LY_PER_KPC) * kpcToPx;
   ctx.save();
   ctx.strokeStyle = CREAM;
-  ctx.lineWidth = Math.max(1.5, fontPx / 10);
+  ctx.lineWidth = Math.max(1, fontPx / 12);
   ctx.beginPath();
-  ctx.moveTo(x - w / 2, y - fontPx * 0.3);
-  ctx.lineTo(x - w / 2, y);
-  ctx.lineTo(x + w / 2, y);
-  ctx.lineTo(x + w / 2, y - fontPx * 0.3);
+  ctx.moveTo(x, y - fontPx * 0.3);
+  ctx.lineTo(x, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y - fontPx * 0.3);
   ctx.stroke();
-  ctx.font = `500 ${Math.round(fontPx * 0.85)}px ${SANS}`;
+  ctx.font = `500 ${Math.round(fontPx * 0.82)}px ${SANS}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  haloText(ctx, label(ly), x, y - fontPx * 0.4, CREAM);
+  haloText(ctx, label(ly), x + w / 2, y - fontPx * 0.4, CREAM);
   ctx.restore();
 }
 
-/** The view both pictures share: zoomed on the Sun and the star when it is near. */
-function viewFor(star: Star): { view: View; zoom: boolean } {
-  const p = galacticPlanePosition(star);
-  const sunY = -SUN_GALACTOCENTRIC_KPC;
-  if (p) {
-    const d = Math.hypot(p.x, p.y - sunY);
-    if (d < CLOSE_UP_KPC) {
-      return { view: { x: p.x / 2, y: (p.y + sunY) / 2, r: Math.max(MIN_CLOSE_UP_KPC, d * 0.85 + 0.6) }, zoom: true };
-    }
-  }
-  return { view: { x: 0, y: 0, r: 17 }, zoom: false };
+/** The Sun: ☉, a ring with a dot. */
+function sunMark(ctx: Ctx, x: number, y: number, r: number) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(4,6,14,0.85)';
+  ctx.lineWidth = r * 0.9;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = CREAM;
+  ctx.lineWidth = Math.max(1.2, r * 0.32);
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = CREAM;
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(1, r * 0.28), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
-export function isCloseUp(star: Star): boolean {
-  return viewFor(star).zoom;
-}
-
-/** Names the arms crossing a close-up, written along each arm. */
+/** Names the arms crossing the picture, written along each arm, clear of what is marked. */
 function labelArms(
   ctx: Ctx,
-  cx: number,
-  cy: number,
-  R: number,
+  b: Box,
   toPx: (x: number, y: number) => [number, number],
   labels: GalaxyLabels,
   fontPx: number,
+  avoid: [number, number][],
+  keepOut: Box[],
 ) {
   ctx.save();
-  ctx.font = `italic 500 ${Math.round(fontPx * 0.8)}px ${SANS}`;
+  ctx.font = `italic 500 ${Math.round(fontPx * 0.78)}px ${SANS}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const placed: [number, number][] = [];
   for (const { name, pts } of armCurves()) {
-    // The point on the arm closest to 60% of the way out, away from the Sun at the centre.
+    const tw = ctx.measureText(labels.arm(name)).width;
     let best: { i: number; score: number } | null = null;
     pts.forEach(([x, y], i) => {
+      if (i === 0 || i === pts.length - 1) return;
       const [px, py] = toPx(x, y);
-      const f = Math.hypot(px - cx, py - cy) / R;
-      if (f > 0.85 || i === 0 || i === pts.length - 1) return;
-      const score = Math.abs(f - 0.6);
+      // Keep the whole label inside, away from the edges, the marks and other labels.
+      if (px < b.x + tw / 2 + 8 || px > b.x + b.w - tw / 2 - 8 || py < b.y + fontPx * 1.6 || py > b.y + b.h - fontPx * 2.2) return;
+      const clear = [...avoid, ...placed].every(([ax, ay]) => Math.hypot(px - ax, py - ay) > Math.max(fontPx * 3, tw * 0.6));
+      const outside = keepOut.every(k => px + tw / 2 < k.x || px - tw / 2 > k.x + k.w || py + fontPx < k.y || py - fontPx > k.y + k.h);
+      if (!clear || !outside) return;
+      const f = Math.max(Math.abs(px - cx) / (b.w / 2), Math.abs(py - cy) / (b.h / 2));
+      const score = Math.abs(f - 0.55);
       if (!best || score < best.score) best = { i, score };
     });
     if (!best) continue;
@@ -282,241 +327,307 @@ function labelArms(
     let angle = Math.atan2(by - ay, bx - ax);
     if (angle > Math.PI / 2) angle -= Math.PI;
     if (angle < -Math.PI / 2) angle += Math.PI;
+    placed.push([px, py]);
     ctx.save();
     ctx.translate(px, py);
     ctx.rotate(angle);
-    haloText(ctx, labels.arm(name), 0, 0, 'rgba(200,210,240,0.85)');
+    haloText(ctx, labels.arm(name), 0, 0, 'rgba(205,215,245,0.88)');
     ctx.restore();
   }
+  ctx.restore();
+}
+
+/** Where on the picture's edge to point at the Galactic Centre; null when it is in view. */
+function centreArrowAt(b: Box, toPx: (x: number, y: number) => [number, number], fontPx: number) {
+  const [gx, gy] = toPx(0, 0);
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  if (gx > b.x && gx < b.x + b.w && gy > b.y && gy < b.y + b.h) return null;
+  const dx = gx - cx;
+  const dy = gy - cy;
+  const k = Math.min((b.w / 2 - fontPx * 1.2) / Math.abs(dx || 1e-9), (b.h / 2 - fontPx * 1.2) / Math.abs(dy || 1e-9));
+  return { x: cx + dx * k, y: cy + dy * k, dx, dy };
+}
+
+/** An arrow at the picture's edge pointing at the Galactic Centre, when it is out of view. */
+function centreArrow(ctx: Ctx, b: Box, toPx: (x: number, y: number) => [number, number], label: string, fontPx: number) {
+  const at = centreArrowAt(b, toPx, fontPx);
+  if (!at) return;
+  const { x: ex, y: ey, dx, dy } = at;
+  const a = Math.atan2(dy, dx);
+  ctx.save();
+  ctx.font = `500 ${Math.round(fontPx * 0.8)}px ${SANS}`;
+  ctx.textBaseline = 'middle';
+  const up = Math.abs(dy) > Math.abs(dx);
+  ctx.textAlign = up ? 'center' : dx > 0 ? 'right' : 'left';
+  const arrow = up ? (dy < 0 ? '↑' : '↓') : dx > 0 ? '→' : '←';
+  const text = up || dx < 0 ? `${arrow} ${label}` : `${label} ${arrow}`;
+  haloText(ctx, text, ex - Math.cos(a) * 2, ey - Math.sin(a) * 2, MUTED);
   ctx.restore();
 }
 
 /** The Galaxy seen from above, with the Sun and the star marked. */
 export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyLabels) {
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
-  const R = Math.min(box.w, box.h) / 2;
-  const fontPx = Math.max(12, Math.round(box.w / 18));
+  const fontPx = Math.max(11, Math.round(Math.min(box.w, box.h) / 22));
   const { view, zoom } = viewFor(star);
-  const s = R / view.r;
-  const toPx = paintFaceOn(ctx, cx, cy, R, view, zoom ? 7000 : 12000, 1977);
+  const { toPx, s } = paintFaceOn(ctx, box, view, 1977, box.w > 600 ? 0.75 : 1);
   const p = galacticPlanePosition(star);
-  const [sx, sy] = toPx(0, -SUN_GALACTOCENTRIC_KPC);
+  const [sx, sy] = toPx(SUN.x, SUN.y);
+  const starPx = p ? toPx(p.x, p.y) : null;
 
-  // Distance unknown, direction known: a sight-line from the Sun to the edge.
+  ctx.save();
+  roundedClip(ctx, box, Math.min(10, box.w / 30));
   const { l } = toGalactic(star.ra, star.dec);
   const dir = { x: -Math.sin(l * DEG), y: -Math.cos(l * DEG) }; // canvas coords
-  const ox = sx - cx;
-  const oy = sy - cy;
-  const b = ox * dir.x + oy * dir.y;
-  const reach = -b + Math.sqrt(Math.max(0, b * b - (ox * ox + oy * oy - R * R)));
   if (!p) {
-    ctx.save();
-    ctx.setLineDash([R / 30, R / 40]);
+    // Distance unknown, direction known: a sight-line from the Sun to the edge.
+    ctx.setLineDash([fontPx * 0.5, fontPx * 0.4]);
     ctx.strokeStyle = GOLD;
-    ctx.lineWidth = Math.max(2, R / 70);
+    ctx.lineWidth = Math.max(1.5, fontPx / 7);
     ctx.beginPath();
     ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + dir.x * reach, sy + dir.y * reach);
+    ctx.lineTo(sx + dir.x * (box.w + box.h), sy + dir.y * (box.w + box.h));
     ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (starPx && zoom) {
+    // From the Sun to the star, with the distance.
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = 'rgba(232,201,143,0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(starPx[0], starPx[1]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  const avoid: [number, number][] = [[sx, sy]];
+  if (starPx) avoid.push(starPx);
+  const insetSide = Math.round(Math.min(box.w, box.h) * 0.3);
+  const insetBox: Box = { x: box.x + box.w - insetSide - 6, y: box.y + 6, w: insetSide, h: insetSide };
+  const arrowAt = zoom ? centreArrowAt(box, toPx, fontPx) : null;
+  const keepOut: Box[] = [insetBox, { x: box.x, y: box.y + box.h - fontPx * 2.6, w: box.w * 0.45, h: fontPx * 2.6 }];
+  if (arrowAt) keepOut.push({ x: arrowAt.x - box.w * 0.22, y: arrowAt.y - fontPx, w: box.w * 0.44, h: fontPx * 2 });
+  // The star's label: to the left when, written to the right, it would run under the inset.
+  let labelBox: Box | null = null;
+  if (starPx) {
+    const underInset = zoom && starPx[1] < insetBox.y + insetBox.h + fontPx * 2 && starPx[0] + fontPx * 9 > insetBox.x;
+    labelBox = underInset ? { ...box, w: Math.max(1, (starPx[0] - box.x) / 0.62 - 1) } : box;
+    const right = starPx[0] < labelBox.x + labelBox.w * 0.62;
+    ctx.save();
+    ctx.font = `600 ${Math.round(fontPx * 1.05)}px ${SANS}`;
+    const tw = ctx.measureText(labels.yourStar).width;
+    ctx.restore();
+    const lx = starPx[0] + (right ? 1 : -1) * fontPx * 1.9;
+    keepOut.push({ x: right ? lx : lx - tw, y: starPx[1] - fontPx * 3, w: tw, h: fontPx * 2.4 });
+  }
+  if (zoom) labelArms(ctx, box, toPx, labels, fontPx, avoid, keepOut);
+  else {
+    ctx.save();
+    ctx.font = `500 ${Math.round(fontPx * 0.8)}px ${SANS}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const [gx, gy] = toPx(0, 0);
+    haloText(ctx, labels.centre, gx, gy + fontPx * 1.4, MUTED);
     ctx.restore();
   }
 
+  // The Sun, labelled on the side away from the star.
+  sunMark(ctx, sx, sy, Math.max(3.5, fontPx * 0.38));
   ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(143,151,173,0.35)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  // The Sun: a ring, labelled clear of the star's marker and sight-line.
-  ctx.strokeStyle = CREAM;
-  ctx.lineWidth = Math.max(1.5, R / 110);
-  ctx.beginPath();
-  ctx.arc(sx, sy, Math.max(4, R / 40), 0, Math.PI * 2);
-  ctx.stroke();
   ctx.font = `500 ${fontPx}px ${SANS}`;
-  const starPx = p ? toPx(p.x, p.y) : null;
   const starBelow = starPx ? starPx[1] > sy : !p && dir.y > 0.3;
   ctx.textAlign = 'center';
   ctx.textBaseline = starBelow ? 'bottom' : 'top';
-  haloText(ctx, labels.sun, sx, sy + (starBelow ? -1 : 1) * R * 0.09, CREAM);
+  haloText(ctx, labels.sun, sx, sy + (starBelow ? -1 : 1) * fontPx * 0.9, CREAM);
   ctx.restore();
 
-  if (starPx) {
-    markWithLabel(ctx, starPx[0], starPx[1], R / 16, labels.yourStar, Math.round(fontPx * 1.05), box);
+  if (starPx && labelBox) {
+    markWithLabel(ctx, starPx[0], starPx[1], Math.max(5, fontPx * 0.55), labels.yourStar, Math.round(fontPx * 1.05), labelBox);
   } else {
+    const reach = Math.min(box.w, box.h) * 0.3;
     const side = dir.x <= 0 ? 1 : -1;
-    const lx = sx + dir.x * reach * 0.55 + -dir.y * side * fontPx * 0.9;
-    const ly = sy + dir.y * reach * 0.55 + dir.x * side * fontPx * 0.9;
+    ctx.save();
     ctx.font = `600 ${fontPx}px ${SANS}`;
     ctx.textAlign = side > 0 ? 'left' : 'right';
     ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(labels.yourStar).width;
+    // Along the sight-line, but always inside the picture.
+    let lx = sx + dir.x * reach - dir.y * side * fontPx;
+    const ly = Math.min(box.y + box.h - fontPx, Math.max(box.y + fontPx, sy + dir.y * reach + dir.x * side * fontPx));
+    lx = side > 0 ? Math.min(lx, box.x + box.w - tw - 6) : Math.max(lx, box.x + tw + 6);
     haloText(ctx, labels.yourStar, lx, ly, GOLD);
+    ctx.restore();
   }
 
-  if (zoom) labelArms(ctx, cx, cy, R, toPx, labels, fontPx);
-
   if (zoom) {
-    // Which way the centre is, a scale, and where this patch sits in the Galaxy.
-    ctx.font = `500 ${Math.round(fontPx * 0.85)}px ${SANS}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    haloText(ctx, `↑ ${labels.centre}`, cx, cy - R * 0.92, MUTED);
-    scaleBar(ctx, cx, cy + R * 0.86, s, view.r * 0.6 * LY_PER_KPC, labels.scale, fontPx);
+    centreArrow(ctx, box, toPx, labels.centre, fontPx);
+    scaleBar(ctx, box.x + fontPx, box.y + box.h - fontPx * 0.8, s, view.r * 0.45 * LY_PER_KPC, labels.scale, fontPx);
 
-    const ri = R * 0.3;
-    const ix = box.x + box.w - ri;
-    const iy = box.y + ri;
+    // Where this patch sits in the whole Galaxy.
+    const ib = insetBox;
     ctx.save();
+    ctx.fillStyle = 'rgba(4,6,14,0.9)';
     ctx.beginPath();
-    ctx.arc(ix, iy, ri + 2, 0, Math.PI * 2);
-    ctx.fillStyle = INK;
+    ctx.roundRect(ib.x - 2, ib.y - 2, ib.w + 4, ib.h + 4, 6);
     ctx.fill();
     ctx.restore();
-    const inset = paintFaceOn(ctx, ix, iy, ri, { x: 0, y: 0, r: 17 }, 2500, 7);
+    const inset = paintFaceOn(ctx, ib, { x: 0, y: 0, r: FULL_VIEW_KPC }, 7);
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(ix, iy, ri, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(143,151,173,0.5)';
+    ctx.strokeStyle = 'rgba(143,151,173,0.45)';
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(ib.x + 0.5, ib.y + 0.5, ib.w - 1, ib.h - 1, Math.min(10, ib.w / 30));
     ctx.stroke();
-    const [vx, vy] = inset(view.x, view.y);
-    const half = Math.max(3, (view.r / 17) * ri);
+    const [vx, vy] = inset.toPx(view.x, view.y);
+    const hw = Math.max(3, (box.w / 2 / s) * inset.s);
+    const hh = Math.max(3, (box.h / 2 / s) * inset.s);
     ctx.strokeStyle = GOLD;
-    ctx.lineWidth = Math.max(1.5, ri / 40);
-    ctx.strokeRect(vx - half, vy - half, 2 * half, 2 * half);
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(vx - hw, vy - hh, 2 * hw, 2 * hh);
     ctx.restore();
   }
 }
 
+/** Light-years with a sensible step for axis ticks. */
+function tickStep(maxLy: number) {
+  const steps = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];
+  return steps.find(s => maxLy / s <= 2.2) ?? 50000;
+}
+
 /**
  * The Galaxy seen edge-on: how far above or below the mid-plane the star is.
- * Drawn to true scale (the disc really is that thin); only a star far off
- * the plane in the full view forces a different vertical scale, labelled.
+ * Heights are stretched to fit the star with room to spare, and labelled on
+ * an axis in light-years, so the stretch is never hidden.
  */
 export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyLabels) {
-  const fontPx = Math.max(11, Math.round(box.h / 7));
+  const fontPx = Math.max(10, Math.round(Math.min(box.w / 32, box.h / 9)));
   const { view, zoom } = viewFor(star);
   const p = galacticPlanePosition(star);
   const z = galacticHeightKpc(star);
-  const aspect = box.w / box.h;
-  // True scale wherever possible: pick the height range that shows the star
-  // and the thin disc, and let the width follow from the strip's shape.
-  let V: number;
-  let H: number;
-  if (zoom) {
-    // Same horizontal zoom as the face-on close-up, and zoomed vertically too,
-    // onto the star's height (labelled when that stretches heights).
-    H = view.r;
-    V = Math.max(z !== null ? Math.abs(z) * 1.6 : 0, SUN_HEIGHT_KPC * 3);
-  } else {
-    H = 17;
-    V = Math.max((H / aspect), z !== null ? Math.abs(z) * 1.4 : 0);
-  }
+  const axisW = fontPx * 6.2;
+  const plot: Box = { x: box.x + axisW, y: box.y, w: box.w - axisW, h: box.h };
+  // Same stretch of the Sun–centre line as the face-on view's height.
+  const H = zoom ? view.r * Math.max(1, plot.w / plot.h / 2.2) : FULL_VIEW_KPC;
   const midX = zoom ? view.y : 0;
-  const sxPer = box.w / 2 / H;
-  const szPer = box.h / 2 / V;
-  const exaggeration = szPer / sxPer; // 1 = true scale
-  const toPx = (X: number, Z: number): [number, number] => [box.x + box.w / 2 + (X - midX) * sxPer, box.y + box.h / 2 - Z * szPer];
+  // Height range: the star with room above it, and never less than the thick disc.
+  const V = Math.max(z !== null ? Math.abs(z) * 1.45 : 0, zoom ? 0.55 : 2.4);
+  const sx = plot.w / 2 / H;
+  const sz = plot.h / 2 / V;
+  const toPx = (X: number, Z: number): [number, number] => [plot.x + plot.w / 2 + (X - midX) * sx, plot.y + plot.h / 2 - Z * sz];
+
+  // Disc: thin + thick, exponential along the plane; the bulge round the centre.
+  const W = Math.round(plot.w);
+  const Hh = Math.round(plot.h);
+  const c = scratch(W, Hh);
+  const g = c.getContext('2d')!;
+  const img = g.createImageData(W, Hh);
   const rand = rng(2024);
-
-  ctx.save();
-  const rr = Math.min(12, box.h / 6);
-  ctx.beginPath();
-  ctx.roundRect(box.x, box.y, box.w, box.h, rr);
-  ctx.fillStyle = 'rgba(8,11,24,0.9)';
-  ctx.fill();
-  ctx.clip();
-
-  // Thin disc (scale height 0.3 kpc) and thick disc (0.9 kpc), radially
-  // exponential; a bulge round the centre.
   const nearestX = Math.max(0, Math.abs(midX) - H);
-  const wMax = Math.exp(-nearestX / DISC_SCALE_KPC);
-  const dot = Math.max(1, box.h / 90);
-  ctx.globalCompositeOperation = 'lighter';
-  const n = Math.round(Math.min(15000, Math.max(3000, (box.w * box.h) / 10)));
-  let placed = 0;
-  for (let tries = 0; placed < n && tries < n * 40; tries++) {
-    const X = midX + (rand() * 2 - 1) * H;
-    if (Math.abs(X) > 17) continue;
-    if (rand() * wMax > Math.exp(-Math.abs(X) / DISC_SCALE_KPC)) continue;
-    const thick = rand() < 0.15;
-    const hz = thick ? 0.9 : 0.3;
-    const Z = (rand() < 0.5 ? -1 : 1) * -Math.log(1 - rand()) * hz;
-    placed++;
-    const [px, py] = toPx(X, Z);
-    if (py < box.y || py > box.y + box.h) continue;
-    ctx.fillStyle = `rgba(170,190,255,${thick ? 0.16 : 0.3})`;
-    ctx.fillRect(px, py, dot, dot);
-  }
-  if (Math.abs(midX) < H + 3) {
-    for (let i = 0; i < 2500; i++) {
-      const [px, py] = toPx(gauss(rand) * 1.1, gauss(rand) * 0.7);
-      ctx.fillStyle = 'rgba(255,225,170,0.16)';
-      ctx.fillRect(px, py, dot, dot);
+  const norm = 1 / Math.max(0.08, Math.exp(-nearestX / DISC_SCALE_KPC));
+  for (let j = 0; j < Hh; j++) {
+    const Z = ((plot.h / 2 - (j + 0.5)) / sz);
+    const sech = 1 / Math.cosh(Z / THIN_KPC);
+    const vert = 0.88 * sech * sech + 0.12 * Math.exp(-Math.abs(Z) / THICK_KPC);
+    for (let i = 0; i < W; i++) {
+      const X = midX + (i + 0.5 - plot.w / 2) / sx;
+      const R = Math.abs(X);
+      const edge = R > DISC_EDGE_KPC ? Math.exp(-(R - DISC_EDGE_KPC) * 2) : 1;
+      const disc = 1.2 * Math.exp(-R / DISC_SCALE_KPC) * vert * edge;
+      const bulge = 1.4 * Math.exp(-((R / 1.3) ** 2 + (Z / 0.6) ** 2));
+      const d = disc + bulge;
+      const [r, gg, bb] = tone(Math.min(d * norm, 3), bulge / (d || 1), 0.4, 0.85 + 0.3 * rand());
+      const k = (j * W + i) * 4;
+      img.data[k] = r;
+      img.data[k + 1] = gg;
+      img.data[k + 2] = bb;
+      img.data[k + 3] = 255;
     }
-    const [gx, gy] = toPx(0, 0);
-    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, 2 * sxPer);
-    g.addColorStop(0, 'rgba(255,236,200,0.7)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(box.x, box.y, box.w, box.h);
   }
-  ctx.globalCompositeOperation = 'source-over';
+  g.putImageData(img, 0, 0);
+  ctx.save();
+  roundedClip(ctx, plot, Math.min(8, plot.h / 10));
+  ctx.drawImage(c, plot.x, plot.y, plot.w, plot.h);
 
   // Mid-plane.
   const [, planeY] = toPx(0, 0);
-  ctx.setLineDash([4, 6]);
-  ctx.strokeStyle = 'rgba(143,151,173,0.4)';
+  ctx.setLineDash([3, 5]);
+  ctx.strokeStyle = 'rgba(180,188,210,0.35)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(box.x, planeY);
-  ctx.lineTo(box.x + box.w, planeY);
+  ctx.moveTo(plot.x, Math.round(planeY) + 0.5);
+  ctx.lineTo(plot.x + plot.w, Math.round(planeY) + 0.5);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  const [sx, sy] = toPx(-SUN_GALACTOCENTRIC_KPC, SUN_HEIGHT_KPC);
-  if (!p) {
+  const [sunX, sunY] = toPx(SUN.y, SUN_HEIGHT_KPC);
+  const starPx = p && z !== null ? toPx(p.y, z) : null;
+  if (starPx) {
+    // Drop line from the star to the plane.
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = 'rgba(232,201,143,0.75)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(starPx[0], starPx[1]);
+    ctx.lineTo(starPx[0], planeY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
     // Unknown distance: the sight-line, in this plane, from the Sun.
     const { l, b } = toGalactic(star.ra, star.dec);
-    const dx = Math.cos(b * DEG) * Math.cos(l * DEG) * sxPer;
-    const dz = Math.sin(b * DEG) * szPer;
-    const n2 = Math.hypot(dx, dz) || 1;
-    ctx.save();
-    ctx.setLineDash([6, 6]);
+    const dx = Math.cos(b * DEG) * Math.cos(l * DEG) * sx;
+    const dz = Math.sin(b * DEG) * sz;
+    const n = Math.hypot(dx, dz) || 1;
+    ctx.setLineDash([5, 5]);
     ctx.strokeStyle = GOLD;
-    ctx.lineWidth = Math.max(1.5, box.h / 60);
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + (dx / n2) * box.w * 2, sy - (dz / n2) * box.w * 2);
+    ctx.moveTo(sunX, sunY);
+    ctx.lineTo(sunX + (dx / n) * box.w * 2, sunY - (dz / n) * box.w * 2);
     ctx.stroke();
-    ctx.restore();
+    ctx.setLineDash([]);
+  }
+  ctx.font = `500 ${Math.round(fontPx * 0.85)}px ${SANS}`;
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'right';
+  haloText(ctx, labels.plane, plot.x + plot.w - 6, planeY - 3, 'rgba(180,188,210,0.8)');
+  if (zoom && Math.abs(midX) + 0.2 >= H) {
+    // Point at the centre from the corner the star leaves free.
+    const starLow = z !== null && z < 0;
+    ctx.textBaseline = starLow ? 'top' : 'bottom';
+    haloText(ctx, `${labels.centre} →`, plot.x + plot.w - 6, starLow ? plot.y + 5 : plot.y + plot.h - 4, MUTED);
   }
   ctx.restore();
 
-  // Labels, outside the clip so they are never cut.
+  // Height axis, in light-years.
   ctx.save();
-  ctx.strokeStyle = CREAM;
-  ctx.lineWidth = Math.max(1.5, box.h / 80);
-  ctx.beginPath();
-  ctx.arc(sx, sy, Math.max(3.5, box.h / 22), 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.font = `500 ${fontPx}px ${SANS}`;
-  const starPx = p && z !== null ? toPx(p.y, z) : null;
-  const sunLabelBelow = !starPx || starPx[1] < sy;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = sunLabelBelow ? 'top' : 'bottom';
-  haloText(ctx, labels.sun, sx, sy + (sunLabelBelow ? 1 : -1) * box.h * 0.1, CREAM);
-  ctx.font = `500 ${Math.round(fontPx * 0.9)}px ${SANS}`;
-  // Bottom corner: the star's label goes up and away from the plane.
+  const maxLy = V * LY_PER_KPC;
+  const step = tickStep(maxLy);
+  ctx.font = `${Math.round(fontPx * 0.85)}px ${MONO}`;
   ctx.textAlign = 'right';
-  ctx.textBaseline = 'bottom';
-  if (Math.abs(midX) > H) haloText(ctx, `${labels.centre} →`, box.x + box.w - 8, box.y + box.h - 4, MUTED);
-  if (exaggeration > 1.25 || exaggeration < 0.8) {
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
-    haloText(ctx, labels.stretched(Math.round(exaggeration * 10) / 10), box.x + 8, box.y + box.h - 4, MUTED);
+  ctx.textBaseline = 'middle';
+  ctx.strokeStyle = 'rgba(233,231,226,0.25)';
+  ctx.lineWidth = 1;
+  for (let v = -Math.floor(maxLy / step) * step; v <= maxLy; v += step) {
+    const y = Math.round(toPx(0, v / LY_PER_KPC)[1]) + 0.5;
+    if (y < box.y + fontPx * 0.6 || y > box.y + box.h - fontPx * 0.6) continue;
+    ctx.beginPath();
+    ctx.moveTo(plot.x - 5, y);
+    ctx.lineTo(plot.x - 1, y);
+    ctx.stroke();
+    ctx.fillStyle = MUTED;
+    ctx.fillText(v === 0 ? '0' : `${v > 0 ? '+' : '−'}${labels.ly(Math.abs(v))}`, plot.x - 8, y);
   }
   ctx.restore();
-  if (starPx) markWithLabel(ctx, starPx[0], starPx[1], Math.max(6, box.h / 9), labels.yourStar, fontPx, box);
+
+  sunMark(ctx, sunX, sunY, Math.max(3.5, fontPx * 0.4));
+  ctx.save();
+  ctx.font = `500 ${fontPx}px ${SANS}`;
+  const sunLabelBelow = !starPx || starPx[1] < sunY;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = sunLabelBelow ? 'top' : 'bottom';
+  haloText(ctx, labels.sun, sunX, sunY + (sunLabelBelow ? 1 : -1) * fontPx * 0.8, CREAM);
+  ctx.restore();
+  if (starPx) markWithLabel(ctx, starPx[0], starPx[1], Math.max(5, fontPx * 0.5), labels.yourStar, fontPx, plot);
 }

@@ -6,7 +6,7 @@
 import { Constellation } from 'astronomy-engine';
 import type { Lang } from '../i18n';
 import { temperatureToRgb } from './physics';
-import { radecToVec, type Vec3 } from './zenith';
+import { radecToVec, starToLatLng, vecToRadec, type SkyFrame, type Vec3 } from './zenith';
 
 type Pt = [number, number]; // [ra°, dec°]
 
@@ -113,6 +113,20 @@ export interface ChartTarget {
   label: string;
 }
 
+/** The ground under the stars: outlines already turned into sky positions. */
+export interface ChartGround {
+  /** [ra°, dec°] rings. */
+  rings: Pt[][];
+  /** The zenith, which lies over the place itself. */
+  zenith: { ra: number; dec: number };
+}
+
+/** Compass and a scale bar in degrees. */
+export interface ChartFurniture {
+  north: string;
+  east: string;
+}
+
 /**
  * Draws the finder chart for constellation `abbr` into the box, framed on
  * the constellation's boundary and the target star.
@@ -124,6 +138,8 @@ export function drawConstellation(
   abbr: string,
   target: ChartTarget,
   style: ChartStyle,
+  ground: ChartGround | null = null,
+  furniture: ChartFurniture | null = null,
 ) {
   const con = sky.constellations[abbr];
   const bounds = con.bounds.map(densify);
@@ -150,89 +166,132 @@ export function drawConstellation(
     return p ? toPx(p) : null;
   };
   const k = style.scale;
+  const path = (pts: Pt[], close: boolean) => {
+    let pen = false;
+    for (const [ra, dec] of pts) {
+      const p = at(ra, dec);
+      if (!p) {
+        pen = false;
+        continue;
+      }
+      if (pen) ctx.lineTo(p[0], p[1]);
+      else ctx.moveTo(p[0], p[1]);
+      pen = true;
+    }
+    if (close) ctx.closePath();
+  };
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(box.x, box.y, box.w, box.h);
   ctx.clip();
 
+  // The ground below, as seen from underneath: under everything else.
+  if (ground) {
+    ctx.beginPath();
+    for (const ring of ground.rings) path(ring, true);
+    ctx.fillStyle = 'rgba(120,150,200,0.13)';
+    ctx.fill('evenodd');
+    ctx.strokeStyle = 'rgba(160,180,220,0.6)';
+    ctx.lineWidth = 1 * k;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
   // Constellation area, softly lit.
   ctx.beginPath();
-  for (const poly of bounds) {
-    poly.forEach(([ra, dec], i) => {
-      const p = at(ra, dec);
-      if (!p) return;
-      if (i === 0) ctx.moveTo(p[0], p[1]);
-      else ctx.lineTo(p[0], p[1]);
-    });
-    ctx.closePath();
-  }
-  ctx.fillStyle = 'rgba(120,140,220,0.07)';
+  for (const poly of bounds) path(poly, true);
+  ctx.fillStyle = 'rgba(120,140,220,0.05)';
   ctx.fill('evenodd');
-  ctx.setLineDash([4 * k, 5 * k]);
-  ctx.strokeStyle = 'rgba(143,151,173,0.45)';
-  ctx.lineWidth = 1.2 * k;
+  ctx.setLineDash([2 * k, 4 * k]);
+  ctx.strokeStyle = 'rgba(143,151,173,0.38)';
+  ctx.lineWidth = 1 * k;
   ctx.stroke();
   ctx.setLineDash([]);
 
   // Stick figure.
   ctx.strokeStyle = style.gold;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 1.6 * k;
+  ctx.globalAlpha = 0.42;
+  ctx.lineWidth = 1.2 * k;
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   for (const line of con.lines) {
     ctx.beginPath();
-    line.forEach(([ra, dec], i) => {
-      const p = at(ra, dec);
-      if (!p) return;
-      if (i === 0) ctx.moveTo(p[0], p[1]);
-      else ctx.lineTo(p[0], p[1]);
-    });
+    path(line, false);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
-  // Stars, faint first; names for the brightest inside the frame.
+  // Stars, faint first.
   const visible = sky.stars
     .map(st => ({ st, p: at(st[0], st[1]) }))
     .filter(({ p }) => p && p[0] > box.x - 10 && p[0] < box.x + box.w + 10 && p[1] > box.y - 10 && p[1] < box.y + box.h + 10)
     .sort((a, b) => b.st[2] - a.st[2]);
+  const radius = (mag: number) => Math.max(0.6, (6.2 - mag) * 0.78) * k;
   for (const { st, p } of visible) {
-    const r = Math.max(0.7, (6.4 - st[2]) * 0.95) * k;
+    const r = radius(st[2]);
     const color = bvToRgb(st[3]);
-    if (st[2] < 2.5) {
-      const g = ctx.createRadialGradient(p![0], p![1], 0, p![0], p![1], r * 3.5);
-      g.addColorStop(0, color.replace('rgb(', 'rgba(').replace(')', ',0.35)'));
+    if (st[2] < 1.5) {
+      const g = ctx.createRadialGradient(p![0], p![1], 0, p![0], p![1], r * 3);
+      g.addColorStop(0, color.replace('rgb(', 'rgba(').replace(')', ',0.3)'));
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(p![0], p![1], r * 3.5, 0, Math.PI * 2);
+      ctx.arc(p![0], p![1], r * 3, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.globalAlpha = st[2] > 5 ? 0.6 : 1;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(p![0], p![1], r, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.font = `400 ${Math.round(11 * k)}px ${style.font}`;
-  ctx.fillStyle = style.muted;
-  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
+
+  // Names for the brightest, wherever they don't collide (with each other or the star's label).
+  const tp = at(target.ra, target.dec);
+  const taken: [number, number, number, number][] = [];
+  if (tp) taken.push([tp[0] - 26 * k, tp[1] - 26 * k, tp[0] + 26 * k, tp[1] + 26 * k]);
+  const free = (b: [number, number, number, number]) =>
+    b[0] > box.x + 2 && b[2] < box.x + box.w - 2 && b[1] > box.y + 2 && b[3] < box.y + box.h - 2 &&
+    taken.every(o => b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]);
+  ctx.font = `400 ${Math.round(10.5 * k)}px ${style.font}`;
   ctx.textBaseline = 'middle';
-  for (const { st, p } of visible) {
-    if (st[4]) ctx.fillText(st[4], p![0] + (6.4 - st[2]) * k + 5 * k, p![1]);
+  ctx.textAlign = 'left';
+  for (const { st, p } of [...visible].reverse()) {
+    if (!st[4] || st[2] > 3.6) continue;
+    const tw = ctx.measureText(st[4]).width;
+    const x = p![0] + radius(st[2]) + 4 * k;
+    const fh = 11 * k;
+    const b: [number, number, number, number] = [x - 1, p![1] - fh / 2, x + tw + 1, p![1] + fh / 2];
+    if (!free(b)) continue;
+    taken.push(b);
+    ctx.fillStyle = style.muted;
+    ctx.fillText(st[4], x, p![1]);
+  }
+
+  // The zenith, over the place itself.
+  if (ground) {
+    const z = at(ground.zenith.ra, ground.zenith.dec);
+    if (z) {
+      ctx.strokeStyle = 'rgba(200,210,235,0.7)';
+      ctx.lineWidth = 1 * k;
+      ctx.beginPath();
+      ctx.arc(z[0], z[1], 2.2 * k, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   // The star.
-  const tp = at(target.ra, target.dec);
   if (tp) {
-    drawTargetMarker(ctx, tp[0], tp[1], 9 * k, style.gold);
+    drawTargetMarker(ctx, tp[0], tp[1], 8 * k, style.gold);
     ctx.font = `600 ${Math.round(12 * k)}px ${style.font}`;
     const right = tp[0] < box.x + box.w * 0.7;
     const above = tp[1] > box.y + 30 * k;
     ctx.textAlign = right ? 'left' : 'right';
     ctx.textBaseline = above ? 'bottom' : 'top';
-    const lx = tp[0] + (right ? 1 : -1) * 16 * k;
-    const ly = tp[1] + (above ? -16 : 16) * k;
+    const lx = tp[0] + (right ? 1 : -1) * 15 * k;
+    const ly = tp[1] + (above ? -15 : 15) * k;
     ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(4,6,14,0.9)';
     ctx.lineWidth = 3.5 * k;
@@ -241,6 +300,44 @@ export function drawConstellation(
     ctx.fillText(target.label, lx, ly);
   }
   ctx.restore();
+
+  if (furniture) {
+    // Looking up: north at the top, east to the left.
+    ctx.save();
+    const ox = box.x + 22 * k;
+    const oy = box.y + 24 * k;
+    ctx.strokeStyle = style.muted;
+    ctx.fillStyle = style.muted;
+    ctx.lineWidth = 1 * k;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox, oy - 14 * k);
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox - 14 * k, oy);
+    ctx.stroke();
+    ctx.font = `500 ${Math.round(9.5 * k)}px ${style.font}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(furniture.north, ox, oy - 15 * k);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(furniture.east, ox - 16 * k, oy);
+    // Stereographic scale is 1 at the centre: one degree is π/180 plane units.
+    const perDeg = (Math.PI / 180) * s;
+    const deg = [1, 2, 5, 10, 20, 30].reduce((best, d) => (d * perDeg <= box.w * 0.28 ? d : best), 1);
+    const bx = box.x + box.w - 14 * k;
+    const by = box.y + box.h - 12 * k;
+    ctx.beginPath();
+    ctx.moveTo(bx - deg * perDeg, by - 3 * k);
+    ctx.lineTo(bx - deg * perDeg, by);
+    ctx.lineTo(bx, by);
+    ctx.lineTo(bx, by - 3 * k);
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${deg}°`, bx - (deg * perDeg) / 2, by - 4 * k);
+    ctx.restore();
+  }
 }
 
 /** A bold, high-contrast "here it is" mark: dark halo under a gold ring and ticks. */
@@ -273,4 +370,53 @@ export function drawTargetMarker(ctx: CanvasRenderingContext2D, x: number, y: nu
   ctx.arc(x, y, Math.max(1.5, size * 0.28), 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
+}
+
+// ---- On the ground -------------------------------------------------------
+
+/** Points every ~0.5° along the great circle from a to b (inclusive of a, not b). */
+function greatCircle(a: Pt, b: Pt): Pt[] {
+  const va = radecToVec(a[0], a[1]);
+  const vb = radecToVec(b[0], b[1]);
+  const ang = Math.acos(Math.max(-1, Math.min(1, dot(va, vb))));
+  const steps = Math.max(1, Math.ceil(ang / ((0.5 * Math.PI) / 180)));
+  const out: Pt[] = [];
+  for (let i = 0; i < steps; i++) {
+    const f = i / steps;
+    // Spherical interpolation.
+    const sa = Math.sin((1 - f) * ang) / (Math.sin(ang) || 1);
+    const sb = Math.sin(f * ang) / (Math.sin(ang) || 1);
+    const v: Vec3 = ang < 1e-9 ? va : [va[0] * sa + vb[0] * sb, va[1] * sa + vb[1] * sb, va[2] * sa + vb[2] * sb];
+    const { ra, dec } = vecToRadec(v);
+    out.push([ra, dec]);
+  }
+  return out;
+}
+
+export interface GroundShape {
+  /** [lat, lon] polylines. */
+  lines: [number, number][][];
+  bounds: [number, number][][];
+  /** Where to write the name. */
+  centre: [number, number];
+}
+
+/** A constellation laid on the ground the way the map lays the stars: one degree of sky for one degree of ground. */
+export function constellationOnGround(frame: SkyFrame, sky: SkyChartData, abbr: string): GroundShape {
+  const con = sky.constellations[abbr];
+  const toGround = ([ra, dec]: Pt) => starToLatLng(frame, ra, dec);
+  const lines = con.lines.map(line => {
+    const pts: Pt[] = [];
+    for (let i = 0; i < line.length - 1; i++) pts.push(...greatCircle(line[i], line[i + 1]));
+    pts.push(line[line.length - 1]);
+    return pts.map(toGround);
+  });
+  const bounds = con.bounds.map(poly => {
+    const pts = densify(poly);
+    return [...pts, pts[0]].map(toGround);
+  });
+  const all = bounds.flat();
+  const lat = all.reduce((a, p) => a + p[0], 0) / all.length;
+  const lon = all.reduce((a, p) => a + p[1], 0) / all.length;
+  return { lines, bounds, centre: [lat, lon] };
 }

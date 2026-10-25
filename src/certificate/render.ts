@@ -8,6 +8,7 @@
  * Gaia DR4 adds (or will add) for this star.
  */
 import { starFacts } from '../facts';
+import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart } from '../sky/constellation';
@@ -194,6 +195,13 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.font = `400 24px ${MONO}`;
   ctx.fillStyle = CREAM;
   ctx.fillText(`Gaia DR3 ${star.id}`, M, y);
+  // Its name, made from that number (src/names).
+  ctx.font = `italic 400 30px ${SERIF}`;
+  ctx.fillStyle = GOLD;
+  for (const line of wrap(ctx, `“${starName(star.id, lang)}”`, W).slice(0, 2)) {
+    y += 42;
+    ctx.fillText(line, M, y);
+  }
 
   // First look: the literature check.
   y += 50;
@@ -315,7 +323,8 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     yourStar: t('chart.yourStar'),
     centre: t('galaxy.centre'),
     scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
-    stretched: x => t('galaxy.stretched', { x }),
+    ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
+      plane: t('galaxy.plane'),
     arm: name => t(`arm.${name}`),
   };
   drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top + 10, w: side, h: side }, star, galaxyLabels);
