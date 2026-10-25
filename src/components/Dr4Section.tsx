@@ -1,10 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fitFiveParameters, transitPoints, type EpochAstrometry } from '../dr4/epoch';
-import { drawResiduals, drawTimeline, drawWindow, drawWobble, timelineYearAt, WINDOWS } from '../dr4/plots';
+import {
+  drawPixels,
+  drawResiduals,
+  drawSkyPath,
+  drawTimeline,
+  FULL_PATH,
+  needsZoom,
+  pathExtent,
+  pathHeight,
+  pixelsHeight,
+  timelineYearAt,
+  WINDOWS,
+  LOOP_PATH,
+} from '../dr4/plots';
 import { closestPreview, daysToDr4, DR4_RELEASE, epochAstrometryFor, loadPreview, type Dr4Result, type PreviewEntry } from '../dr4/source';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
-import { LY_PER_PC } from '../sky/physics';
 import CanvasArt from './CanvasArt';
 import { Figure } from './StarCard';
 
@@ -37,9 +49,23 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   useEffect(() => setSel(null), [data]);
 
   const drawT = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => drawTimeline(ctx, w, h, pts, sel), [pts, sel]);
-  const drawW = useCallback(
+  const selPt = sel !== null ? pts[sel] : null;
+  const zoomed = fit !== null && needsZoom(fit);
+  const PATH_W = 352;
+  const fullH = useMemo(() => (data && fit ? pathHeight(pathExtent(data, fit, pts, FULL_PATH), PATH_W) : 260), [data, fit, pts]);
+  const nearH = useMemo(
+    () => (data && fit && zoomed ? pathHeight(pathExtent(data, fit, pts, LOOP_PATH), PATH_W) : 0),
+    [data, fit, pts, zoomed],
+  );
+  const drawFull = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      if (data && fit) drawWobble(ctx, w, h, data, fit, pts, sel);
+      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, FULL_PATH);
+    },
+    [data, fit, pts, sel],
+  );
+  const drawNear = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, LOOP_PATH);
     },
     [data, fit, pts, sel],
   );
@@ -49,8 +75,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
     },
     [fit, pts, sel],
   );
-  const gClass = sel !== null ? pts[sel].gClass : (pts[0]?.gClass ?? 3);
-  const drawP = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => drawWindow(ctx, w, h, gClass), [gClass]);
+  const shown = selPt ?? pts[0];
+  const gClass = shown?.gClass ?? 3;
+  const nCcd = shown?.nCcd ?? 9;
+  const drawP = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => drawPixels(ctx, w, h, gClass, nCcd), [gClass, nCcd]);
 
   const TL_W = 352;
   const pickTransit = (x: number) => {
@@ -67,11 +95,9 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const releaseDate = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE);
   const days = daysToDr4();
   const yearToDate = (y: number) => new Date(Date.UTC(Math.floor(y), 0, 1) + (y - Math.floor(y)) * 365.25 * 86400e3);
-  const selPt = sel !== null ? pts[sel] : null;
   const isQso = !live && picked?.meta.group === 'qso';
   const wobbly = fit !== null && fit.uwe > 1.4;
   const sampleLabel = (e: PreviewEntry) => `${e.meta.name ?? `G ${nf(e.meta.g, 1)} ${t(`dr4.group.${e.meta.group}`)}`}`;
-  const distLy = fit && fit.parallax > 3 * fit.errors[2] ? (1000 / fit.parallax) * LY_PER_PC : null;
 
   let fig = firstFig - 1;
   return (
@@ -112,6 +138,18 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
 
       {data && (
         <>
+          <Figure
+            n={++fig}
+            className="hero"
+            kicker={t('dr4.pixels.kicker')}
+            title={t('dr4.pixels')}
+            caption={t('dr4.pixels.caption', { n: nCcd, window: WINDOWS[gClass]?.label ?? WINDOWS[3].label, date: releaseDate })}
+          >
+            <div className="plate pixels">
+              <CanvasArt width={352} height={pixelsHeight(gClass)} draw={drawP} label={t('dr4.pixels')} />
+            </div>
+          </Figure>
+
           <Figure n={++fig} title={t('dr4.timeline')} caption={t('dr4.timeline.caption', { n: pts.length })}>
             <CanvasArt width={TL_W} height={92} draw={drawT} label={t('dr4.timeline')} onPick={pickTransit} />
             <div className="transit-readout">
@@ -135,10 +173,32 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
           </Figure>
 
           {fit && (
-            <Figure n={++fig} title={t('dr4.wobble')} caption={isQso ? t('dr4.wobble.qso') : t('dr4.wobble.caption')}>
-              <div className="plate square">
-                <CanvasArt width={320} height={320} draw={drawW} label={t('dr4.wobble')} />
+            <Figure
+              n={++fig}
+              title={t('dr4.wobble')}
+              caption={
+                isQso ? (
+                  t('dr4.wobble.qso')
+                ) : (
+                  <>
+                    {t('dr4.wobble.caption')}
+                    {zoomed && <> {t('dr4.wobble.zoomed')}</>}
+                  </>
+                )
+              }
+            >
+              <div className="plate">
+                {zoomed && <p className="panel-label mono">a · {t('dr4.wobble.full')}</p>}
+                <CanvasArt width={PATH_W} height={fullH} draw={drawFull} label={t('dr4.wobble')} />
               </div>
+              {zoomed && (
+                <div className="plate">
+                  <p className="panel-label mono">
+                    b · {t('dr4.wobble.year')}
+                  </p>
+                  <CanvasArt width={PATH_W} height={nearH} draw={drawNear} label={t('dr4.wobble.year')} />
+                </div>
+              )}
             </Figure>
           )}
 
@@ -151,51 +211,6 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
               <CanvasArt width={352} height={150} draw={drawR} label={t('dr4.residuals')} />
             </Figure>
           )}
-
-          {fit && (
-            <section className="table-block">
-              <h3 className="fig-title">
-                <span className="fig-num mono">{t('table', { n: 2 })}</span> {t('dr4.fit.title')}
-              </h3>
-              <dl className="facts">
-                <div>
-                  <dt>{t('dr4.fit.parallax')}</dt>
-                  <dd className="mono">
-                    {nf(fit.parallax, 3)} ± {nf(fit.errors[2], 3)} mas
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('dr4.fit.distance')}</dt>
-                  <dd>
-                    {distLy !== null
-                      ? t('fact.distance.value', { ly: new Intl.NumberFormat(lang, { maximumSignificantDigits: 3 }).format(distLy) })
-                      : t('dr4.fit.noDistance')}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('dr4.fit.pm')}</dt>
-                  <dd className="mono">
-                    {nf(fit.pmRa, 1)}, {nf(fit.pmDec, 1)} mas/yr
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('dr4.fit.n')}</dt>
-                  <dd className="mono">{new Intl.NumberFormat(lang).format(fit.nUsed)}</dd>
-                </div>
-              </dl>
-              <p className="fig-caption">{wobbly ? t('dr4.fit.note.wobbly') : t('dr4.fit.note')}</p>
-            </section>
-          )}
-
-          <Figure
-            n={++fig}
-            title={t('dr4.pixels')}
-            caption={t('dr4.pixels.caption', { window: WINDOWS[gClass]?.label ?? WINDOWS[3].label, date: releaseDate })}
-          >
-            <div className="plate pixels">
-              <CanvasArt width={352} height={gClass <= 1 ? 240 : 80} draw={drawP} label={t('dr4.pixels')} />
-            </div>
-          </Figure>
         </>
       )}
     </section>

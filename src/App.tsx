@@ -9,9 +9,10 @@ import { CatalogueUnavailable, starsAround, type Depth, type Star } from './sky/
 import { hasDistance } from './sky/physics';
 import { literatureFor, type Literature } from './sky/simbad';
 import { instantToWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
-import { skyFrame } from './sky/zenith';
+import { skyFrame, subStellarPoint } from './sky/zenith';
 import { readUrl, writeUrl } from './urlState';
 import Readout from './components/Readout';
+import { constellationOf, constellationOnGround, loadSkyChart, type SkyChartData } from './sky/constellation';
 
 export interface Place {
   lat: number;
@@ -49,6 +50,8 @@ export default function App() {
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [literature, setLiterature] = useState<Literature | 'loading' | 'error' | null>(null);
+  const [onMap, setOnMap] = useState(false);
+  const [sky, setSky] = useState<SkyChartData | null>(null);
   const abort = useRef<AbortController | null>(null);
 
   const zone = place ? timeZoneAt(place.lat, place.lon) : null;
@@ -125,6 +128,18 @@ export default function App() {
     search(place, when, depth);
   };
 
+  // Back to a star found by ID or name: wherever on Earth it is (or was) straight overhead.
+  const goToStar = (star: Star, when: Date | null) => {
+    const at = when ?? new Date();
+    const p = subStellarPoint(star.ra, star.dec, at);
+    const there = { lat: p.lat, lon: p.lon, name: null };
+    setPlace(there);
+    setDepth('all');
+    setMode(when ? 'moment' : 'now');
+    if (when) setWall(instantToWallTime(when, timeZoneAt(p.lat, p.lon)));
+    search(there, at, 'all', star.id);
+  };
+
   const pick = (lat: number, lon: number, name: string | null = null) => {
     setPlace({ lat, lon, name });
     setStatus({ kind: 'idle' });
@@ -146,6 +161,16 @@ export default function App() {
       ctl.abort();
     };
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (onMap && !sky) loadSkyChart().then(setSky, e => console.error(e));
+  }, [onMap, sky]);
+  // The selected star's constellation, laid on the ground at the size it spans in the sky.
+  const overlay = useMemo(() => {
+    if (!onMap || !sky || !result || !selected) return null;
+    const abbr = constellationOf(selected.ra, selected.dec);
+    return { ...constellationOnGround(result.frame, sky, abbr), name: sky.constellations[abbr].names[lang] };
+  }, [onMap, sky, result, selected, lang]);
+
   const resultPlace = result && place && result.place.lat === place.lat && result.place.lon === place.lon ? place : result?.place;
 
   return (
@@ -157,6 +182,7 @@ export default function App() {
           selectedId={selectedId}
           onPick={(lat, lon) => pick(lat, lon)}
           onSelectStar={setSelectedId}
+          overlay={overlay}
         />
         {result && <Readout result={result} />}
       </div>
@@ -177,8 +203,11 @@ export default function App() {
         selected={selected}
         literature={literature}
         onBackToZenith={() => result && setSelectedId(result.zenithId)}
+        onMap={onMap}
+        onToggleMap={() => setOnMap(v => !v)}
         onCertificate={() => setCertOpen(true)}
         onAbout={() => setAboutOpen(true)}
+        onFound={goToStar}
       />
       {certOpen && result && selected && (
         <CertificateDialog

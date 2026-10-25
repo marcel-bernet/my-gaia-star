@@ -5,15 +5,19 @@ import { drawStarPortrait } from '../certificate/panels';
 import { formatRatio } from '../certificate/render';
 import { CREAM, GOLD, MUTED } from '../certificate/theme';
 import { starFacts } from '../facts';
+import { starName } from '../names/name';
 import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
-import { constellationOf, drawConstellation, loadSkyChart, type SkyChartData } from '../sky/constellation';
+import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, type SkyChartData } from '../sky/constellation';
+import { countryAt, loadCountries, type Country } from '../sky/country';
+import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
 import type { Literature } from '../sky/simbad';
 import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
 import Dr4Section from './Dr4Section';
+import NameDialog from './NameDialog';
 
 interface Props {
   star: Star;
@@ -21,13 +25,30 @@ interface Props {
   placeName: string | null;
   literature: Literature | 'loading' | 'error' | null;
   onBackToZenith: () => void;
+  onMap: boolean;
+  onToggleMap: () => void;
   onCertificate: () => void;
 }
 
-export function Figure({ n, title, children, caption }: { n: number; title: string; children: ReactNode; caption?: ReactNode }) {
+export function Figure({
+  n,
+  title,
+  children,
+  caption,
+  kicker,
+  className,
+}: {
+  n: number;
+  title: string;
+  children: ReactNode;
+  caption?: ReactNode;
+  kicker?: string;
+  className?: string;
+}) {
   const { t } = useI18n();
   return (
-    <figure className="fig">
+    <figure className={className ? `fig ${className}` : 'fig'}>
+      {kicker && <p className="badge mono">{kicker}</p>}
       <figcaption className="fig-title">
         <span className="fig-num mono">{t('fig', { n })}</span> {title}
       </figcaption>
@@ -72,7 +93,7 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
   );
 }
 
-export default function StarCard({ star, result, placeName, literature, onBackToZenith, onCertificate }: Props) {
+export default function StarCard({ star, result, placeName, literature, onBackToZenith, onMap, onToggleMap, onCertificate }: Props) {
   const { t, lang } = useI18n();
   const [copied, setCopied] = useState(false);
   const isZenith = star.id === result.zenithId;
@@ -83,9 +104,25 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   const abbr = useMemo(() => constellationOf(star.ra, star.dec), [star]);
   const [sky, setSky] = useState<SkyChartData | null>(null);
 
+  const [countries, setCountries] = useState<Country[] | null>(null);
+
   useEffect(() => {
     loadSkyChart().then(setSky, e => console.error(e));
+    loadCountries().then(setCountries, e => console.error(e));
   }, []);
+
+  // The country under the stars, turned into the sky positions above each point of it.
+  const { frame } = result;
+  const country = useMemo(() => (countries ? countryAt(countries, frame.lat, frame.lon) : null), [countries, frame]);
+  const ground = useMemo<ChartGround | null>(
+    () =>
+      country
+        ? { rings: country.rings.map(r => r.map(([lon, lat]) => { const p = groundToSky(frame, lat, lon); return [p.ra, p.dec] as [number, number]; })), zenith: frame.zenith }
+        : null,
+    [country, frame],
+  );
+  // The place's own name for its country ("Barcelona, España" → "España"), else Natural Earth's.
+  const countryName = placeName?.includes(', ') ? placeName.split(', ').pop()! : (country?.name ?? '');
 
   const drawPortrait = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) =>
@@ -98,7 +135,8 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
       yourStar: t('chart.yourStar'),
       centre: t('galaxy.centre'),
       scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      stretched: x => t('galaxy.stretched', { x }),
+      ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
+      plane: t('galaxy.plane'),
       arm: name => t(`arm.${name}`),
     }),
     [t, lang],
@@ -121,10 +159,10 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
           muted: MUTED,
           font: '"Inter Variable", system-ui, sans-serif',
           scale: 0.9,
-        });
+        }, ground, { north: t('chart.north'), east: t('chart.east') });
       }
     },
-    [sky, abbr, star, t],
+    [sky, abbr, star, t, ground],
   );
 
   // Bring a fresh result into view (the panel scrolls on desktop, the page on phones).
@@ -132,6 +170,15 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
     const id = setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
     return () => clearTimeout(id);
   }, [result, star.id]);
+
+  const name = starName(star.id, lang);
+  const [copiedWhat, setCopiedWhat] = useState<'name' | 'id' | null>(null);
+  const [nameHelp, setNameHelp] = useState(false);
+  const copy = async (what: 'name' | 'id', text: string) => {
+    await navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedWhat(what);
+    setTimeout(() => setCopiedWhat(c => (c === what ? null : c)), 1800);
+  };
 
   const share = async () => {
     const url = window.location.href;
@@ -155,11 +202,30 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
           <span className="swatch" style={{ background: starColor(star) }} aria-hidden />
           <h2>{kind ? t(`kind.${kind.kind}`) : t('fact.id')}</h2>
         </div>
+        <p className="moment">{formatMoment(result.frame.date, result.zone, lang)}</p>
+      </header>
+
+      <section className="name-block" aria-label={t('card.name')}>
+        <p className="badge mono">{t('card.name')}</p>
+        <p className="star-name" lang={lang}>
+          “{name}”
+        </p>
         <p className="star-id mono">
           {t('fact.id')} {star.id}
         </p>
-        <p className="moment">{formatMoment(result.frame.date, result.zone, lang)}</p>
-      </header>
+        <div className="name-actions">
+          <button className="secondary small" onClick={() => copy('name', name)}>
+            {copiedWhat === 'name' ? t('action.copied.name') : t('action.copy.name')}
+          </button>
+          <button className="secondary small" onClick={() => copy('id', star.id)}>
+            {copiedWhat === 'id' ? t('action.copied.id') : t('action.copy.id')}
+          </button>
+          <button className="link" onClick={() => setNameHelp(true)}>
+            {t('name.how')} →
+          </button>
+        </div>
+      </section>
+      {nameHelp && <NameDialog id={star.id} onClose={() => setNameHelp(false)} />}
 
       <FirstLook literature={literature} id={star.id} />
 
@@ -187,9 +253,24 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
         </Figure>
       )}
 
-      <Figure n={++fig} title={`${t('card.where')} — ${sky ? sky.constellations[abbr].names[lang] : '…'}`} caption={`${t('fact.see')}: ${t(`see.${visibility(star)}`)}.`}>
+      <Figure
+        n={++fig}
+        title={`${t('card.where')} — ${sky ? sky.constellations[abbr].names[lang] : '…'}`}
+        caption={
+          <>
+            {t('fact.see')}: {t(`see.${visibility(star)}`)}.{' '}
+            {ground && countryName && t('card.where.ground', { country: countryName, place: where })}
+          </>
+        }
+      >
         <div className="plate">
-          <CanvasArt width={352} height={250} draw={drawChart} label={t('card.where')} />
+          <CanvasArt width={352} height={270} draw={drawChart} label={t('card.where')} />
+        </div>
+        <div className="fig-tools">
+          <p className="hint">{t('map.hint')}</p>
+          <button className="secondary small" aria-pressed={onMap} onClick={onToggleMap}>
+            {onMap ? t('map.hide') : t('map.show')}
+          </button>
         </div>
       </Figure>
 
@@ -202,11 +283,11 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
             : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })
         }
       >
-        <div className="plate">
-          <div className="galaxy-face">
-            <CanvasArt width={300} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
-          </div>
-          <CanvasArt width={352} height={84} draw={drawEdgeOn} label={t('cert.edge')} />
+        <div className="plate galaxy">
+          <p className="panel-label mono">a · {t('galaxy.above')}</p>
+          <CanvasArt width={352} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
+          <p className="panel-label mono">b · {t('cert.edge')}</p>
+          <CanvasArt width={352} height={150} draw={drawEdgeOn} label={t('cert.edge')} />
         </div>
       </Figure>
 

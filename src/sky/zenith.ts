@@ -15,6 +15,7 @@ import {
   RotateVector,
   Rotation_EQJ_HOR,
   Rotation_HOR_EQJ,
+  SiderealTime,
   Vector,
   type RotationMatrix,
 } from 'astronomy-engine';
@@ -75,6 +76,8 @@ export interface SkyFrame {
    * `east`/`north` along the ground (not divided by cos(lat)).
    */
   offset(raDeg: number, decDeg: number): { east: number; north: number; sep: number };
+  /** The catalogue (ICRS) position `sepDeg` from the zenith at azimuth `azDeg` (north through east). */
+  at(sepDeg: number, azDeg: number): { ra: number; dec: number };
 }
 
 export function skyFrame(lat: number, lon: number, date: Date): SkyFrame {
@@ -99,16 +102,57 @@ export function skyFrame(lat: number, lon: number, date: Date): SkyFrame {
       if (h < 1e-12) return { east: 0, north: 0, sep };
       return { east: (sep * -w) / h, north: (sep * n) / h, sep };
     },
+    at(sepDeg, azDeg) {
+      const s = Math.sin(sepDeg * DEG);
+      const hor: Vec3 = [s * Math.cos(azDeg * DEG), -s * Math.sin(azDeg * DEG), Math.cos(sepDeg * DEG)];
+      return vecToRadec(removeAberration(rotate(horToEqj, hor, time), beta));
+    },
   };
 }
 
 /**
  * Where a star sits on the map: one degree of sky away from the zenith is
  * drawn one degree of arc away on the ground, in the same compass direction,
- * as if the sky were projected straight down onto the map.
+ * as if the sky were projected straight down onto the map. Longitudes are
+ * not wrapped, so a shape drawn this way stays in one piece.
  */
 export function starToLatLng(frame: SkyFrame, raDeg: number, decDeg: number): [number, number] {
-  const { east, north } = frame.offset(raDeg, decDeg);
-  const cosLat = Math.max(Math.cos(frame.lat * DEG), 1e-6);
-  return [frame.lat + north, frame.lon + east / cosLat];
+  const { east, north, sep } = frame.offset(raDeg, decDeg);
+  const az = Math.atan2(east, north);
+  const d = sep * DEG;
+  const p1 = frame.lat * DEG;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(az));
+  const dl = Math.atan2(Math.sin(az) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return [p2 / DEG, frame.lon + dl / DEG];
+}
+
+/** The inverse: the sky that lies over a point on the ground (ICRS, degrees). */
+export function groundToSky(frame: SkyFrame, lat: number, lon: number): { ra: number; dec: number } {
+  const p1 = frame.lat * DEG;
+  const p2 = lat * DEG;
+  const dl = (lon - frame.lon) * DEG;
+  const cosD = Math.sin(p1) * Math.sin(p2) + Math.cos(p1) * Math.cos(p2) * Math.cos(dl);
+  const sep = Math.acos(Math.max(-1, Math.min(1, cosD))) / DEG;
+  const az = Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / DEG;
+  return frame.at(sep, az);
+}
+
+/**
+ * The place on Earth where a star (ICRS) is straight overhead at `date`.
+ * Starts from right ascension minus sidereal time and refines with the full
+ * zenith model, so the star lands within a fraction of an arcsecond.
+ */
+export function subStellarPoint(raDeg: number, decDeg: number, date: Date): { lat: number; lon: number } {
+  const wrap = (l: number) => ((((l + 180) % 360) + 360) % 360) - 180;
+  let lat = decDeg;
+  let lon = wrap(raDeg - SiderealTime(date) * 15);
+  for (let i = 0; i < 4; i++) {
+    const z = skyFrame(lat, lon, date).zenith;
+    let dRa = raDeg - z.ra;
+    if (dRa > 180) dRa -= 360;
+    if (dRa < -180) dRa += 360;
+    lat = Math.max(-89.999, Math.min(89.999, lat + (decDeg - z.dec)));
+    lon = wrap(lon + dRa);
+  }
+  return { lat, lon };
 }

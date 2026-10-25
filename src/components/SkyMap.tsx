@@ -1,7 +1,8 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
-import { Circle, CircleMarker, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import type { GroundShape } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { starColor } from '../sky/physics';
 import { starToLatLng, type SkyFrame } from '../sky/zenith';
@@ -18,6 +19,8 @@ interface Props {
   selectedId: string | null;
   onPick: (lat: number, lon: number) => void;
   onSelectStar: (id: string) => void;
+  /** The selected star's constellation, laid on the ground. */
+  overlay: (GroundShape & { name: string }) | null;
 }
 
 const placeIcon = L.divIcon({ className: 'place-pin', html: '<span></span>', iconSize: [28, 28] });
@@ -26,6 +29,8 @@ const zenithIcon = L.divIcon({ className: 'zenith-pin', html: '<span></span><i><
 const selectedIcon = L.divIcon({ className: 'selected-pin', html: '<span></span>', iconSize: [34, 34] });
 
 const KM_PER_DEG = 111.32;
+
+const escapeHtml = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 // Star dots are a few pixels across; give fingers a wider catch area.
 const renderer = L.canvas({ tolerance: window.matchMedia('(pointer: coarse)').matches ? 12 : 3 });
 const wide = () => window.matchMedia('(min-width: 761px)').matches;
@@ -35,10 +40,21 @@ function ClickToPick({ onPick }: { onPick: Props['onPick'] }) {
   return null;
 }
 
-function FollowView({ place, result, radiusDeg }: { place: Props['place']; result: MapResult | null; radiusDeg: number }) {
+function FollowView({
+  place,
+  result,
+  radiusDeg,
+  overlayOn,
+}: {
+  place: Props['place'];
+  result: MapResult | null;
+  radiusDeg: number;
+  /** While the constellation is shown, FitOverlay frames the map instead. */
+  overlayOn: boolean;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (result) {
+    if (result && !overlayOn) {
       const { lat, lon } = result.frame;
       const r = radiusDeg * 1.08;
       const cos = Math.max(Math.cos((lat * Math.PI) / 180), 0.05);
@@ -51,7 +67,7 @@ function FollowView({ place, result, radiusDeg }: { place: Props['place']; resul
         { duration: 1.4, paddingTopLeft: [24, wide() ? 72 : 48], paddingBottomRight: [24, 24] },
       );
     }
-  }, [map, result, radiusDeg]);
+  }, [map, result, radiusDeg, overlayOn]);
   useEffect(() => {
     if (place && !result) map.flyTo([place.lat, place.lon], Math.max(map.getZoom(), 9), { duration: 1.2 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,7 +75,24 @@ function FollowView({ place, result, radiusDeg }: { place: Props['place']; resul
   return null;
 }
 
-export default function SkyMap({ place, result, selectedId, onPick, onSelectStar }: Props) {
+/** When the constellation appears, step back to show all of it. */
+function FitOverlay({ overlay }: { overlay: Props['overlay'] }) {
+  const map = useMap();
+  const shown = overlay ? `${overlay.name} ${overlay.centre.map(v => v.toFixed(2))}` : null;
+  useEffect(() => {
+    if (!overlay) return;
+    const pts = overlay.bounds.flat();
+    map.flyToBounds(L.latLngBounds(pts.map(([lat, lon]) => L.latLng(Math.max(-85, Math.min(85, lat)), lon))), {
+      duration: 1.4,
+      paddingTopLeft: [24, wide() ? 72 : 48],
+      paddingBottomRight: [24, 24],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, shown]);
+  return null;
+}
+
+export default function SkyMap({ place, result, selectedId, onPick, onSelectStar, overlay }: Props) {
   const placed = useMemo(() => {
     if (!result) return [];
     const gs = result.stars.map(s => s.g);
@@ -100,7 +133,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
         maxZoom={19}
       />
       <ClickToPick onPick={onPick} />
-      <FollowView place={place} result={result} radiusDeg={radiusDeg} />
+      <FollowView place={place} result={result} radiusDeg={radiusDeg} overlayOn={!!overlay} />
       {result && (
         <Circle
           center={[result.frame.lat, result.frame.lon]}
@@ -118,6 +151,22 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
           eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
         />
       ))}
+      <FitOverlay overlay={overlay} />
+      {overlay && (
+        <>
+          {overlay.bounds.map((b, i) => (
+            <Polyline key={`b${i}`} positions={b} pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }} interactive={false} />
+          ))}
+          {overlay.lines.map((l, i) => (
+            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }} interactive={false} />
+          ))}
+          <Marker
+            position={overlay.centre}
+            icon={L.divIcon({ className: 'constellation-label', html: `<span>${escapeHtml(overlay.name)}</span>`, iconSize: [0, 0] })}
+            interactive={false}
+          />
+        </>
+      )}
       {place && <Marker position={[place.lat, place.lon]} icon={placeIcon} interactive={false} />}
       {zenith && (
         <Marker position={zenith.pos} icon={zenithIcon} eventHandlers={{ click: () => onSelectStar(zenith.s.id) }} />

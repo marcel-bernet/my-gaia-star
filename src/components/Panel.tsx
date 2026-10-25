@@ -5,6 +5,7 @@ import { LANGS, useI18n, type Lang } from '../i18n';
 import type { Literature } from '../sky/simbad';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
 import StarCard from './StarCard';
+import StarFinder from './StarFinder';
 
 export type Mode = 'now' | 'moment';
 
@@ -32,8 +33,11 @@ interface Props {
   selected: Star | null;
   literature: Literature | 'loading' | 'error' | null;
   onBackToZenith: () => void;
+  onMap: boolean;
+  onToggleMap: () => void;
   onCertificate: () => void;
   onAbout: () => void;
+  onFound: (star: Star, when: Date | null) => void;
 }
 
 export default function Panel(p: Props) {
@@ -199,6 +203,8 @@ export default function Panel(p: Props) {
         )}
       </section>
 
+      <StarFinder current={p.selected?.id ?? null} onFound={p.onFound} />
+
       {hasResult && p.result && p.selected && (
         <StarCard
           star={p.selected}
@@ -206,6 +212,8 @@ export default function Panel(p: Props) {
           placeName={p.resultPlaceName}
           literature={p.literature}
           onBackToZenith={p.onBackToZenith}
+          onMap={p.onMap}
+          onToggleMap={p.onToggleMap}
           onCertificate={p.onCertificate}
         />
       )}
