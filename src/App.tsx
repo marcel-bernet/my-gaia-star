@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AboutDialog from './components/AboutDialog';
+import PointDialog from './components/PointDialog';
 import CertificateDialog from './components/CertificateDialog';
 import Panel, { type Mode } from './components/Panel';
 import SkyMap, { type MapResult } from './components/SkyMap';
@@ -49,6 +50,7 @@ export default function App() {
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [pointOpen, setPointOpen] = useState(false);
   const [literature, setLiterature] = useState<Literature | 'loading' | 'error' | null>(null);
   const [onMap, setOnMap] = useState(false);
   const [sky, setSky] = useState<SkyChartData | null>(null);
@@ -207,6 +209,7 @@ export default function App() {
         onToggleMap={() => setOnMap(v => !v)}
         onCertificate={() => setCertOpen(true)}
         onAbout={() => setAboutOpen(true)}
+        onPoint={() => setPointOpen(true)}
         onFound={goToStar}
       />
       {certOpen && result && selected && (
@@ -219,6 +222,7 @@ export default function App() {
         />
       )}
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+      {pointOpen && <PointDialog onClose={() => setPointOpen(false)} />}
     </div>
   );
 }

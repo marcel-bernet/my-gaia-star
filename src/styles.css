@@ -1264,3 +1264,156 @@ textarea {
   color: var(--text-3);
   margin-right: 6px;
 }
+
+/* What's the point? ------------------------------------------------------ */
+
+.point-btn {
+  margin-top: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 8px;
+  border: 1px dashed var(--rule-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font: 13px var(--sans);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.point-btn span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--star);
+  font: 600 13px var(--serif);
+}
+
+.point-btn:hover {
+  color: var(--text);
+  border-color: var(--text-3);
+}
+
+.point-btn:hover span {
+  transform: rotate(-12deg);
+}
+
+.point .point-lede {
+  font: italic 16px/1.55 var(--serif);
+  color: var(--text);
+}
+
+.point section {
+  padding-top: 18px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule);
+}
+
+.point h3 {
+  margin: 0 0 10px;
+  font: 500 19px/1.25 var(--serif);
+  color: var(--text);
+}
+
+.point-fig {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 4px auto 16px;
+}
+
+.point-hundred {
+  margin: 4px 0 16px;
+}
+
+.point-hundred .point-fig {
+  margin-bottom: 8px;
+}
+
+.point-hundred figcaption {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font: 11px var(--mono);
+  color: var(--text-3);
+}
+
+.point-hundred .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: -1px;
+  margin-right: 4px;
+}
+
+.point-hundred .dot.studied {
+  background: var(--text);
+}
+
+.point-hundred .dot.yours {
+  background: var(--star);
+}
+
+.point-go {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.point-dipper {
+  margin: 4px 0 16px;
+}
+
+.point-dipper polygon {
+  transition: fill 0.6s;
+}
+
+.point-dots {
+  opacity: 0;
+  transition: opacity 0.9s;
+}
+
+.point-dots.on {
+  opacity: 1;
+}
+
+.point-dipper figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.point-toggle {
+  padding: 7px 14px;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: 13px var(--sans);
+  cursor: pointer;
+}
+
+.point-toggle:hover {
+  border-color: var(--text-3);
+}
+
+.point-count {
+  font: 11.5px/1.45 var(--mono);
+  color: var(--text-3);
+}
+
+.point-count.on {
+  color: var(--text-2);
+}
+
+.point-dipper .point-fig {
+  max-width: 100%;
+}

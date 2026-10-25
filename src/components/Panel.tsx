@@ -37,6 +37,7 @@ interface Props {
   onToggleMap: () => void;
   onCertificate: () => void;
   onAbout: () => void;
+  onPoint: () => void;
   onFound: (star: Star, when: Date | null) => void;
 }
 
@@ -112,6 +113,9 @@ export default function Panel(p: Props) {
                 <dd>{t('stat.passes')}</dd>
               </div>
             </dl>
+            <button className="point-btn" onClick={p.onPoint}>
+              <span aria-hidden="true">?</span> {t('point')}
+            </button>
           </>
         )}
       </section>
@@ -221,6 +225,9 @@ export default function Panel(p: Props) {
       <footer className="colophon">
         <button className="link" onClick={p.onAbout}>
           {t('about')}
+        </button>
+        <button className="link" onClick={p.onPoint}>
+          {t('point')}
         </button>
         <a className="link" href="https://github.com/marcel-bernet/my-gaia-star" target="_blank" rel="noreferrer">
           GitHub
