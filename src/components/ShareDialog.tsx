@@ -77,7 +77,7 @@ export default function ShareDialog({ star, result, placeName, literature, onClo
     const ly = distanceLy(star);
     const what = kind ? t(`kind.${kind.kind}`) : t('share.aStar');
     const lines = [
-      t('share.text.name', { name: starName(star.id, lang) }),
+      t('share.text.name', { name: starName(star.id, lang), id: star.id }),
       t(ly === null ? 'share.text.what' : 'share.text.whatFar', {
         what,
         ly: ly === null ? '' : formatRatio(ly, lang),
