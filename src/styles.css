@@ -1417,3 +1417,61 @@ textarea {
 .point-dipper .point-fig {
   max-width: 100%;
 }
+
+/* Share ------------------------------------------------------------------ */
+
+.share {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.share textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.share-url {
+  margin: -4px 0 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+
+.share-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.share-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font: 600 14px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.share-target:hover {
+  border-color: var(--text-2);
+  background: var(--surface);
+}
+
+.share-target svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.share-target.whatsapp svg { color: #25d366; }
+.share-target.telegram svg { color: #2aabee; }
+.share-target.bluesky svg { color: #1185fe; }
+.share-target.facebook svg { color: #1877f2; }

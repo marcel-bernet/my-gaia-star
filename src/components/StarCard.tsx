@@ -18,6 +18,7 @@ import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
 import Dr4Section from './Dr4Section';
 import NameDialog from './NameDialog';
+import ShareDialog from './ShareDialog';
 
 interface Props {
   star: Star;
@@ -95,7 +96,7 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
 
 export default function StarCard({ star, result, placeName, literature, onBackToZenith, onMap, onToggleMap, onCertificate }: Props) {
   const { t, lang } = useI18n();
-  const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const isZenith = star.id === result.zenithId;
   const facts = starFacts(star, result.frame.date, t, lang);
   const where = placeName || t('place.unnamed');
@@ -180,17 +181,6 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
     setTimeout(() => setCopiedWhat(c => (c === what ? null : c)), 1800);
   };
 
-  const share = async () => {
-    const url = window.location.href;
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-      await navigator.share({ title: t('tagline'), url }).catch(() => {});
-      return;
-    }
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   let fig = 0;
   return (
     <article className="dossier" ref={ref}>
@@ -233,10 +223,11 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
         <button className="primary" onClick={onCertificate}>
           {t('action.certificate')}
         </button>
-        <button className="secondary" onClick={share}>
-          {copied ? t('action.copied') : t('action.share')}
+        <button className="secondary" onClick={() => setSharing(true)}>
+          {t('action.share')}
         </button>
       </div>
+      {sharing && <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />}
 
       {kind && (
         <Figure

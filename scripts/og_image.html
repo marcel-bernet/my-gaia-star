@@ -1,0 +1,166 @@
+<!doctype html>
+<!--
+  The link-preview card (public/og-image.png, 1200×630), drawn from the real
+  naked-eye Gaia stars around Orion. Regenerate with:
+    google-chrome --headless --allow-file-access-from-files --hide-scrollbars \
+      --window-size=1200,630 --screenshot=public/og-image.png scripts/og_image.html
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face { font-family: Serif; src: url(../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2); font-weight: 200 900; }
+      @font-face { font-family: Sans; src: url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2); font-weight: 100 900; }
+      @font-face { font-family: Mono; src: url(../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2); }
+      html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #0c0d0f; }
+      canvas { position: absolute; inset: 0; }
+      .text { position: absolute; left: 72px; top: 64px; bottom: 60px; width: 560px; display: flex; flex-direction: column; color: #e9e7e2; }
+      .brand { font: 600 22px Sans; letter-spacing: -0.01em; display: flex; align-items: center; gap: 12px; }
+      .brand i { width: 10px; height: 10px; border-radius: 50%; background: #e8c98f; box-shadow: 0 0 14px #e8c98f; }
+      .kicker { margin: 52px 0 14px; font: 14px Mono; letter-spacing: 0.08em; text-transform: uppercase; color: #a4a39e; }
+      h1 { margin: 0; font: 500 56px/1.08 Serif; letter-spacing: -0.015em; }
+      h1 em { font-style: normal; color: #e8c98f; }
+      p { margin: 24px 0 0; font: 400 21px/1.45 Sans; color: #a4a39e; max-width: 500px; }
+      .url { margin-top: auto; font: 15px Mono; color: #74736e; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="2400" height="1260" style="width: 1200px; height: 630px"></canvas>
+    <div class="text">
+      <div class="brand"><i></i>My Gaia Star</div>
+      <div class="kicker">ESA Gaia · 1.8 billion stars</div>
+      <h1>Above you is a star <em>no one</em> has ever looked at closely.</h1>
+      <p>Pick a place and a moment. Find the star straight overhead — its name, its story, and a certificate.</p>
+      <div class="url">marcel-bernet.github.io/my-gaia-star</div>
+    </div>
+    <script>
+      const D = Math.PI / 180;
+      // Stereographic view of the sky around Orion, on a plate at the right.
+      const RA0 = 84 * D, DEC0 = 2 * D, CX = 905, CY = 315, R = 330, FIELD = 42 * D;
+      const K = R / (2 * Math.tan(FIELD / 2));
+      function project(ra, dec) {
+        ra *= D; dec *= D;
+        const cosc = Math.sin(DEC0) * Math.sin(dec) + Math.cos(DEC0) * Math.cos(dec) * Math.cos(ra - RA0);
+        if (cosc < Math.cos(FIELD * 1.4)) return null;
+        const k = (2 * K) / (1 + cosc);
+        // East to the left, as the sky looks from below.
+        const x = -k * Math.cos(dec) * Math.sin(ra - RA0);
+        const y = -k * (Math.cos(DEC0) * Math.sin(dec) - Math.sin(DEC0) * Math.cos(dec) * Math.cos(ra - RA0));
+        return [CX + x, CY + y];
+      }
+      // Gaia BP−RP to a star's tint, blue-white through gold to orange-red.
+      function tint(c) {
+        const stops = [[-0.2, [170, 195, 255]], [0.4, [225, 232, 255]], [0.8, [255, 244, 225]], [1.3, [255, 214, 160]], [2.2, [255, 170, 110]]];
+        c = Math.max(-0.2, Math.min(2.2, c ?? 0.8));
+        let i = 0;
+        while (i < stops.length - 2 && c > stops[i + 1][0]) i++;
+        const [a, ca] = stops[i], [b, cb] = stops[i + 1], f = (c - a) / (b - a);
+        return ca.map((v, j) => Math.round(v + (cb[j] - v) * f));
+      }
+      let seed = 7;
+      const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+      (async () => {
+        const data = await (await fetch('../public/naked-eye.json')).json();
+        const ix = Object.fromEntries(data.columns.map((c, i) => [c, i]));
+        await document.fonts.ready;
+        const ctx = document.getElementById('c').getContext('2d');
+        ctx.scale(2, 2);
+
+        // The plate: a faint disc and its rim, like the app's search circle.
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+        ctx.fillStyle = '#08090b';
+        ctx.fill();
+        ctx.clip();
+        // Milky Way dust: countless faint points, denser along a band.
+        for (let n = 0; n < 5200; n++) {
+          const t = rand() * 2 - 1, s = (rand() + rand() + rand() - 1.5) * 150;
+          const x = CX - 60 + t * 420 + s * 0.45, y = CY + t * 260 - s;
+          const a = 0.08 + rand() * 0.22;
+          ctx.fillStyle = `rgba(233,231,226,${a})`;
+          ctx.fillRect(x, y, 0.8, 0.8);
+        }
+        for (let n = 0; n < 900; n++) {
+          ctx.fillStyle = `rgba(233,231,226,${0.06 + rand() * 0.25})`;
+          ctx.fillRect(CX + (rand() * 2 - 1) * R, CY + (rand() * 2 - 1) * R, 0.9, 0.9);
+        }
+        // The real stars, sized by brightness.
+        const stars = data.rows.map(r => ({ id: r[ix.id], g: r[ix.g], c: r[ix.bpRp], p: project(r[ix.ra], r[ix.dec]) })).filter(s => s.p);
+        stars.sort((a, b) => b.g - a.g);
+        for (const s of stars) {
+          const [x, y] = s.p;
+          const r = Math.max(0.7, 6 - s.g * 0.95);
+          const [cr, cg, cb] = tint(s.c);
+          // Faint stars recede, so the bright patterns read at thumbnail size.
+          const alpha = Math.min(1, Math.max(0.25, (6.6 - s.g) / 3.5));
+          if (s.g < 2.5) {
+            const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+            glow.addColorStop(0, `rgba(${cr},${cg},${cb},0.35)`);
+            glow.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(x, y, r * 5, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+          ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha})`;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(233,231,226,0.16)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // "Your star": a faint one, well inside the plate, under the gold reticle.
+        const mine = stars
+          .filter(s => s.g > 5.3)
+          // Alone inside the reticle, so it is clear which star is meant.
+          .filter(s => Math.hypot(s.p[0] - CX, s.p[1] - CY) < R - 90)
+          .filter(s => !stars.some(o => o !== s && o.g < 6 && Math.hypot(o.p[0] - s.p[0], o.p[1] - s.p[1]) < 24))
+          .map(s => ({ s, d: Math.hypot(s.p[0] - (CX - 40), s.p[1] - (CY + 85)) }))
+          .sort((a, b) => a.d - b.d)[0].s;
+        const [mx, my] = mine.p;
+        ctx.strokeStyle = '#e8c98f';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.arc(mx, my, 15, 0, 2 * Math.PI);
+        ctx.stroke();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          ctx.beginPath();
+          ctx.moveTo(mx + dx * 21, my + dy * 21);
+          ctx.lineTo(mx + dx * 30, my + dy * 30);
+          ctx.stroke();
+        }
+        const glow = ctx.createRadialGradient(mx, my, 0, mx, my, 9);
+        glow.addColorStop(0, 'rgba(232,201,143,0.9)');
+        glow.addColorStop(1, 'rgba(232,201,143,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(mx, my, 9, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.font = '11px Mono';
+        ctx.fillStyle = 'rgba(8,9,11,0.8)';
+        ctx.fillRect(mx + 34, my - 18, ctx.measureText(`Gaia DR3 ${mine.id}`).width + 8, 36);
+        ctx.fillStyle = '#e8c98f';
+        ctx.font = '12px Mono';
+        ctx.fillText('YOUR STAR', mx + 38, my - 4);
+        ctx.fillStyle = 'rgba(233,231,226,0.55)';
+        ctx.font = '11px Mono';
+        ctx.fillText(`Gaia DR3 ${mine.id}`, mx + 38, my + 12);
+
+        // Let the text side breathe over the plate's left edge.
+        const fade = ctx.createLinearGradient(520, 0, 700, 0);
+        fade.addColorStop(0, 'rgba(12,13,15,1)');
+        fade.addColorStop(1, 'rgba(12,13,15,0)');
+        ctx.fillStyle = fade;
+        ctx.fillRect(0, 0, 700, 630);
+        document.title = 'ready';
+      })();
+    </script>
+  </body>
+</html>
