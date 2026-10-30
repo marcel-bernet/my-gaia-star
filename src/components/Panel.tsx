@@ -1,9 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import type { Place, Result, Status } from '../App';
+import type { LiteratureState, Place, Result, Status } from '../types';
 import { REPO_URL } from '../config';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Lang } from '../i18n';
-import type { Literature } from '../sky/simbad';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
 import StarCard from './StarCard';
 import StarFinder from './StarFinder';
@@ -32,7 +31,7 @@ interface Props {
   result: Result | null;
   resultPlaceName: string | null;
   selected: Star | null;
-  literature: Literature | 'loading' | 'error' | null;
+  literature: LiteratureState;
   onBackToZenith: () => void;
   onMap: boolean;
   onToggleMap: () => void;

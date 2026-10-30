@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Result } from '../App';
+import type { Result } from '../types';
 import { downloadPdf, downloadPng, renderCertificate, type Dr4Summary } from '../certificate/render';
 import { fitFiveParameters, transitPoints } from '../dr4/epoch';
 import { DR4_RELEASE } from '../config';

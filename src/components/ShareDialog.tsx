@@ -1,12 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import type { Result } from '../App';
+import type { LiteratureState, Result } from '../types';
 import { formatRatio } from '../certificate/render';
 import { useI18n } from '../i18n';
 import { starName } from '../names/name';
 import { classify } from '../sky/classify';
 import type { Star } from '../sky/gaia';
 import { distanceLy } from '../sky/physics';
-import type { Literature } from '../sky/simbad';
 import { formatMoment } from '../sky/time';
 import { urlFor } from '../urlState';
 import Dialog from './Dialog';
@@ -15,7 +14,7 @@ interface Props {
   star: Star;
   result: Result;
   placeName: string;
-  literature: Literature | 'loading' | 'error' | null;
+  literature: LiteratureState;
   onClose: () => void;
 }
 

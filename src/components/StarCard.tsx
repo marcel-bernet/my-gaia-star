@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Result } from '../App';
+import type { LiteratureState, Result } from '../types';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
 import { formatRatio } from '../certificate/render';
@@ -13,7 +13,6 @@ import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, typ
 import { countryAt, loadCountries, type Country } from '../sky/country';
 import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
-import type { Literature } from '../sky/simbad';
 import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
@@ -25,7 +24,7 @@ interface Props {
   star: Star;
   result: Result;
   placeName: string | null;
-  literature: Literature | 'loading' | 'error' | null;
+  literature: LiteratureState;
   onBackToZenith: () => void;
   onMap: boolean;
   onToggleMap: () => void;

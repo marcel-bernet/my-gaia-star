@@ -1,4 +1,4 @@
-import type { Result } from '../App';
+import type { Result } from '../types';
 import { formatDec, formatRa } from '../facts';
 import { useI18n } from '../i18n';
 

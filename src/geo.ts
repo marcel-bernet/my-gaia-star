@@ -3,12 +3,10 @@
  * one request per second and no search-as-you-type, so we only search on submit.
  */
 import { SERVICES } from './config';
+import type { Place } from './types';
 
-export interface Place {
-  lat: number;
-  lon: number;
-  name: string;
-}
+/** A place found by name: unlike a tapped point, it always has a name. */
+export type FoundPlace = Place & { name: string };
 
 interface NominatimResult {
   lat: string;
@@ -26,7 +24,7 @@ function shortName(r: NominatimResult): string {
   return local || region || r.display_name.split(',').slice(0, 2).join(',');
 }
 
-export async function searchPlace(query: string, lang: string): Promise<Place | null> {
+export async function searchPlace(query: string, lang: string): Promise<FoundPlace | null> {
   const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1', addressdetails: '1', 'accept-language': lang });
   const res = await fetch(`${SERVICES.nominatim}/search?${params}`);
   if (!res.ok) return null;

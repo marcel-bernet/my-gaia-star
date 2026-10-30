@@ -4,19 +4,13 @@ import { useEffect, useMemo } from 'react';
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
-import type { Star } from '../sky/gaia';
 import { starColor } from '../sky/physics';
-import { starToLatLng, type SkyFrame } from '../sky/zenith';
-
-export interface MapResult {
-  frame: SkyFrame;
-  stars: Star[];
-  zenithId: string;
-}
+import { starToLatLng } from '../sky/zenith';
+import type { Result } from '../types';
 
 interface Props {
   place: { lat: number; lon: number } | null;
-  result: MapResult | null;
+  result: Pick<Result, 'frame' | 'stars' | 'zenithId'> | null;
   selectedId: string | null;
   onPick: (lat: number, lon: number) => void;
   onSelectStar: (id: string) => void;
@@ -48,7 +42,7 @@ function FollowView({
   overlayOn,
 }: {
   place: Props['place'];
-  result: MapResult | null;
+  result: Props['result'];
   radiusDeg: number;
   /** While the constellation is shown, FitOverlay frames the map instead. */
   overlayOn: boolean;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18n } from '../i18n';
+import type { Status } from '../types';
 import { digitsToId, idToDigits, isSourceId, parseName, segments, slotOptions, type Digits } from '../names/name';
 import { CatalogueUnavailable, starById, type Star } from '../sky/gaia';
 
@@ -30,9 +31,7 @@ export default function StarFinder({
   const [pasteMsg, setPasteMsg] = useState<string | null>(null);
   const [now, setNow] = useState(true);
   const [moment, setMoment] = useState(localNow);
-  const [status, setStatus] = useState<{ kind: 'idle' } | { kind: 'loading' } | { kind: 'error'; message: string }>({
-    kind: 'idle',
-  });
+  const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Start from the star on screen, so its own name is what you see first.
   useEffect(() => {

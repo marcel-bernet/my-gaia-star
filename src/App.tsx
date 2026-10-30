@@ -3,31 +3,18 @@ import AboutDialog from './components/AboutDialog';
 import PointDialog from './components/PointDialog';
 import CertificateDialog from './components/CertificateDialog';
 import Panel, { type Mode } from './components/Panel';
-import SkyMap, { type MapResult } from './components/SkyMap';
+import SkyMap from './components/SkyMap';
 import { placeName } from './geo';
 import { useI18n } from './i18n';
 import { CatalogueUnavailable, starsAround, type Depth, type Star } from './sky/gaia';
 import { hasDistance } from './sky/physics';
-import { literatureFor, type Literature } from './sky/simbad';
+import { literatureFor } from './sky/simbad';
+import type { LiteratureState, Place, Result, Status } from './types';
 import { instantToWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
 import { skyFrame, subStellarPoint } from './sky/zenith';
 import { readUrl, writeUrl } from './urlState';
 import Readout from './components/Readout';
 import { constellationOf, constellationOnGround, loadSkyChart, type SkyChartData } from './sky/constellation';
-
-export interface Place {
-  lat: number;
-  lon: number;
-  name: string | null;
-}
-
-export interface Result extends MapResult {
-  place: Place;
-  depth: Depth;
-  zone: string;
-}
-
-export type Status = { kind: 'idle' } | { kind: 'loading' } | { kind: 'error'; message: string };
 
 function todayWall() {
   const now = new Date();
@@ -51,7 +38,7 @@ export default function App() {
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [pointOpen, setPointOpen] = useState(false);
-  const [literature, setLiterature] = useState<Literature | 'loading' | 'error' | null>(null);
+  const [literature, setLiterature] = useState<LiteratureState>(null);
   const [onMap, setOnMap] = useState(false);
   const [sky, setSky] = useState<SkyChartData | null>(null);
   const abort = useRef<AbortController | null>(null);
