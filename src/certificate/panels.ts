@@ -3,7 +3,7 @@ import type { Classification } from '../sky/classify';
 import { drawTargetMarker } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { absoluteMag, starColor, temperatureToRgb } from '../sky/physics';
-import { GOLD, MUTED } from './theme';
+import { GOLD, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -13,8 +13,6 @@ export interface Box {
   w: number;
   h: number;
 }
-
-const SANS = '"Inter Variable", system-ui, sans-serif';
 
 /** Deterministic pseudo-random numbers, so a certificate redraws identically. */
 export function rng(seed: number) {

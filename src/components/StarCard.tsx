@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LiteratureState, Result } from '../types';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
 import { formatRatio } from '../certificate/render';
 import { simbadUrl } from '../config';
-import { CREAM, GOLD, MUTED } from '../certificate/theme';
+import { CREAM, GOLD, MUTED, SANS } from '../certificate/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
 import { useI18n, type Key } from '../i18n';
@@ -13,10 +13,11 @@ import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, typ
 import { countryAt, loadCountries, type Country } from '../sky/country';
 import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
-import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
+import { galacticHeightKpc, LY_PER_KPC, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
 import CanvasArt from './CanvasArt';
 import Dr4Section from './Dr4Section';
+import Figure, { FIGURE_W } from './Figure';
 import NameDialog from './NameDialog';
 import ShareDialog from './ShareDialog';
 
@@ -29,34 +30,6 @@ interface Props {
   onMap: boolean;
   onToggleMap: () => void;
   onCertificate: () => void;
-}
-
-export function Figure({
-  n,
-  title,
-  children,
-  caption,
-  kicker,
-  className,
-}: {
-  n: number;
-  title: string;
-  children: ReactNode;
-  caption?: ReactNode;
-  kicker?: string;
-  className?: string;
-}) {
-  const { t } = useI18n();
-  return (
-    <figure className={className ? `fig ${className}` : 'fig'}>
-      {kicker && <p className="badge mono">{kicker}</p>}
-      <figcaption className="fig-title">
-        <span className="fig-num mono">{t('fig', { n })}</span> {title}
-      </figcaption>
-      {children}
-      {caption && <p className="fig-caption">{caption}</p>}
-    </figure>
-  );
 }
 
 function FirstLook({ literature, id }: { literature: Props['literature']; id: string }) {
@@ -181,7 +154,7 @@ export default function StarCard({
             gold: GOLD,
             cream: CREAM,
             muted: MUTED,
-            font: '"Inter Variable", system-ui, sans-serif',
+            font: SANS,
             scale: 0.9,
           },
           ground,
@@ -284,7 +257,7 @@ export default function StarCard({
         }
       >
         <div className="plate">
-          <CanvasArt width={352} height={270} draw={drawChart} label={t('card.where')} />
+          <CanvasArt width={FIGURE_W} height={270} draw={drawChart} label={t('card.where')} />
         </div>
         <div className="fig-tools">
           <p className="hint">{t('map.hint')}</p>
@@ -300,14 +273,14 @@ export default function StarCard({
         caption={
           height === null
             ? t('fact.height.unknown')
-            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })
+            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * LY_PER_KPC, lang) })
         }
       >
         <div className="plate galaxy">
           <p className="panel-label mono">a · {t('galaxy.above')}</p>
-          <CanvasArt width={352} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
+          <CanvasArt width={FIGURE_W} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
           <p className="panel-label mono">b · {t('cert.edge')}</p>
-          <CanvasArt width={352} height={150} draw={drawEdgeOn} label={t('cert.edge')} />
+          <CanvasArt width={FIGURE_W} height={150} draw={drawEdgeOn} label={t('cert.edge')} />
         </div>
       </Figure>
 

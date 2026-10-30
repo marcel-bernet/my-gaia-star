@@ -28,7 +28,7 @@ import { DR4_RELEASE } from '../config';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import CanvasArt from './CanvasArt';
-import { Figure } from './StarCard';
+import Figure, { FIGURE_W } from './Figure';
 
 export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: number }) {
   const { t, lang } = useI18n();
@@ -64,10 +64,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   );
   const selPt = sel !== null ? pts[sel] : null;
   const zoomed = fit !== null && needsZoom(fit);
-  const PATH_W = 352;
-  const fullH = useMemo(() => (data && fit ? pathHeight(pathExtent(data, fit, pts, FULL_PATH), PATH_W) : 260), [data, fit, pts]);
+  const fullH = useMemo(
+    () => (data && fit ? pathHeight(pathExtent(data, fit, pts, FULL_PATH), FIGURE_W) : 260),
+    [data, fit, pts],
+  );
   const nearH = useMemo(
-    () => (data && fit && zoomed ? pathHeight(pathExtent(data, fit, pts, LOOP_PATH), PATH_W) : 0),
+    () => (data && fit && zoomed ? pathHeight(pathExtent(data, fit, pts, LOOP_PATH), FIGURE_W) : 0),
     [data, fit, pts, zoomed],
   );
   const drawFull = useCallback(
@@ -96,9 +98,8 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
     [gClass, nCcd],
   );
 
-  const TL_W = 352;
   const pickTransit = (x: number) => {
-    const year = timelineYearAt(x, TL_W);
+    const year = timelineYearAt(x, FIGURE_W);
     let best = 0;
     pts.forEach((p, i) => {
       if (Math.abs(p.year - year) < Math.abs(pts[best].year - year)) best = i;
@@ -167,12 +168,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             caption={t('dr4.pixels.caption', { n: nCcd, window: WINDOWS[gClass]?.label ?? WINDOWS[3].label, date: releaseDate })}
           >
             <div className="plate pixels">
-              <CanvasArt width={352} height={pixelsHeight(gClass)} draw={drawP} label={t('dr4.pixels')} />
+              <CanvasArt width={FIGURE_W} height={pixelsHeight(gClass)} draw={drawP} label={t('dr4.pixels')} />
             </div>
           </Figure>
 
           <Figure n={nextFig()} title={t('dr4.timeline')} caption={t('dr4.timeline.caption', { n: pts.length })}>
-            <CanvasArt width={TL_W} height={92} draw={drawT} label={t('dr4.timeline')} onPick={pickTransit} />
+            <CanvasArt width={FIGURE_W} height={92} draw={drawT} label={t('dr4.timeline')} onPick={pickTransit} />
             <div className="transit-readout">
               <button className="icon-btn small" onClick={() => step(-1)} aria-label="←">
                 ←
@@ -213,12 +214,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             >
               <div className="plate">
                 {zoomed && <p className="panel-label mono">a · {t('dr4.wobble.full')}</p>}
-                <CanvasArt width={PATH_W} height={fullH} draw={drawFull} label={t('dr4.wobble')} />
+                <CanvasArt width={FIGURE_W} height={fullH} draw={drawFull} label={t('dr4.wobble')} />
               </div>
               {zoomed && (
                 <div className="plate">
                   <p className="panel-label mono">b · {t('dr4.wobble.year')}</p>
-                  <CanvasArt width={PATH_W} height={nearH} draw={drawNear} label={t('dr4.wobble.year')} />
+                  <CanvasArt width={FIGURE_W} height={nearH} draw={drawNear} label={t('dr4.wobble.year')} />
                 </div>
               )}
             </Figure>
@@ -232,7 +233,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
                 wobbly ? t('dr4.residuals.wobble', { uwe: nf(fit.uwe, 1) }) : t('dr4.residuals.single', { rms: nf(fit.rms) })
               }
             >
-              <CanvasArt width={352} height={150} draw={drawR} label={t('dr4.residuals')} />
+              <CanvasArt width={FIGURE_W} height={150} draw={drawR} label={t('dr4.residuals')} />
             </Figure>
           )}
         </>

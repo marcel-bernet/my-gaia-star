@@ -13,18 +13,16 @@ import type { Star } from '../sky/gaia';
 import {
   galacticHeightKpc,
   galacticPlanePosition,
-  LY_PER_PC,
+  LY_PER_KPC,
   SUN_GALACTOCENTRIC_KPC,
   SUN_HEIGHT_KPC,
   toGalactic,
 } from '../sky/physics';
 import { haloText, markWithLabel, rng, type Box } from './panels';
-import { CREAM, GOLD, MUTED } from './theme';
+import { CREAM, GOLD, MONO, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
-const SANS = '"Inter Variable", system-ui, sans-serif';
-const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const DEG = Math.PI / 180;
 const PITCH = 12 * DEG;
 const K = Math.tan(PITCH);
@@ -36,7 +34,6 @@ const THICK_KPC = 0.9;
 /** Closer than this, the views zoom in on the Sun and the star. */
 const CLOSE_UP_KPC = 5;
 const FULL_VIEW_KPC = 16.5;
-const LY_PER_KPC = LY_PER_PC * 1000;
 const SUN = { x: 0, y: -SUN_GALACTOCENTRIC_KPC };
 
 // Arms are placed to match the Milky Way along the Sun's line to the centre

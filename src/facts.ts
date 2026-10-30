@@ -6,6 +6,7 @@ import {
   distanceLy,
   galacticHeightKpc,
   lightDepartureYear,
+  LY_PER_KPC,
   luminositySun,
   properMotion,
   spectralClass,
@@ -65,7 +66,7 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
   }
   const z = galacticHeightKpc(star);
   if (z !== null) {
-    const ly = sig(locale, Math.abs(z) * 3261.56);
+    const ly = sig(locale, Math.abs(z) * LY_PER_KPC);
     facts.push({ label: t('fact.height'), value: t(z >= 0 ? 'fact.height.above' : 'fact.height.below', { ly }) });
   }
   const temp = temperature(star);

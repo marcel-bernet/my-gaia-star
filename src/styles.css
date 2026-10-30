@@ -2,6 +2,9 @@
  * My Gaia Star — a research notebook, not a landing page.
  * Neutral graphite, one serif for statements, a mono for anything measured,
  * and gold reserved for one thing only: your star.
+ *
+ * Canvas drawings can't read these variables: src/certificate/theme.ts
+ * repeats the colours and fonts, so change both together.
  */
 :root {
   --bg: #0c0d0f;

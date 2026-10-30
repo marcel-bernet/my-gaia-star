@@ -2,12 +2,19 @@ import { useState, type FormEvent } from 'react';
 import type { LiteratureState, Place, Result, Status } from '../types';
 import { REPO_URL } from '../config';
 import { searchPlace } from '../geo';
-import { LANGS, useI18n, type Lang } from '../i18n';
+import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
 import StarCard from './StarCard';
 import StarFinder from './StarFinder';
 
 export type Mode = 'now' | 'moment';
+
+/** Headline numbers on the landing page (ESA's published counts). */
+const GAIA_STATS: [number, Key][] = [
+  [1_811_709_771, 'stat.dr3'],
+  [2_793_009_568, 'stat.dr4'],
+  [129_625_750_708, 'stat.passes'],
+];
 
 const DEPTH_MAG: Record<Depth, string> = {
   'naked-eye': 'G < 6',
@@ -100,18 +107,12 @@ export default function Panel(p: Props) {
           <>
             <p className="lede">{t('intro')}</p>
             <dl className="stats">
-              <div>
-                <dt>{nf.format(1_811_709_771)}</dt>
-                <dd>{t('stat.dr3')}</dd>
-              </div>
-              <div>
-                <dt>{nf.format(2_793_009_568)}</dt>
-                <dd>{t('stat.dr4')}</dd>
-              </div>
-              <div>
-                <dt>{nf.format(129_625_750_708)}</dt>
-                <dd>{t('stat.passes')}</dd>
-              </div>
+              {GAIA_STATS.map(([n, label]) => (
+                <div key={label}>
+                  <dt>{nf.format(n)}</dt>
+                  <dd>{t(label)}</dd>
+                </div>
+              ))}
             </dl>
             <button className="point-btn" onClick={p.onPoint}>
               <span aria-hidden="true">?</span> {t('point')}

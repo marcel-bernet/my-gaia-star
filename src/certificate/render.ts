@@ -19,7 +19,7 @@ import { hasDistance, visibility } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
 import { drawGalaxyFaceOn, isCloseUp, type GalaxyLabels } from './galaxy';
 import { drawHr, drawStarPortrait } from './panels';
-import { CREAM, FAINT, GOLD, INK, MONO, MUTED, PLATE, RULE, SANS, SERIF } from './theme';
+import { BG, CREAM, FAINT, GOLD, MONO, MUTED, PLATE, RULE, SANS, SERIF } from './theme';
 
 /** What DR4 showed for this star, when its own data was available. */
 export interface Dr4Summary {
@@ -183,7 +183,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   const ctx = canvas.getContext('2d')!;
   ctx.textBaseline = 'alphabetic';
 
-  ctx.fillStyle = INK;
+  ctx.fillStyle = BG;
   ctx.fillRect(0, 0, PAGE_W, PAGE_H);
   cornerMarks(ctx);
 

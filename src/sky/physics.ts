@@ -3,6 +3,7 @@ import type { Star } from './gaia';
 
 const DEG = Math.PI / 180;
 export const LY_PER_PC = 3.26156;
+export const LY_PER_KPC = LY_PER_PC * 1000;
 
 /** Effective temperature (K): Gaia's own GSP-Phot value, else from BP−RP colour. */
 export function temperature(star: Pick<Star, 'teff' | 'bpRp'>): number | null {
