@@ -1,11 +1,10 @@
-import { useState, type FormEvent } from 'react';
-import type { LiteratureState, Place, Result, Status } from '../types';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import type { Place, Status } from '../types';
 import { REPO_URL } from '../config';
 import type { WallTime } from '../sky/time';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
-import StarCard from './StarCard';
 import StarFinder from './StarFinder';
 
 export type Mode = 'now' | 'moment';
@@ -36,14 +35,10 @@ interface Props {
   onDepth: (d: Depth) => void;
   status: Status;
   onRun: () => void;
-  result: Result | null;
-  resultPlaceName: string | null;
-  selected: Star | null;
-  literature: LiteratureState;
-  onBackToZenith: () => void;
-  onMap: boolean;
-  onToggleMap: () => void;
-  onCertificate: () => void;
+  /** The star on screen, if any. */
+  currentStarId: string | null;
+  /** The star card, shown below the form. */
+  children?: ReactNode;
   onAbout: () => void;
   onPoint: () => void;
   onFound: (star: Star, when: Date | null) => void;
@@ -83,7 +78,7 @@ export default function Panel(p: Props) {
   };
 
   const loading = p.status.kind === 'loading';
-  const hasResult = !!p.result && !!p.selected;
+  const hasResult = p.currentStarId !== null;
   const nf = new Intl.NumberFormat(lang, { notation: 'compact', compactDisplay: 'long', maximumSignificantDigits: 3 });
 
   return (
@@ -226,20 +221,9 @@ export default function Panel(p: Props) {
         )}
       </section>
 
-      <StarFinder current={p.selected?.id ?? null} onFound={p.onFound} />
+      <StarFinder current={p.currentStarId} onFound={p.onFound} />
 
-      {hasResult && p.result && p.selected && (
-        <StarCard
-          star={p.selected}
-          result={p.result}
-          placeName={p.resultPlaceName}
-          literature={p.literature}
-          onBackToZenith={p.onBackToZenith}
-          onMap={p.onMap}
-          onToggleMap={p.onToggleMap}
-          onCertificate={p.onCertificate}
-        />
-      )}
+      {p.children}
 
       <footer className="colophon">
         <button className="link" onClick={p.onAbout}>
