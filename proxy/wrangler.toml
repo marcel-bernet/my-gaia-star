@@ -1,0 +1,9 @@
+# Cloudflare Worker for DR4 epoch data. Deploy with:  cd proxy && npx wrangler deploy
+# Then build the site with VITE_DR4_PROXY=https://my-gaia-star-dr4.<your-account>.workers.dev
+name = "my-gaia-star-dr4"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# The site's origin (scheme + host, no path). Only this origin may read the proxy's answers.
+ALLOWED_ORIGIN = "https://marcel-bernet.github.io"

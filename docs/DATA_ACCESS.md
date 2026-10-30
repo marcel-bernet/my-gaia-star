@@ -34,7 +34,7 @@ DataLink format check (DR3, today): `?RETRIEVAL_TYPE=EPOCH_PHOTOMETRY&ID=…&REL
 1. Read the DR4 data model: confirm the DataLink `RETRIEVAL_TYPE` names (`EPOCH_ASTROMETRY`? `EPOCH_IMAGE`?) and the `RELEASE` string; fix `PRODUCTS` in `proxy/worker.js`.
 2. Pull one real star through the proxy; run it through `fromVotable` (the pre-release columns — `obs_time_tcb`, `scan_pos_angle`, `centroid_pos_al`, `centroid_pos_error_al`, `used_by_agis_al`, `parallax_factor_al` — are what the code reads; check none were renamed).
 3. DR3 → DR4 identifiers: most `source_id`s carry over. For the rest, DR4 ships a DR3 cross-match table; resolve in the proxy (one TAP query, cached) and keep the site on DR3 ids until VizieR/GAVO serve DR4 cones.
-4. `wrangler deploy`, rebuild the site with `VITE_DR4_PROXY=…`, push.
+4. `cd proxy && npx wrangler deploy` (settings in `proxy/wrangler.toml`), rebuild the site with `VITE_DR4_PROXY=…`, push.
 5. Then: swap the cone search to DR4 when `I/3xx/gaiadr4` (VizieR) or a GAVO `gaia.dr4lite` appears; add the light curve; then the pixels.
 
 ## 2. Will a public site get blocked?

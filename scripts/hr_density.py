@@ -4,7 +4,7 @@ One-off build step (the output is committed). The Gaia archive bins every
 well-measured star within 200 pc server-side, so only the histogram comes
 back. The PNG is greyscale log-density; the app colours it.
 
-    python3 -m venv .venv && .venv/bin/pip install pillow numpy
+    python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
     .venv/bin/python scripts/hr_density.py
 """
 import csv, io, json, sys, urllib.parse, urllib.request

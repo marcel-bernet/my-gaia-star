@@ -49,7 +49,7 @@ LIVE=1 npx vitest run gaia.live   # also query the real Gaia services
 npm run build      # static site in dist/
 ```
 
-The bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `numpy` and `pillow`):
+The bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `pip install -r scripts/requirements.txt`):
 
 ```bash
 python3 scripts/naked_eye_stars.py
