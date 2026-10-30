@@ -8,7 +8,7 @@
  * each visitor has their own IP, and we debounce and cache, so a busy site
  * does not add up against one limit.
  */
-const TAP = 'https://simbad.cds.unistra.fr/simbad/sim-tap/sync';
+import { SERVICES } from '../config';
 
 export type Literature = { known: false } | { known: true; name: string; papers: number; type: string | null };
 
@@ -51,7 +51,7 @@ export function literatureFor(gaiaDr3Id: string, signal?: AbortSignal): Promise<
       'SELECT b.main_id, b.nbref, b.otype FROM basic AS b JOIN ident AS i ON i.oidref = b.oid ' +
       `WHERE i.id = 'Gaia DR3 ${gaiaDr3Id}'`;
     const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-    p = fetch(`${TAP}?${params}`, { signal: AbortSignal.timeout(15_000) })
+    p = fetch(`${SERVICES.simbadTap}?${params}`, { signal: AbortSignal.timeout(15_000) })
       .then(r => {
         if (!r.ok) throw new Error(`SIMBAD: HTTP ${r.status}`);
         return r.text();

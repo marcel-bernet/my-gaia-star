@@ -17,7 +17,6 @@ import {
 import {
   closestPreview,
   daysToDr4,
-  DR4_RELEASE,
   dr4IsOut,
   epochAstrometryFor,
   isReleaseDay,
@@ -25,6 +24,7 @@ import {
   type Dr4Result,
   type PreviewEntry,
 } from '../dr4/source';
+import { DR4_RELEASE } from '../config';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import CanvasArt from './CanvasArt';

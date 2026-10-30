@@ -3,6 +3,7 @@ import type { Result } from '../App';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
 import { formatRatio } from '../certificate/render';
+import { simbadUrl } from '../config';
 import { CREAM, GOLD, MUTED } from '../certificate/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
@@ -86,11 +87,7 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
       <p className="first-title">{t('first.known.title', { name: literature.name })}</p>
       <p className="first-body">
         {t('first.known.body', { papers })}{' '}
-        <a
-          href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${id}`)}`}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={simbadUrl(id)} target="_blank" rel="noreferrer">
           SIMBAD ↗
         </a>
       </p>
@@ -337,12 +334,7 @@ export default function StarCard({
             ← {t('result.backToZenith')}
           </button>
         )}
-        <a
-          className="link"
-          href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${star.id}`)}`}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a className="link" href={simbadUrl(star.id)} target="_blank" rel="noreferrer">
           {t('action.simbad')} ↗
         </a>
       </div>

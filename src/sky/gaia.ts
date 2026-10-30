@@ -16,6 +16,7 @@
  * brightness in the cone, so the "bright" depth probes a small cone first and
  * only then asks for the radius it actually needs.
  */
+import { SERVICES } from '../config';
 
 export type Depth = 'naked-eye' | 'bright' | 'faint' | 'all';
 
@@ -52,9 +53,7 @@ const ALL: Cone = { radiusDeg: 400 / 3600, maxMag: null, limit: LIMIT };
 const BRIGHT_PROBE: Cone = { radiusDeg: 0.25, maxMag: 13, limit: LIMIT };
 const BRIGHT_MAX_RADIUS_DEG = 1.5;
 
-const VIZIER_CONE = 'https://vizier.cds.unistra.fr/viz-bin/asu-tsv';
 const VIZIER_COLUMNS = ['Source', 'RA_ICRS', 'DE_ICRS', 'Gmag', 'BP-RP', 'Plx', 'e_Plx', 'pmRA', 'pmDE', 'RV', 'Teff'];
-const GAVO_TAP = 'https://dc.g-vo.org/tap/sync';
 const TIMEOUT_MS = 30_000;
 
 export class CatalogueUnavailable extends Error {}
@@ -111,7 +110,7 @@ async function vizierCone(ra: number, dec: number, cone: Cone, signal?: AbortSig
     '-out.max': String(cone.limit),
   });
   if (cone.maxMag !== null) params.set('Gmag', `<${cone.maxMag}`);
-  const res = await get(`${VIZIER_CONE}?${params}`, signal);
+  const res = await get(`${SERVICES.vizier}?${params}`, signal);
   return parseTsv(await res.text()).flatMap(toStar);
 }
 
@@ -147,7 +146,7 @@ async function gavoCone(ra: number, dec: number, cone: Cone, signal?: AbortSigna
     `FROM gaia.dr3lite WHERE ${where.join(' AND ')} ORDER BY d`;
   // CSV rather than JSON: JSON numbers would round the 19-digit Gaia IDs.
   const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-  const res = await get(`${GAVO_TAP}?${params}`, signal);
+  const res = await get(`${SERVICES.gavoTap}?${params}`, signal);
   return parseCsv(await res.text()).flatMap(fromGavo);
 }
 
@@ -245,7 +244,7 @@ export async function starById(id: string, signal?: AbortSignal): Promise<Star |
       '-out': VIZIER_COLUMNS.join(','),
       '-out.max': '1',
     });
-    const res = await get(`${VIZIER_CONE}?${params}`, signal);
+    const res = await get(`${SERVICES.vizier}?${params}`, signal);
     return (
       parseTsv(await res.text())
         .flatMap(r => toStar(r))
@@ -257,7 +256,7 @@ export async function starById(id: string, signal?: AbortSignal): Promise<Star |
       'SELECT source_id,ra,dec,phot_g_mean_mag,phot_bp_mean_mag-phot_rp_mean_mag AS bp_rp,' +
       `parallax,parallax_error,pmra,pmdec,radial_velocity FROM gaia.dr3lite WHERE source_id=${id}`;
     const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-    const res = await get(`${GAVO_TAP}?${params}`, signal);
+    const res = await get(`${SERVICES.gavoTap}?${params}`, signal);
     return parseCsv(await res.text()).flatMap(r => fromGavo(r))[0] ?? null;
   }
 }

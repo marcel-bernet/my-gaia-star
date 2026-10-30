@@ -2,6 +2,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { starColor } from '../sky/physics';
@@ -128,8 +129,8 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
     >
       <TileLayer
         // Plain OSM tiles (no API key), turned into a night map by CSS (see .leaflet-tile-pane).
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution={SERVICES.tilesAttribution}
+        url={SERVICES.tiles}
         maxZoom={19}
       />
       <ClickToPick onPick={onPick} />

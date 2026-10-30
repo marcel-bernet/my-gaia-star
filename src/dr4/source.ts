@@ -7,12 +7,9 @@
  * through that proxy — ESA's archive sends no CORS headers, so a browser
  * cannot call it directly. See docs/DATA_ACCESS.md and proxy/.
  */
+import { DR4_PROXY as PROXY, DR4_RELEASE } from '../config';
 import type { Star } from '../sky/gaia';
 import { fromPreview, fromVotable, type EpochAstrometry, type PreviewSource } from './epoch';
-
-/** 2 December 2026, about 12:00 CET. */
-export const DR4_RELEASE = new Date('2026-12-02T11:00:00Z');
-const PROXY: string | undefined = import.meta.env.VITE_DR4_PROXY;
 
 export const dr4IsOut = (now = new Date()) => now >= DR4_RELEASE;
 export const daysToDr4 = (now = new Date()) => Math.max(0, Math.ceil((DR4_RELEASE.getTime() - now.getTime()) / 86400e3));

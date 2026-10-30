@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { Place, Result, Status } from '../App';
+import { REPO_URL } from '../config';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Lang } from '../i18n';
 import type { Literature } from '../sky/simbad';
@@ -246,7 +247,7 @@ export default function Panel(p: Props) {
         <button className="link" onClick={p.onPoint}>
           {t('point')}
         </button>
-        <a className="link" href="https://github.com/marcel-bernet/my-gaia-star" target="_blank" rel="noreferrer">
+        <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
           GitHub
         </a>
         <span className="credit">ESA/Gaia/DPAC · CDS · OSM</span>

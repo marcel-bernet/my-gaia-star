@@ -2,7 +2,7 @@
  * Place names via OpenStreetMap Nominatim. Their usage policy asks for at most
  * one request per second and no search-as-you-type, so we only search on submit.
  */
-const BASE = 'https://nominatim.openstreetmap.org';
+import { SERVICES } from './config';
 
 export interface Place {
   lat: number;
@@ -28,7 +28,7 @@ function shortName(r: NominatimResult): string {
 
 export async function searchPlace(query: string, lang: string): Promise<Place | null> {
   const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1', addressdetails: '1', 'accept-language': lang });
-  const res = await fetch(`${BASE}/search?${params}`);
+  const res = await fetch(`${SERVICES.nominatim}/search?${params}`);
   if (!res.ok) return null;
   const [r] = (await res.json()) as NominatimResult[];
   return r ? { lat: Number(r.lat), lon: Number(r.lon), name: shortName(r) } : null;
@@ -71,7 +71,7 @@ async function reverse(lat: number, lon: number, lang: string): Promise<string |
     'accept-language': lang,
   });
   try {
-    const res = await fetch(`${BASE}/reverse?${params}`);
+    const res = await fetch(`${SERVICES.nominatim}/reverse?${params}`);
     if (!res.ok) return null;
     const r = (await res.json()) as NominatimResult & { error?: string };
     return r.error ? null : shortName(r);
