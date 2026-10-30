@@ -16,6 +16,8 @@ const PROXY: string | undefined = import.meta.env.VITE_DR4_PROXY;
 
 export const dr4IsOut = (now = new Date()) => now >= DR4_RELEASE;
 export const daysToDr4 = (now = new Date()) => Math.max(0, Math.ceil((DR4_RELEASE.getTime() - now.getTime()) / 86400e3));
+/** True for the first 24 hours after the release. */
+export const isReleaseDay = (now = new Date()) => dr4IsOut(now) && now.getTime() - DR4_RELEASE.getTime() < 86400e3;
 
 export interface PreviewEntry {
   meta: Omit<PreviewSource, 'transits'> & { g: number };

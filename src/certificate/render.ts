@@ -7,6 +7,7 @@
  * literature check, numbered figures, a table of measurements, and what
  * Gaia DR4 adds (or will add) for this star.
  */
+import { dr4IsOut } from '../dr4/source';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
@@ -363,7 +364,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     ctx.font = `400 23px ${SANS}`;
     ctx.fillStyle = MUTED;
     ctx.textAlign = 'left';
-    wrap(ctx, t('cert.dr4.pending', { date: input.dr4Date }), W - 260)
+    wrap(ctx, t(dr4IsOut(input.made) ? 'cert.dr4.out' : 'cert.dr4.pending', { date: input.dr4Date }), W - 260)
       .slice(0, 3)
       .forEach((l, k) => ctx.fillText(l, M + 260, dr4Top + 46 + k * 31));
   }

@@ -14,7 +14,7 @@ import {
   WINDOWS,
   LOOP_PATH,
 } from '../dr4/plots';
-import { closestPreview, daysToDr4, DR4_RELEASE, epochAstrometryFor, loadPreview, type Dr4Result, type PreviewEntry } from '../dr4/source';
+import { closestPreview, daysToDr4, DR4_RELEASE, dr4IsOut, epochAstrometryFor, isReleaseDay, loadPreview, type Dr4Result, type PreviewEntry } from '../dr4/source';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import CanvasArt from './CanvasArt';
@@ -93,7 +93,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
 
   const nf = (n: number, digits = 2) => new Intl.NumberFormat(lang, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
   const releaseDate = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE);
+  const out = dr4IsOut();
   const days = daysToDr4();
+  // Before the release: a countdown. On release day: "Today". After that: nothing.
+  const badge = !out ? t('dr4.countdown', { n: days }) : isReleaseDay() ? t('dr4.today') : null;
   const yearToDate = (y: number) => new Date(Date.UTC(Math.floor(y), 0, 1) + (y - Math.floor(y)) * 365.25 * 86400e3);
   const isQso = !live && picked?.meta.group === 'qso';
   const wobbly = fit !== null && fit.uwe > 1.4;
@@ -104,10 +107,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
     <section className="dr4" aria-labelledby="dr4-title">
       <header className="dr4-head">
         <p className="kicker">
-          {t('dr4.kicker')} <span className="countdown mono">{days > 0 ? t('dr4.countdown', { n: days }) : t('dr4.today')}</span>
+          {t(out ? 'dr4.kicker.out' : 'dr4.kicker')} {badge && <span className="countdown mono">{badge}</span>}
         </p>
         <h2 id="dr4-title">{t('dr4.title')}</h2>
-        <p className="lede">{t('dr4.lead', { date: releaseDate })}</p>
+        <p className="lede">{t(out ? 'dr4.lead.out' : 'dr4.lead', { date: releaseDate })}</p>
         <p className="note">
           {live
             ? t('dr4.live')
@@ -115,7 +118,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
               ? t('dr4.notFound')
               : status?.kind === 'preview' && status.reason === 'error'
                 ? t('dr4.error')
-                : t('dr4.standin')}
+                : t(out ? 'dr4.standin.out' : 'dr4.standin')}
         </p>
       </header>
 
