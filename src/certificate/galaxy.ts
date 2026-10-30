@@ -9,6 +9,7 @@
  * seen from the north Galactic pole. Edge-on: horizontal is the face-on y axis
  * (towards the centre), vertical is height above the mid-plane.
  */
+import type { T } from '../i18n';
 import type { Star } from '../sky/gaia';
 import {
   galacticHeightKpc,
@@ -57,6 +58,20 @@ export interface GalaxyLabels {
   /** "Galactic plane". */
   plane: string;
   arm: (name: ArmName) => string;
+}
+
+/** The galaxy views' labels in the visitor's language. */
+export function galaxyLabels(t: T, lang: string): GalaxyLabels {
+  const ly = (n: number) => new Intl.NumberFormat(lang).format(n);
+  return {
+    sun: t('cert.mw.sun'),
+    yourStar: t('chart.yourStar'),
+    centre: t('galaxy.centre'),
+    scale: n => t('fact.distance.value', { ly: ly(n) }),
+    ly: n => t('galaxy.ly', { ly: ly(n) }),
+    plane: t('galaxy.plane'),
+    arm: name => t(`arm.${name}`),
+  };
 }
 
 const armWidth = (r: number) => 0.3 + 0.04 * r;

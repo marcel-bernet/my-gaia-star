@@ -12,9 +12,20 @@ export function timeZoneAt(lat: number, lon: number): string {
   }
 }
 
-interface WallTime {
+/** What a clock on the wall shows, as <input type="date"> and <input type="time"> want it. */
+export interface WallTime {
   date: string; // YYYY-MM-DD
   time: string; // HH:MM
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** What the visitor's own clock shows. */
+export function localWallTime(d = new Date()): WallTime {
+  return {
+    date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+    time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+  };
 }
 
 function partsIn(zone: string, instant: Date): Record<string, number> {
@@ -54,8 +65,7 @@ export function wallTimeToInstant(wall: WallTime, zone: string): Date {
 /** What clocks in `zone` showed at `instant`. */
 export function instantToWallTime(instant: Date, zone: string): WallTime {
   const p = partsIn(zone, instant);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return { date: `${p.year}-${pad(p.month)}-${pad(p.day)}`, time: `${pad(p.hour)}:${pad(p.minute)}` };
+  return { date: `${p.year}-${pad2(p.month)}-${pad2(p.day)}`, time: `${pad2(p.hour)}:${pad2(p.minute)}` };
 }
 
 export function formatMoment(instant: Date, zone: string, locale: string): string {

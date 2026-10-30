@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { LiteratureState, Result } from '../types';
-import { formatRatio } from '../certificate/render';
+import { twoSigFigs } from '../format';
 import { useI18n } from '../i18n';
 import { starName } from '../names/name';
 import { classify } from '../sky/classify';
@@ -90,7 +90,7 @@ export default function ShareDialog({ star, result, placeName, literature, onClo
       t('share.text.name', { name: starName(star.id, lang), id: star.id }),
       t(ly === null ? 'share.text.what' : 'share.text.whatFar', {
         what,
-        ly: ly === null ? '' : formatRatio(ly, lang),
+        ly: ly === null ? '' : twoSigFigs(ly, lang),
         place: placeName,
         moment: formatMoment(result.frame.date, result.zone, lang),
       }),

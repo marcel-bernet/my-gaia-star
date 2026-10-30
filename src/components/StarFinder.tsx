@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18n } from '../i18n';
+import { localWallTime } from '../sky/time';
 import type { Status } from '../types';
 import { digitsToId, idToDigits, isSourceId, parseName, segments, slotOptions, type Digits } from '../names/name';
 import { CatalogueUnavailable, starById, type Star } from '../sky/gaia';
 
 type By = 'id' | 'name';
 
+/** Now on the visitor's clock, as <input type="datetime-local"> wants it. */
 function localNow() {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const { date, time } = localWallTime();
+  return `${date}T${time}`;
 }
 
 /**

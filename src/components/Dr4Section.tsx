@@ -25,6 +25,7 @@ import {
   type PreviewEntry,
 } from '../dr4/source';
 import { DR4_RELEASE } from '../config';
+import { formatLongDate } from '../format';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import CanvasArt from './CanvasArt';
@@ -110,7 +111,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
 
   const nf = (n: number, digits = 2) =>
     new Intl.NumberFormat(lang, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
-  const releaseDate = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE);
+  const releaseDate = formatLongDate(DR4_RELEASE, lang);
   const out = dr4IsOut();
   const days = daysToDr4();
   // Before the release: a countdown. On release day: "Today". After that: nothing.

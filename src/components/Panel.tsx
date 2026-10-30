@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { LiteratureState, Place, Result, Status } from '../types';
 import { REPO_URL } from '../config';
+import type { WallTime } from '../sky/time';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
@@ -28,8 +29,8 @@ interface Props {
   onPlace: (lat: number, lon: number, name: string | null) => void;
   mode: Mode;
   onMode: (m: Mode) => void;
-  wall: { date: string; time: string };
-  onWall: (w: { date: string; time: string }) => void;
+  wall: WallTime;
+  onWall: (w: WallTime) => void;
   zone: string | null;
   depth: Depth;
   onDepth: (d: Depth) => void;

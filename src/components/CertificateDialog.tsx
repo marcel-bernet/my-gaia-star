@@ -5,6 +5,7 @@ import { fitFiveParameters, transitPoints } from '../dr4/epoch';
 import { DR4_RELEASE } from '../config';
 import { epochAstrometryFor } from '../dr4/source';
 import type { Literature } from '../sky/simbad';
+import { formatLongDate } from '../format';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import { formatMoment } from '../sky/time';
@@ -51,7 +52,7 @@ export default function CertificateDialog({ star, result, placeName, literature,
         dedication,
         literature,
         dr4,
-        dr4Date: new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE),
+        dr4Date: formatLongDate(DR4_RELEASE, lang),
         made: new Date(),
         subtitle: `${formatMoment(result.frame.date, result.zone, lang)} · ${placeName}`,
         t,

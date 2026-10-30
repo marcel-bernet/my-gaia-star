@@ -1,7 +1,7 @@
 // Hits the real services. Run with: LIVE=1 npx vitest run gaia.live
 // Note this can't catch CORS problems — check those in a browser.
 import { describe, expect, it } from 'vitest';
-import { _services, starsAround, type Depth } from './gaia';
+import { gavoCone, starsAround, vizierCone, type Depth } from './gaia';
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -23,7 +23,7 @@ describe.runIf(process.env.LIVE)('Gaia services (live)', () => {
 
   it('GAVO fallback returns the same nearest star', { timeout: 60_000 }, async () => {
     const cone = { radiusDeg: 0.05, maxMag: null, limit: 20 };
-    const [v, g] = await Promise.all([_services.vizierCone(146.9, 41.4, cone), _services.gavoCone(146.9, 41.4, cone)]);
+    const [v, g] = await Promise.all([vizierCone(146.9, 41.4, cone), gavoCone(146.9, 41.4, cone)]);
     expect(g[0].id).toBe(v[0].id);
     expect(g[0].plx).toBeCloseTo(v[0].plx!, 3);
   });

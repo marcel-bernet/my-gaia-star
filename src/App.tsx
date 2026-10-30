@@ -10,17 +10,14 @@ import { CatalogueUnavailable, starsAround, type Depth, type Star } from './sky/
 import { hasDistance } from './sky/physics';
 import { literatureFor } from './sky/simbad';
 import type { LiteratureState, Place, Result, Status } from './types';
-import { instantToWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
+import { instantToWallTime, localWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
 import { skyFrame, subStellarPoint } from './sky/zenith';
 import { readUrl, writeUrl } from './urlState';
 import Readout from './components/Readout';
 import { constellationOf, constellationOnGround, loadSkyChart, type SkyChartData } from './sky/constellation';
 
-function todayWall() {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return { date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, time: '00:00' };
-}
+/** The time inputs start at midnight today. */
+const todayWall = () => ({ ...localWallTime(), time: '00:00' });
 
 export default function App() {
   const { t, lang } = useI18n();

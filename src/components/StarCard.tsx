@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LiteratureState, Result } from '../types';
-import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
+import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../certificate/galaxy';
 import { drawStarPortrait } from '../certificate/panels';
-import { formatRatio } from '../certificate/render';
 import { simbadUrl } from '../config';
 import { CREAM, GOLD, MUTED, SANS } from '../certificate/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
+import { twoSigFigs } from '../format';
 import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, type SkyChartData } from '../sky/constellation';
@@ -120,25 +120,14 @@ export default function StarCard({
       drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
     [star, kind, t],
   );
-  const galaxyLabels = useMemo<GalaxyLabels>(
-    () => ({
-      sun: t('cert.mw.sun'),
-      yourStar: t('chart.yourStar'),
-      centre: t('galaxy.centre'),
-      scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      plane: t('galaxy.plane'),
-      arm: name => t(`arm.${name}`),
-    }),
-    [t, lang],
-  );
+  const galaxyText = useMemo(() => galaxyLabels(t, lang), [t, lang]);
   const drawFaceOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
-    [star, galaxyLabels],
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+    [star, galaxyText],
   );
   const drawEdgeOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
-    [star, galaxyLabels],
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+    [star, galaxyText],
   );
   const height = galacticHeightKpc(star);
   const drawChart = useCallback(
@@ -238,7 +227,7 @@ export default function StarCard({
           caption={
             <>
               {kind.sure ? t(`kind.${kind.kind}.about` as Key) : t('kind.colourOnly')}
-              {kind.radiusSun !== null && <> {t('kind.size', { x: formatRatio(kind.radiusSun, lang) })}.</>}
+              {kind.radiusSun !== null && <> {t('kind.size', { x: twoSigFigs(kind.radiusSun, lang) })}.</>}
             </>
           }
         >
@@ -273,7 +262,7 @@ export default function StarCard({
         caption={
           height === null
             ? t('fact.height.unknown')
-            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * LY_PER_KPC, lang) })
+            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: twoSigFigs(Math.abs(height) * LY_PER_KPC, lang) })
         }
       >
         <div className="plate galaxy">

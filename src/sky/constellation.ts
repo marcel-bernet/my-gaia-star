@@ -5,6 +5,7 @@
  */
 import { Constellation } from 'astronomy-engine';
 import type { Lang } from '../i18n';
+import { fetchBundled, once } from '../lib/cache';
 import { temperatureToRgb } from './physics';
 import { radecToVec, starToLatLng, vecToRadec, type SkyFrame, type Vec3 } from './zenith';
 
@@ -24,19 +25,7 @@ export interface SkyChartData {
   stars: ChartStar[];
 }
 
-let data: Promise<SkyChartData> | null = null;
-export function loadSkyChart(): Promise<SkyChartData> {
-  data ??= fetch(`${import.meta.env.BASE_URL}sky-chart.json`)
-    .then(r => {
-      if (!r.ok) throw new Error(`sky-chart.json: HTTP ${r.status}`);
-      return r.json() as Promise<SkyChartData>;
-    })
-    .catch(e => {
-      data = null;
-      throw e;
-    });
-  return data;
-}
+export const loadSkyChart = once(() => fetchBundled<SkyChartData>('sky-chart.json'));
 
 /** IAU abbreviation, e.g. "UMa". */
 export function constellationOf(raDeg: number, decDeg: number): string {

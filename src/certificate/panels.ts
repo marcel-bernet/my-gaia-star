@@ -3,6 +3,7 @@ import type { Classification } from '../sky/classify';
 import { drawTargetMarker } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { absoluteMag, starColor, temperatureToRgb } from '../sky/physics';
+import { once } from '../lib/cache';
 import { GOLD, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
@@ -67,10 +68,9 @@ export function markWithLabel(ctx: Ctx, x: number, y: number, size: number, labe
 // Must match scripts/hr_density.py.
 export const HR_AXES = { xMin: -0.6, xMax: 4.6, yMin: -4, yMax: 17 };
 
-let hrImage: Promise<HTMLCanvasElement> | null = null;
 /** The density map, coloured night-blue to starlight (done once). */
-function loadHrDensity(): Promise<HTMLCanvasElement> {
-  hrImage ??= new Promise<HTMLImageElement>((resolve, reject) => {
+const loadHrDensity = once(() =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
@@ -104,9 +104,8 @@ function loadHrDensity(): Promise<HTMLCanvasElement> {
     }
     o.putImageData(px, 0, 0);
     return off;
-  });
-  return hrImage;
-}
+  }),
+);
 
 export interface HrLabels {
   hotter: string;

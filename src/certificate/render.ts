@@ -9,6 +9,7 @@
  */
 import { dr4IsOut } from '../dr4/source';
 import { starFacts } from '../facts';
+import { formatLongDate, twoSigFigs } from '../format';
 import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
@@ -17,7 +18,7 @@ import type { Star } from '../sky/gaia';
 import type { Literature } from '../sky/simbad';
 import { hasDistance, visibility } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
-import { drawGalaxyFaceOn, isCloseUp, type GalaxyLabels } from './galaxy';
+import { drawGalaxyFaceOn, galaxyLabels, isCloseUp } from './galaxy';
 import { drawHr, drawStarPortrait } from './panels';
 import { BG, CREAM, FAINT, GOLD, MONO, MUTED, PLATE, RULE, SANS, SERIF } from './theme';
 
@@ -188,7 +189,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   cornerMarks(ctx);
 
   // Record header.
-  const made = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(input.made);
+  const made = formatLongDate(input.made, lang);
   kicker(ctx, `My Gaia Star · ${t('cert.record')}`, M, 150);
   kicker(ctx, made, M + W, 150, FAINT, 'right');
   rule(ctx, 172);
@@ -351,21 +352,12 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     brighter: t('cert.hr.brighter'),
     yourStar: t('chart.yourStar'),
   });
-  const galaxyLabels: GalaxyLabels = {
-    sun: t('cert.mw.sun'),
-    yourStar: t('chart.yourStar'),
-    centre: t('galaxy.centre'),
-    scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
-    ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
-    plane: t('galaxy.plane'),
-    arm: name => t(`arm.${name}`),
-  };
-  drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top + 10, w: side, h: side }, star, galaxyLabels);
+  drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top + 10, w: side, h: side }, star, galaxyLabels(t, lang));
 
   const capY = top + ph + 40;
   const sizeText =
     kind?.radiusSun != null
-      ? t('kind.size', { x: formatRatio(kind.radiusSun, lang) })
+      ? t('kind.size', { x: twoSigFigs(kind.radiusSun, lang) })
       : kind && !kind.sure
         ? t('kind.colourOnly')
         : t('kind.sizeUnknown');
@@ -416,11 +408,6 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
 }
 
 /** "3.4", "0.012", "1,200" — two significant figures. */
-export function formatRatio(x: number, locale: string) {
-  return x >= 100
-    ? new Intl.NumberFormat(locale).format(Number(x.toPrecision(2)))
-    : new Intl.NumberFormat(locale, { maximumSignificantDigits: 2 }).format(x);
-}
 
 export async function downloadPng(canvas: HTMLCanvasElement, filename: string) {
   const blob = await new Promise<Blob>(r => canvas.toBlob(b => r(b!), 'image/png'));
