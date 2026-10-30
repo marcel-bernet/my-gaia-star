@@ -72,7 +72,10 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
   const kind = classify(star)?.kind;
   const cls = spectralClass(star, kind === 'giant' || kind === 'red-giant' || kind === 'supergiant' || kind === 'subgiant');
   if (temp !== null && cls) {
-    facts.push({ label: t('fact.colour'), value: t('fact.colour.value', { temp: fmt(locale, Math.round(temp / 50) * 50), cls }) });
+    facts.push({
+      label: t('fact.colour'),
+      value: t('fact.colour.value', { temp: fmt(locale, Math.round(temp / 50) * 50), cls }),
+    });
   }
   facts.push({ label: t('fact.brightness'), value: t('fact.brightness.value', { v: fmt(locale, vMagnitude(star), 1) }) });
   facts.push({ label: t('fact.see'), value: t(`see.${visibility(star)}`) });
@@ -81,7 +84,10 @@ export function starFacts(star: Star, seenAt: Date, t: T, locale: string): Fact[
   const pm = properMotion(star);
   // 1° = 3.6 million mas: how long the star takes to drift one degree across the sky.
   if (pm !== null && pm > 0.05) {
-    facts.push({ label: t('fact.motion'), value: t('fact.motion.value', { pm: fmt(locale, pm, 1), years: sig(locale, 3.6e6 / pm) }) });
+    facts.push({
+      label: t('fact.motion'),
+      value: t('fact.motion.value', { pm: fmt(locale, pm, 1), years: sig(locale, 3.6e6 / pm) }),
+    });
   }
   if (star.rv !== null) {
     facts.push({

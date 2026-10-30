@@ -79,7 +79,14 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): st
 }
 
 /** Letter-spaced text (canvas letterSpacing isn't everywhere yet). Returns its width. */
-function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, tracking: number, align: 'left' | 'center' | 'right' = 'left') {
+function spaced(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  tracking: number,
+  align: 'left' | 'center' | 'right' = 'left',
+) {
   const chars = [...text];
   const width = chars.reduce((w, c) => w + ctx.measureText(c).width + tracking, -tracking);
   let cx = align === 'left' ? x : align === 'center' ? x - width / 2 : x - width;
@@ -91,14 +98,29 @@ function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
   return width;
 }
 
-function kicker(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color = FAINT, align: 'left' | 'center' | 'right' = 'left') {
+function kicker(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  color = FAINT,
+  align: 'left' | 'center' | 'right' = 'left',
+) {
   ctx.font = `500 20px ${MONO}`;
   ctx.fillStyle = color;
   return spaced(ctx, text.toUpperCase(), x, y, 2.5, align);
 }
 
 /** "Fig. 2  Where to look — Lyra" */
-function figTitle(ctx: CanvasRenderingContext2D, n: number, title: string, x: number, y: number, t: T, kind: 'fig' | 'table' = 'fig') {
+function figTitle(
+  ctx: CanvasRenderingContext2D,
+  n: number,
+  title: string,
+  x: number,
+  y: number,
+  t: T,
+  kind: 'fig' | 'table' = 'fig',
+) {
   ctx.font = `400 21px ${MONO}`;
   ctx.fillStyle = FAINT;
   ctx.textAlign = 'left';
@@ -114,7 +136,9 @@ function caption(ctx: CanvasRenderingContext2D, text: string, x: number, y: numb
   ctx.font = `400 21px ${SANS}`;
   ctx.fillStyle = MUTED;
   ctx.textAlign = 'left';
-  wrap(ctx, text, width).slice(0, lines).forEach((l, k) => ctx.fillText(l, x, y + k * 29));
+  wrap(ctx, text, width)
+    .slice(0, lines)
+    .forEach((l, k) => ctx.fillText(l, x, y + k * 29));
 }
 
 function rule(ctx: CanvasRenderingContext2D, y: number, x = M, w = W) {
@@ -217,7 +241,9 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     literature === null
       ? null
       : literature.known
-        ? t('first.known.body', { papers: literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers }) })
+        ? t('first.known.body', {
+            papers: literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers }),
+          })
         : t('cert.firstLook.body', { date: made });
   ctx.font = `500 40px ${SERIF}`;
   const stLines = wrap(ctx, statement, W - 70).slice(0, 2);
@@ -292,7 +318,9 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     ctx.fillText(f.label, fx, fy + 34);
     ctx.font = `400 27px ${SANS}`;
     ctx.fillStyle = CREAM;
-    wrap(ctx, f.value, colW - 36).slice(0, 2).forEach((l, k) => ctx.fillText(l, fx, fy + 70 + k * 32));
+    wrap(ctx, f.value, colW - 36)
+      .slice(0, 2)
+      .forEach((l, k) => ctx.fillText(l, fx, fy + 70 + k * 32));
   });
 
   // Three figures: what kind of star, HR diagram, Milky Way.
@@ -306,7 +334,10 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   figTitle(ctx, nextFig(), t('cert.mw'), px[2], panelsTop, t);
   for (const x of px) plate(ctx, x, top, pw, ph);
 
-  drawStarPortrait(ctx, { x: px[0], y: top + 10, w: pw, h: ph - 80 }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') });
+  drawStarPortrait(ctx, { x: px[0], y: top + 10, w: pw, h: ph - 80 }, star, kind, {
+    sun: t('kind.sun'),
+    star: t('chart.yourStar'),
+  });
   if (kind) {
     ctx.font = `500 34px ${SERIF}`;
     ctx.fillStyle = CREAM;
@@ -326,14 +357,18 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     centre: t('galaxy.centre'),
     scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
     ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      plane: t('galaxy.plane'),
+    plane: t('galaxy.plane'),
     arm: name => t(`arm.${name}`),
   };
   drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top + 10, w: side, h: side }, star, galaxyLabels);
 
   const capY = top + ph + 40;
   const sizeText =
-    kind?.radiusSun != null ? t('kind.size', { x: formatRatio(kind.radiusSun, lang) }) : kind && !kind.sure ? t('kind.colourOnly') : t('kind.sizeUnknown');
+    kind?.radiusSun != null
+      ? t('kind.size', { x: formatRatio(kind.radiusSun, lang) })
+      : kind && !kind.sure
+        ? t('kind.colourOnly')
+        : t('kind.sizeUnknown');
   caption(ctx, sizeText, px[0], capY, pw);
   caption(ctx, hasDistance(star) ? t('cert.hr.caption') : t('cert.hr.unknown'), px[1], capY, pw);
   const mwCaption = isCloseUp(star) ? t('cert.mw.closeup') : hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown');

@@ -16,7 +16,7 @@ function expected(sp: string): Kind[] | null {
   const m = sp.match(/^d?([OBAFGKM])\d*(?:\.\d+)?[+-]?\s*(0|Ia|Iab|Ib|II|III|IV|V)?/);
   if (!m || !m[2]) return null;
   const [, cls, lum] = m;
-  if (lum === '0' || lum.startsWith('I') && lum !== 'II' && lum !== 'III' && lum !== 'IV') return ['supergiant'];
+  if (lum === '0' || (lum.startsWith('I') && lum !== 'II' && lum !== 'III' && lum !== 'IV')) return ['supergiant'];
   if (lum === 'II' || lum === 'III') return ['giant', 'red-giant', 'blue-giant'];
   // Dwarfs: allow the neighbouring colour bin, since types and colours overlap at the edges.
   const order: Kind[] = ['blue-ms', 'white-ms', 'yellow-white', 'yellow-dwarf', 'orange-dwarf', 'red-dwarf'];

@@ -10,9 +10,7 @@
  */
 const TAP = 'https://simbad.cds.unistra.fr/simbad/sim-tap/sync';
 
-export type Literature =
-  | { known: false }
-  | { known: true; name: string; papers: number; type: string | null };
+export type Literature = { known: false } | { known: true; name: string; papers: number; type: string | null };
 
 const cache = new Map<string, Promise<Literature>>();
 

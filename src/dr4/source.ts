@@ -33,7 +33,10 @@ export function loadPreview(): Promise<PreviewEntry[]> {
     })
     .then(({ sources }) =>
       sources.map(({ transits, ...meta }) => {
-        const gs = transits.map(t => t.g).filter((g): g is number => g !== null).sort((a, b) => a - b);
+        const gs = transits
+          .map(t => t.g)
+          .filter((g): g is number => g !== null)
+          .sort((a, b) => a - b);
         return { meta: { ...meta, g: gs[gs.length >> 1] }, data: fromPreview({ ...meta, transits }) };
       }),
     )
@@ -51,8 +54,7 @@ export function closestPreview(entries: PreviewEntry[], star: Pick<Star, 'g' | '
 }
 
 export type Dr4Result =
-  | { kind: 'live'; data: EpochAstrometry }
-  | { kind: 'preview'; reason: 'not-yet' | 'no-proxy' | 'not-found' | 'error' };
+  { kind: 'live'; data: EpochAstrometry } | { kind: 'preview'; reason: 'not-yet' | 'no-proxy' | 'not-found' | 'error' };
 
 const live = new Map<string, Promise<EpochAstrometry | null>>();
 

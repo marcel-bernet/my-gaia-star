@@ -398,7 +398,7 @@ export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd:
   const top = oy + gh + 34;
   const rowH = h - top - 16;
   const tw = Math.min(28, (w - 40) / n - 4);
-  const th = twoD ? Math.min(rowH, (tw * win.ac) / win.al * 1.6) : Math.min(rowH, 30);
+  const th = twoD ? Math.min(rowH, ((tw * win.ac) / win.al) * 1.6) : Math.min(rowH, 30);
   const total = n * tw + (n - 1) * 4;
   const sx = (w - total) / 2;
   for (let k = 0; k < n; k++) {

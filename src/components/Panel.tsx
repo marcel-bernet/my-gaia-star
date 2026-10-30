@@ -142,14 +142,21 @@ export default function Panel(p: Props) {
               placeholder={t('place.search')}
               autoComplete="off"
             />
-            <button type="button" className="icon-btn" onClick={locate} title={t('place.locate')} aria-label={t('place.locate')} disabled={locating}>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={locate}
+              title={t('place.locate')}
+              aria-label={t('place.locate')}
+              disabled={locating}
+            >
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
                 <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
           </form>
-          <p className="hint">{locating ? t('place.locating') : placeMsg ?? (!p.place ? t('place.hint') : '')}</p>
+          <p className="hint">{locating ? t('place.locating') : (placeMsg ?? (!p.place ? t('place.hint') : ''))}</p>
         </div>
 
         <div className="step">
@@ -166,8 +173,18 @@ export default function Panel(p: Props) {
           {p.mode === 'moment' && (
             <>
               <div className="when">
-                <input type="date" value={p.wall.date} onChange={e => p.onWall({ ...p.wall, date: e.target.value })} aria-label={t('when.date')} />
-                <input type="time" value={p.wall.time} onChange={e => p.onWall({ ...p.wall, time: e.target.value })} aria-label={t('when.time')} />
+                <input
+                  type="date"
+                  value={p.wall.date}
+                  onChange={e => p.onWall({ ...p.wall, date: e.target.value })}
+                  aria-label={t('when.date')}
+                />
+                <input
+                  type="time"
+                  value={p.wall.time}
+                  onChange={e => p.onWall({ ...p.wall, time: e.target.value })}
+                  aria-label={t('when.time')}
+                />
               </div>
               {p.zone && <p className="hint">{t('when.zone', { zone: p.zone.replaceAll('_', ' ') })}</p>}
             </>

@@ -14,7 +14,17 @@ import {
   WINDOWS,
   LOOP_PATH,
 } from '../dr4/plots';
-import { closestPreview, daysToDr4, DR4_RELEASE, dr4IsOut, epochAstrometryFor, isReleaseDay, loadPreview, type Dr4Result, type PreviewEntry } from '../dr4/source';
+import {
+  closestPreview,
+  daysToDr4,
+  DR4_RELEASE,
+  dr4IsOut,
+  epochAstrometryFor,
+  isReleaseDay,
+  loadPreview,
+  type Dr4Result,
+  type PreviewEntry,
+} from '../dr4/source';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import CanvasArt from './CanvasArt';
@@ -48,7 +58,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const fit = useMemo(() => (data ? fitFiveParameters(data) : null), [data]);
   useEffect(() => setSel(null), [data]);
 
-  const drawT = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => drawTimeline(ctx, w, h, pts, sel), [pts, sel]);
+  const drawT = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawTimeline(ctx, w, h, pts, sel),
+    [pts, sel],
+  );
   const selPt = sel !== null ? pts[sel] : null;
   const zoomed = fit !== null && needsZoom(fit);
   const PATH_W = 352;
@@ -78,7 +91,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const shown = selPt ?? pts[0];
   const gClass = shown?.gClass ?? 3;
   const nCcd = shown?.nCcd ?? 9;
-  const drawP = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => drawPixels(ctx, w, h, gClass, nCcd), [gClass, nCcd]);
+  const drawP = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawPixels(ctx, w, h, gClass, nCcd),
+    [gClass, nCcd],
+  );
 
   const TL_W = 352;
   const pickTransit = (x: number) => {
@@ -91,7 +107,8 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   };
   const step = (d: number) => setSel(s => (pts.length ? ((s ?? (d > 0 ? -1 : 0)) + d + pts.length) % pts.length : null));
 
-  const nf = (n: number, digits = 2) => new Intl.NumberFormat(lang, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
+  const nf = (n: number, digits = 2) =>
+    new Intl.NumberFormat(lang, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
   const releaseDate = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(DR4_RELEASE);
   const out = dr4IsOut();
   const days = daysToDr4();
@@ -163,7 +180,10 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
               <span className="mono">
                 {selPt
                   ? t('dr4.transit', {
-                      date: new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(yearToDate(selPt.year)) + ' UTC',
+                      date:
+                        new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(
+                          yearToDate(selPt.year),
+                        ) + ' UTC',
                       psi: nf(selPt.psi, 1),
                       used: selPt.nUsed,
                       ccd: selPt.nCcd,
@@ -197,9 +217,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
               </div>
               {zoomed && (
                 <div className="plate">
-                  <p className="panel-label mono">
-                    b · {t('dr4.wobble.year')}
-                  </p>
+                  <p className="panel-label mono">b · {t('dr4.wobble.year')}</p>
                   <CanvasArt width={PATH_W} height={nearH} draw={drawNear} label={t('dr4.wobble.year')} />
                 </div>
               )}
@@ -210,7 +228,9 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             <Figure
               n={nextFig()}
               title={t('dr4.residuals')}
-              caption={wobbly ? t('dr4.residuals.wobble', { uwe: nf(fit.uwe, 1) }) : t('dr4.residuals.single', { rms: nf(fit.rms) })}
+              caption={
+                wobbly ? t('dr4.residuals.wobble', { uwe: nf(fit.uwe, 1) }) : t('dr4.residuals.single', { rms: nf(fit.rms) })
+              }
             >
               <CanvasArt width={352} height={150} draw={drawR} label={t('dr4.residuals')} />
             </Figure>

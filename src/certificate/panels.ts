@@ -158,7 +158,8 @@ export async function drawHr(ctx: Ctx, box: Box, star: Star, labels: HrLabels) {
   if (x < plot.x || x > plot.x + plot.w) return;
   const M = absoluteMag(star);
   if (M !== null) {
-    const y = plot.y + ((Math.min(Math.max(M, HR_AXES.yMin), HR_AXES.yMax) - HR_AXES.yMin) / (HR_AXES.yMax - HR_AXES.yMin)) * plot.h;
+    const y =
+      plot.y + ((Math.min(Math.max(M, HR_AXES.yMin), HR_AXES.yMax) - HR_AXES.yMin) / (HR_AXES.yMax - HR_AXES.yMin)) * plot.h;
     markWithLabel(ctx, x, y, box.w / 22, labels.yourStar, Math.round(fontPx * 1.05), box);
   } else {
     // Colour known, brightness not: it lies somewhere in this column.
@@ -188,7 +189,15 @@ export interface PortraitLabels {
   star: string;
 }
 
-function sphere(ctx: Ctx, x: number, y: number, r: number, rgb: [number, number, number], kind: Classification['kind'] | null, seed: number) {
+function sphere(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  r: number,
+  rgb: [number, number, number],
+  kind: Classification['kind'] | null,
+  seed: number,
+) {
   const [cr, cg, cb] = rgb;
   // Corona glow.
   const glow = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 2.1 + 4);
@@ -227,7 +236,14 @@ function sphere(ctx: Ctx, x: number, y: number, r: number, rgb: [number, number,
     const a = rand() * Math.PI * 2;
     const d = Math.sqrt(rand()) * r;
     const cellR = (big ? 0.28 : 0.07) * r * (0.6 + rand() * 0.8);
-    const cg2 = ctx.createRadialGradient(x + Math.cos(a) * d, y + Math.sin(a) * d, 0, x + Math.cos(a) * d, y + Math.sin(a) * d, cellR);
+    const cg2 = ctx.createRadialGradient(
+      x + Math.cos(a) * d,
+      y + Math.sin(a) * d,
+      0,
+      x + Math.cos(a) * d,
+      y + Math.sin(a) * d,
+      cellR,
+    );
     const dark = rand() < 0.5;
     cg2.addColorStop(0, dark ? 'rgba(0,0,0,0.16)' : 'rgba(255,255,255,0.12)');
     cg2.addColorStop(1, 'rgba(0,0,0,0)');

@@ -213,8 +213,7 @@ function loadNakedEye(): Promise<Star[]> {
 
 export function sepDeg(ra1: number, dec1: number, ra2: number, dec2: number): number {
   const r = Math.PI / 180;
-  const s =
-    Math.sin(dec1 * r) * Math.sin(dec2 * r) + Math.cos(dec1 * r) * Math.cos(dec2 * r) * Math.cos((ra1 - ra2) * r);
+  const s = Math.sin(dec1 * r) * Math.sin(dec2 * r) + Math.cos(dec1 * r) * Math.cos(dec2 * r) * Math.cos((ra1 - ra2) * r);
   return Math.acos(Math.max(-1, Math.min(1, s))) / r;
 }
 
@@ -240,9 +239,18 @@ export async function starsAround(ra: number, dec: number, depth: Depth, signal?
 export async function starById(id: string, signal?: AbortSignal): Promise<Star | null> {
   if (!/^\d{1,19}$/.test(id)) return null;
   try {
-    const params = new URLSearchParams({ '-source': 'I/355/gaiadr3', Source: id, '-out': VIZIER_COLUMNS.join(','), '-out.max': '1' });
+    const params = new URLSearchParams({
+      '-source': 'I/355/gaiadr3',
+      Source: id,
+      '-out': VIZIER_COLUMNS.join(','),
+      '-out.max': '1',
+    });
     const res = await get(`${VIZIER_CONE}?${params}`, signal);
-    return parseTsv(await res.text()).flatMap(r => toStar(r)).find(s => s.id === id) ?? null;
+    return (
+      parseTsv(await res.text())
+        .flatMap(r => toStar(r))
+        .find(s => s.id === id) ?? null
+    );
   } catch (e) {
     if (!(e instanceof CatalogueUnavailable)) throw e;
     const adql =

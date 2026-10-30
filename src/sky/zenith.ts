@@ -133,7 +133,8 @@ export function groundToSky(frame: SkyFrame, lat: number, lon: number): { ra: nu
   const dl = (lon - frame.lon) * DEG;
   const cosD = Math.sin(p1) * Math.sin(p2) + Math.cos(p1) * Math.cos(p2) * Math.cos(dl);
   const sep = Math.acos(Math.max(-1, Math.min(1, cosD))) / DEG;
-  const az = Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / DEG;
+  const az =
+    Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / DEG;
   return frame.at(sep, az);
 }
 

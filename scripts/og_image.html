@@ -9,19 +9,83 @@
   <head>
     <meta charset="UTF-8" />
     <style>
-      @font-face { font-family: Serif; src: url(../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2); font-weight: 200 900; }
-      @font-face { font-family: Sans; src: url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2); font-weight: 100 900; }
-      @font-face { font-family: Mono; src: url(../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2); }
-      html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #0c0d0f; }
-      canvas { position: absolute; inset: 0; }
-      .text { position: absolute; left: 72px; top: 64px; bottom: 60px; width: 560px; display: flex; flex-direction: column; color: #e9e7e2; }
-      .brand { font: 600 22px Sans; letter-spacing: -0.01em; display: flex; align-items: center; gap: 12px; }
-      .brand i { width: 10px; height: 10px; border-radius: 50%; background: #e8c98f; box-shadow: 0 0 14px #e8c98f; }
-      .kicker { margin: 52px 0 14px; font: 14px Mono; letter-spacing: 0.08em; text-transform: uppercase; color: #a4a39e; }
-      h1 { margin: 0; font: 500 56px/1.08 Serif; letter-spacing: -0.015em; }
-      h1 em { font-style: normal; color: #e8c98f; }
-      p { margin: 24px 0 0; font: 400 21px/1.45 Sans; color: #a4a39e; max-width: 500px; }
-      .url { margin-top: auto; font: 15px Mono; color: #74736e; }
+      @font-face {
+        font-family: Serif;
+        src: url(../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2);
+        font-weight: 200 900;
+      }
+      @font-face {
+        font-family: Sans;
+        src: url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2);
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: Mono;
+        src: url(../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2);
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #0c0d0f;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+      }
+      .text {
+        position: absolute;
+        left: 72px;
+        top: 64px;
+        bottom: 60px;
+        width: 560px;
+        display: flex;
+        flex-direction: column;
+        color: #e9e7e2;
+      }
+      .brand {
+        font: 600 22px Sans;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #e8c98f;
+        box-shadow: 0 0 14px #e8c98f;
+      }
+      .kicker {
+        margin: 52px 0 14px;
+        font: 14px Mono;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #a4a39e;
+      }
+      h1 {
+        margin: 0;
+        font: 500 56px/1.08 Serif;
+        letter-spacing: -0.015em;
+      }
+      h1 em {
+        font-style: normal;
+        color: #e8c98f;
+      }
+      p {
+        margin: 24px 0 0;
+        font: 400 21px/1.45 Sans;
+        color: #a4a39e;
+        max-width: 500px;
+      }
+      .url {
+        margin-top: auto;
+        font: 15px Mono;
+        color: #74736e;
+      }
     </style>
   </head>
   <body>
@@ -36,10 +100,16 @@
     <script>
       const D = Math.PI / 180;
       // Stereographic view of the sky around Orion, on a plate at the right.
-      const RA0 = 84 * D, DEC0 = 2 * D, CX = 905, CY = 315, R = 330, FIELD = 42 * D;
+      const RA0 = 84 * D,
+        DEC0 = 2 * D,
+        CX = 905,
+        CY = 315,
+        R = 330,
+        FIELD = 42 * D;
       const K = R / (2 * Math.tan(FIELD / 2));
       function project(ra, dec) {
-        ra *= D; dec *= D;
+        ra *= D;
+        dec *= D;
         const cosc = Math.sin(DEC0) * Math.sin(dec) + Math.cos(DEC0) * Math.cos(dec) * Math.cos(ra - RA0);
         if (cosc < Math.cos(FIELD * 1.4)) return null;
         const k = (2 * K) / (1 + cosc);
@@ -50,15 +120,23 @@
       }
       // Gaia BP−RP to a star's tint, blue-white through gold to orange-red.
       function tint(c) {
-        const stops = [[-0.2, [170, 195, 255]], [0.4, [225, 232, 255]], [0.8, [255, 244, 225]], [1.3, [255, 214, 160]], [2.2, [255, 170, 110]]];
+        const stops = [
+          [-0.2, [170, 195, 255]],
+          [0.4, [225, 232, 255]],
+          [0.8, [255, 244, 225]],
+          [1.3, [255, 214, 160]],
+          [2.2, [255, 170, 110]],
+        ];
         c = Math.max(-0.2, Math.min(2.2, c ?? 0.8));
         let i = 0;
         while (i < stops.length - 2 && c > stops[i + 1][0]) i++;
-        const [a, ca] = stops[i], [b, cb] = stops[i + 1], f = (c - a) / (b - a);
+        const [a, ca] = stops[i],
+          [b, cb] = stops[i + 1],
+          f = (c - a) / (b - a);
         return ca.map((v, j) => Math.round(v + (cb[j] - v) * f));
       }
       let seed = 7;
-      const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
       (async () => {
         const data = await (await fetch('../public/naked-eye.json')).json();
@@ -76,8 +154,10 @@
         ctx.clip();
         // Milky Way dust: countless faint points, denser along a band.
         for (let n = 0; n < 5200; n++) {
-          const t = rand() * 2 - 1, s = (rand() + rand() + rand() - 1.5) * 150;
-          const x = CX - 60 + t * 420 + s * 0.45, y = CY + t * 260 - s;
+          const t = rand() * 2 - 1,
+            s = (rand() + rand() + rand() - 1.5) * 150;
+          const x = CX - 60 + t * 420 + s * 0.45,
+            y = CY + t * 260 - s;
           const a = 0.08 + rand() * 0.22;
           ctx.fillStyle = `rgba(233,231,226,${a})`;
           ctx.fillRect(x, y, 0.8, 0.8);
@@ -87,7 +167,9 @@
           ctx.fillRect(CX + (rand() * 2 - 1) * R, CY + (rand() * 2 - 1) * R, 0.9, 0.9);
         }
         // The real stars, sized by brightness.
-        const stars = data.rows.map(r => ({ id: r[ix.id], g: r[ix.g], c: r[ix.bpRp], p: project(r[ix.ra], r[ix.dec]) })).filter(s => s.p);
+        const stars = data.rows
+          .map(r => ({ id: r[ix.id], g: r[ix.g], c: r[ix.bpRp], p: project(r[ix.ra], r[ix.dec]) }))
+          .filter(s => s.p);
         stars.sort((a, b) => b.g - a.g);
         for (const s of stars) {
           const [x, y] = s.p;
@@ -130,7 +212,12 @@
         ctx.beginPath();
         ctx.arc(mx, my, 15, 0, 2 * Math.PI);
         ctx.stroke();
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]) {
           ctx.beginPath();
           ctx.moveTo(mx + dx * 21, my + dy * 21);
           ctx.lineTo(mx + dx * 30, my + dy * 30);

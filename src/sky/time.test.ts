@@ -25,7 +25,5 @@ describe('time zones', () => {
 });
 
 it('knows historical rules (Peru had summer time in early 1990)', () => {
-  expect(wallTimeToInstant({ date: '1990-03-15', time: '14:30' }, 'America/Lima').toISOString()).toBe(
-    '1990-03-15T18:30:00.000Z',
-  );
+  expect(wallTimeToInstant({ date: '1990-03-15', time: '14:30' }, 'America/Lima').toISOString()).toBe('1990-03-15T18:30:00.000Z');
 });

@@ -112,7 +112,7 @@ export function toGalactic(raDeg: number, decDeg: number): { l: number; b: numbe
   const dec = decDeg * DEG;
   const v = [Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec)];
   const [x, y, z] = M.map(r => r[0] * v[0] + r[1] * v[1] + r[2] * v[2]);
-  return { l: ((Math.atan2(y, x) / DEG) + 360) % 360, b: Math.asin(z) / DEG };
+  return { l: (Math.atan2(y, x) / DEG + 360) % 360, b: Math.asin(z) / DEG };
 }
 
 export const SUN_GALACTOCENTRIC_KPC = 8.2;

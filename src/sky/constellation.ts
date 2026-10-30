@@ -253,7 +253,10 @@ export function drawConstellation(
   const taken: [number, number, number, number][] = [];
   if (tp) taken.push([tp[0] - 26 * k, tp[1] - 26 * k, tp[0] + 26 * k, tp[1] + 26 * k]);
   const free = (b: [number, number, number, number]) =>
-    b[0] > box.x + 2 && b[2] < box.x + box.w - 2 && b[1] > box.y + 2 && b[3] < box.y + box.h - 2 &&
+    b[0] > box.x + 2 &&
+    b[2] < box.x + box.w - 2 &&
+    b[1] > box.y + 2 &&
+    b[3] < box.y + box.h - 2 &&
     taken.every(o => b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]);
   ctx.font = `400 ${Math.round(10.5 * k)}px ${style.font}`;
   ctx.textBaseline = 'middle';

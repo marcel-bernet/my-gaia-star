@@ -30,7 +30,19 @@ import {
   type Thing,
 } from './lexicon';
 
-export const SLOTS = ['count', 'creature', 'trait', 'verb', 'manner', 'preposition', 'look', 'place', 'realm', 'realmLook', 'time'] as const;
+export const SLOTS = [
+  'count',
+  'creature',
+  'trait',
+  'verb',
+  'manner',
+  'preposition',
+  'look',
+  'place',
+  'realm',
+  'realmLook',
+  'time',
+] as const;
 export type Slot = (typeof SLOTS)[number];
 const SIZE: Record<Slot, number> = {
   count: 32,
@@ -194,10 +206,16 @@ export function segments(d: Digits, lang: Lang): Segment[] {
     seg('trait', adjective(d.trait, lang, who.g, plural)),
     seg('verb', (es ? verb[2] : verb[3]).split('|')[plural ? 1 : 0]),
     seg('manner', es ? manner[1] : manner[2]),
-    seg('preposition', es ? withArticle('es', prepEs, cEs, place.word, place.g) : withArticle('ca', prepCa, cCa, place.word, place.g)),
+    seg(
+      'preposition',
+      es ? withArticle('es', prepEs, cEs, place.word, place.g) : withArticle('ca', prepCa, cCa, place.word, place.g),
+    ),
     seg('place', place.word),
     seg('look', adjective(d.look, lang, place.g, false)),
-    seg('realm', withArticle(lang, '', 'de', realm.word, realm.g) + (lang === 'ca' && caElides(realm.word) ? '' : ' ') + realm.word),
+    seg(
+      'realm',
+      withArticle(lang, '', 'de', realm.word, realm.g) + (lang === 'ca' && caElides(realm.word) ? '' : ' ') + realm.word,
+    ),
     seg('realmLook', adjective(d.realmLook, lang, realm.g, false)),
     seg(null, ','),
     seg('time', es ? time[1] : time[2]),
@@ -309,6 +327,9 @@ function match(rest: string, lang: Lang, order: Segment[], k: number, known: Par
 export function slotOptions(d: Digits, slot: Slot, lang: Lang): string[] {
   return Array.from({ length: SIZE[slot] }, (_, v) => {
     const segs = segments({ ...d, [slot]: v }, lang).filter(s => s.slot === slot);
-    return segs.map(s => s.text).join(' ').replace(/’ /g, '’');
+    return segs
+      .map(s => s.text)
+      .join(' ')
+      .replace(/’ /g, '’');
   });
 }

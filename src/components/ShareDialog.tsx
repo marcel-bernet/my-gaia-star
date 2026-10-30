@@ -25,36 +25,47 @@ const TARGETS: { id: string; label: string; href: (text: string, url: string, su
     id: 'whatsapp',
     label: 'WhatsApp',
     href: (text, url) => `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`,
-    icon: <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm-3 5c.3 0 .5 0 .7.5l.8 1.8c0 .2 0 .4-.1.5l-.5.6c-.1.2-.2.3 0 .6a7 7 0 0 0 3.3 2.9c.2.1.4 0 .5-.1l.7-.8c.2-.2.3-.2.5-.1l1.8.8c.3.2.4.2.4.4 0 .6-.3 1.4-1 1.7-.6.3-1.4.4-3-.3-2.7-1.1-4.3-3.8-4.5-4-.1-.2-1-1.3-1-2.5S8.2 8.2 8.5 8Z" />,
+    icon: (
+      <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm-3 5c.3 0 .5 0 .7.5l.8 1.8c0 .2 0 .4-.1.5l-.5.6c-.1.2-.2.3 0 .6a7 7 0 0 0 3.3 2.9c.2.1.4 0 .5-.1l.7-.8c.2-.2.3-.2.5-.1l1.8.8c.3.2.4.2.4.4 0 .6-.3 1.4-1 1.7-.6.3-1.4.4-3-.3-2.7-1.1-4.3-3.8-4.5-4-.1-.2-1-1.3-1-2.5S8.2 8.2 8.5 8Z" />
+    ),
   },
   {
     id: 'telegram',
     label: 'Telegram',
     href: (text, url) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
-    icon: <path d="M21 4 2.8 11.1c-1 .4-1 1.6 0 1.9l4.6 1.4 1.7 5.4c.2.7 1.1.9 1.6.4l2.5-2.4 4.7 3.5c.6.4 1.4.1 1.6-.6L22 5.3c.2-.9-.4-1.6-1-1.3Zm-3.4 3.6-8 7.3-.3 3-1.3-4.2 9.6-6.1Z" />,
+    icon: (
+      <path d="M21 4 2.8 11.1c-1 .4-1 1.6 0 1.9l4.6 1.4 1.7 5.4c.2.7 1.1.9 1.6.4l2.5-2.4 4.7 3.5c.6.4 1.4.1 1.6-.6L22 5.3c.2-.9-.4-1.6-1-1.3Zm-3.4 3.6-8 7.3-.3 3-1.3-4.2 9.6-6.1Z" />
+    ),
   },
   {
     id: 'x',
     label: 'X',
     href: (text, url) => `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
-    icon: <path d="M17.7 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8L17.7 3Zm-1.1 16.2h1.7L7.4 4.7H5.6l11 14.5Z" />,
+    icon: (
+      <path d="M17.7 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8L17.7 3Zm-1.1 16.2h1.7L7.4 4.7H5.6l11 14.5Z" />
+    ),
   },
   {
     id: 'bluesky',
     label: 'Bluesky',
     href: (text, url) => `https://bsky.app/intent/compose?text=${encodeURIComponent(`${text}\n${url}`)}`,
-    icon: <path d="M6.3 4.4C8.4 6 10.6 9.1 12 11c1.4-1.9 3.6-5 5.7-6.6C19.2 3.3 22 2.4 22 5.4c0 .6-.4 5-.6 5.7-.7 2.5-3.2 3.1-5.5 2.7 4 .7 5 2.9 2.8 5.2-4.2 4.3-6-1.1-6.5-2.5l-.2-.5-.2.5c-.5 1.4-2.3 6.8-6.5 2.5-2.2-2.3-1.2-4.5 2.8-5.2-2.3.4-4.8-.2-5.5-2.7-.2-.7-.6-5.1-.6-5.7 0-3 2.8-2.1 4.3-1Z" />,
+    icon: (
+      <path d="M6.3 4.4C8.4 6 10.6 9.1 12 11c1.4-1.9 3.6-5 5.7-6.6C19.2 3.3 22 2.4 22 5.4c0 .6-.4 5-.6 5.7-.7 2.5-3.2 3.1-5.5 2.7 4 .7 5 2.9 2.8 5.2-4.2 4.3-6-1.1-6.5-2.5l-.2-.5-.2.5c-.5 1.4-2.3 6.8-6.5 2.5-2.2-2.3-1.2-4.5 2.8-5.2-2.3.4-4.8-.2-5.5-2.7-.2-.7-.6-5.1-.6-5.7 0-3 2.8-2.1 4.3-1Z" />
+    ),
   },
   {
     id: 'facebook',
     label: 'Facebook',
     href: (_text, url) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-    icon: <path d="M13.5 21v-7.5H16l.4-3h-2.9V8.7c0-.9.3-1.5 1.5-1.5h1.5V4.5c-.3 0-1.2-.1-2.2-.1-2.2 0-3.8 1.4-3.8 3.9v2.2H8v3h2.5V21h3Z" />,
+    icon: (
+      <path d="M13.5 21v-7.5H16l.4-3h-2.9V8.7c0-.9.3-1.5 1.5-1.5h1.5V4.5c-.3 0-1.2-.1-2.2-.1-2.2 0-3.8 1.4-3.8 3.9v2.2H8v3h2.5V21h3Z" />
+    ),
   },
   {
     id: 'email',
     label: 'Email',
-    href: (text, url, subject) => `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`,
+    href: (text, url, subject) =>
+      `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${text}\n\n${url}`)}`,
     icon: <path d="M3 6h18v12H3V6Zm1.8 1.5 7.2 5.4 7.2-5.4H4.8Zm-.3 1.8v7.2h15V9.3L12 14.8 4.5 9.3Z" />,
   },
 ];
@@ -123,7 +134,13 @@ export default function ShareDialog({ star, result, placeName, literature, onClo
             </button>
           )}
           {TARGETS.map(s => (
-            <a key={s.id} className={`share-target ${s.id}`} href={s.href(text, url, t('share.subject'))} target="_blank" rel="noreferrer">
+            <a
+              key={s.id}
+              className={`share-target ${s.id}`}
+              href={s.href(text, url, t('share.subject'))}
+              target="_blank"
+              rel="noreferrer"
+            >
               <svg viewBox="0 0 24 24" aria-hidden>
                 {s.icon}
               </svg>

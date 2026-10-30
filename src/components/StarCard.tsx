@@ -86,7 +86,11 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
       <p className="first-title">{t('first.known.title', { name: literature.name })}</p>
       <p className="first-body">
         {t('first.known.body', { papers })}{' '}
-        <a href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${id}`)}`} target="_blank" rel="noreferrer">
+        <a
+          href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${id}`)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
           SIMBAD ↗
         </a>
       </p>
@@ -94,7 +98,16 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
   );
 }
 
-export default function StarCard({ star, result, placeName, literature, onBackToZenith, onMap, onToggleMap, onCertificate }: Props) {
+export default function StarCard({
+  star,
+  result,
+  placeName,
+  literature,
+  onBackToZenith,
+  onMap,
+  onToggleMap,
+  onCertificate,
+}: Props) {
   const { t, lang } = useI18n();
   const [sharing, setSharing] = useState(false);
   const isZenith = star.id === result.zenithId;
@@ -118,7 +131,15 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   const ground = useMemo<ChartGround | null>(
     () =>
       country
-        ? { rings: country.rings.map(r => r.map(([lon, lat]) => { const p = groundToSky(frame, lat, lon); return [p.ra, p.dec] as [number, number]; })), zenith: frame.zenith }
+        ? {
+            rings: country.rings.map(r =>
+              r.map(([lon, lat]) => {
+                const p = groundToSky(frame, lat, lon);
+                return [p.ra, p.dec] as [number, number];
+              }),
+            ),
+            zenith: frame.zenith,
+          }
         : null,
     [country, frame],
   );
@@ -154,13 +175,22 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   const drawChart = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
       if (sky) {
-        drawConstellation(ctx, { x: 0, y: 0, w, h }, sky, abbr, { ra: star.ra, dec: star.dec, label: t('chart.yourStar') }, {
-          gold: GOLD,
-          cream: CREAM,
-          muted: MUTED,
-          font: '"Inter Variable", system-ui, sans-serif',
-          scale: 0.9,
-        }, ground, { north: t('chart.north'), east: t('chart.east') });
+        drawConstellation(
+          ctx,
+          { x: 0, y: 0, w, h },
+          sky,
+          abbr,
+          { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
+          {
+            gold: GOLD,
+            cream: CREAM,
+            muted: MUTED,
+            font: '"Inter Variable", system-ui, sans-serif',
+            scale: 0.9,
+          },
+          ground,
+          { north: t('chart.north'), east: t('chart.east') },
+        );
       }
     },
     [sky, abbr, star, t, ground],
@@ -228,7 +258,9 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
           {t('action.share')}
         </button>
       </div>
-      {sharing && <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />}
+      {sharing && (
+        <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />
+      )}
 
       {kind && (
         <Figure
@@ -305,7 +337,12 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
             ← {t('result.backToZenith')}
           </button>
         )}
-        <a className="link" href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${star.id}`)}`} target="_blank" rel="noreferrer">
+        <a
+          className="link"
+          href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${star.id}`)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
           {t('action.simbad')} ↗
         </a>
       </div>

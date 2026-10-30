@@ -136,7 +136,9 @@ a:hover {
   font: italic 500 15px var(--serif);
   letter-spacing: 0.04em;
   color: var(--star);
-  text-shadow: 0 0 4px #000, 0 0 10px #000;
+  text-shadow:
+    0 0 4px #000,
+    0 0 10px #000;
   pointer-events: none;
 }
 
@@ -486,7 +488,10 @@ textarea {
   border-radius: 5px;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    opacity 0.15s;
 }
 
 .primary {
@@ -1279,7 +1284,9 @@ textarea {
   color: var(--text-2);
   font: 13px var(--sans);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .point-btn span {
@@ -1456,7 +1463,9 @@ textarea {
   font: 600 14px var(--sans);
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .share-target:hover {
@@ -1471,7 +1480,15 @@ textarea {
   fill: currentColor;
 }
 
-.share-target.whatsapp svg { color: #25d366; }
-.share-target.telegram svg { color: #2aabee; }
-.share-target.bluesky svg { color: #1185fe; }
-.share-target.facebook svg { color: #1877f2; }
+.share-target.whatsapp svg {
+  color: #25d366;
+}
+.share-target.telegram svg {
+  color: #2aabee;
+}
+.share-target.bluesky svg {
+  color: #1185fe;
+}
+.share-target.facebook svg {
+  color: #1877f2;
+}

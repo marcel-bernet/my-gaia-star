@@ -248,7 +248,15 @@ function niceLy(target: number): number {
   return steps.reduce((best, s) => (Math.abs(Math.log(s / target)) < Math.abs(Math.log(best / target)) ? s : best));
 }
 
-function scaleBar(ctx: Ctx, x: number, y: number, kpcToPx: number, targetLy: number, label: (ly: number) => string, fontPx: number) {
+function scaleBar(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  kpcToPx: number,
+  targetLy: number,
+  label: (ly: number) => string,
+  fontPx: number,
+) {
   const ly = niceLy(targetLy);
   const w = (ly / LY_PER_KPC) * kpcToPx;
   ctx.save();
@@ -311,9 +319,12 @@ function labelArms(
       if (i === 0 || i === pts.length - 1) return;
       const [px, py] = toPx(x, y);
       // Keep the whole label inside, away from the edges, the marks and other labels.
-      if (px < b.x + tw / 2 + 8 || px > b.x + b.w - tw / 2 - 8 || py < b.y + fontPx * 1.6 || py > b.y + b.h - fontPx * 2.2) return;
+      if (px < b.x + tw / 2 + 8 || px > b.x + b.w - tw / 2 - 8 || py < b.y + fontPx * 1.6 || py > b.y + b.h - fontPx * 2.2)
+        return;
       const clear = [...avoid, ...placed].every(([ax, ay]) => Math.hypot(px - ax, py - ay) > Math.max(fontPx * 3, tw * 0.6));
-      const outside = keepOut.every(k => px + tw / 2 < k.x || px - tw / 2 > k.x + k.w || py + fontPx < k.y || py - fontPx > k.y + k.h);
+      const outside = keepOut.every(
+        k => px + tw / 2 < k.x || px - tw / 2 > k.x + k.w || py + fontPx < k.y || py - fontPx > k.y + k.h,
+      );
       if (!clear || !outside) return;
       const f = Math.max(Math.abs(px - cx) / (b.w / 2), Math.abs(py - cy) / (b.h / 2));
       const score = Math.abs(f - 0.55);
@@ -527,7 +538,7 @@ export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
   const nearestX = Math.max(0, Math.abs(midX) - H);
   const norm = 1 / Math.max(0.08, Math.exp(-nearestX / DISC_SCALE_KPC));
   for (let j = 0; j < Hh; j++) {
-    const Z = ((plot.h / 2 - (j + 0.5)) / sz);
+    const Z = (plot.h / 2 - (j + 0.5)) / sz;
     const sech = 1 / Math.cosh(Z / THIN_KPC);
     const vert = 0.88 * sech * sech + 0.12 * Math.exp(-Math.abs(Z) / THICK_KPC);
     for (let i = 0; i < W; i++) {

@@ -155,22 +155,34 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
       {overlay && (
         <>
           {overlay.bounds.map((b, i) => (
-            <Polyline key={`b${i}`} positions={b} pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }} interactive={false} />
+            <Polyline
+              key={`b${i}`}
+              positions={b}
+              pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }}
+              interactive={false}
+            />
           ))}
           {overlay.lines.map((l, i) => (
-            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }} interactive={false} />
+            <Polyline
+              key={`l${i}`}
+              positions={l}
+              pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }}
+              interactive={false}
+            />
           ))}
           <Marker
             position={overlay.centre}
-            icon={L.divIcon({ className: 'constellation-label', html: `<span>${escapeHtml(overlay.name)}</span>`, iconSize: [0, 0] })}
+            icon={L.divIcon({
+              className: 'constellation-label',
+              html: `<span>${escapeHtml(overlay.name)}</span>`,
+              iconSize: [0, 0],
+            })}
             interactive={false}
           />
         </>
       )}
       {place && <Marker position={[place.lat, place.lon]} icon={placeIcon} interactive={false} />}
-      {zenith && (
-        <Marker position={zenith.pos} icon={zenithIcon} eventHandlers={{ click: () => onSelectStar(zenith.s.id) }} />
-      )}
+      {zenith && <Marker position={zenith.pos} icon={zenithIcon} eventHandlers={{ click: () => onSelectStar(zenith.s.id) }} />}
       {selected && <Marker position={selected.pos} icon={selectedIcon} interactive={false} />}
     </MapContainer>
   );

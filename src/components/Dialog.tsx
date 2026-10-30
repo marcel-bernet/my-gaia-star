@@ -1,7 +1,17 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 /** Native <dialog>: focus trapping, Esc and backdrop come for free. */
-export default function Dialog({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+export default function Dialog({
+  title,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     // No close() on cleanup: it would fire onClose; unmounting removes it anyway.
