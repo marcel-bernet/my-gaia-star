@@ -90,8 +90,8 @@ export default function App() {
           return;
         }
         // Stars come back nearest-first. "Your star" is the nearest one Gaia
-        // measured a distance and colour for (as the old backend's default
-        // did), so its certificate can place it in the Galaxy.
+        // measured a distance and colour for, so its certificate can place it
+        // on the HR diagram and in the Galaxy.
         const zenithId = (stars.find(s => hasDistance(s) && s.bpRp !== null) ?? stars[0]).id;
         setResult({ frame, stars, zenithId, place: at, depth: d, zone: timeZoneAt(at.lat, at.lon) });
         const sel = keepSelection && stars.some(s => s.id === keepSelection) ? keepSelection : zenithId;

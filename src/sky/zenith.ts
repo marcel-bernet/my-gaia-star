@@ -2,10 +2,10 @@
  * Where is "straight up" on the celestial sphere, and where does each star
  * land relative to it?
  *
- * Replaces the old astropy backend. Gaia positions are ICRS; astronomy-engine
- * gives us the rotation between the observer's horizon frame and J2000 (EQJ,
- * which matches ICRS to ~0.02″). We add annual aberration ourselves so the
- * zenith matches astropy's AltAz→ICRS to within an arcsecond or so.
+ * Gaia positions are ICRS; astronomy-engine gives us the rotation between
+ * the observer's horizon frame and J2000 (EQJ, which matches ICRS to
+ * ~0.02″). We add annual aberration ourselves so the zenith matches
+ * astropy's AltAz→ICRS to within an arcsecond or so (zenith.test.ts).
  */
 import {
   Body,

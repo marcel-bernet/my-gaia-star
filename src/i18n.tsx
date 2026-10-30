@@ -103,8 +103,6 @@ const en = {
   'cert.hr.cooler': 'cooler',
   'cert.hr.brighter': 'brighter',
   'cert.mw.sun': 'Sun',
-  'cert.mw.centre': 'centre',
-  'cert.chart': 'The sky straight above',
   'cert.footer':
     'Data: ESA/Gaia/DPAC (Gaia DR3, DR4) · SIMBAD, CDS Strasbourg · My Gaia Star — independent, not affiliated with ESA',
   'kind.white-dwarf': 'White dwarf',
@@ -144,13 +142,9 @@ const en = {
   'kind.size': 'About {x}× the size of the Sun',
   'kind.sizeUnknown': 'Size unknown',
   'kind.sun': 'Sun',
-  'kind.notToScale': '(not to scale)',
-  'fact.kind': 'Kind of star',
-  'fact.constellation': 'Constellation',
   'card.kind': 'What kind of star',
   'card.where': 'Where to look',
   'chart.yourStar': 'Your star',
-  'cert.constellation': 'Constellation',
   'cert.kind': 'What kind of star',
   'galaxy.centre': 'Galactic centre',
   'cert.edge': 'Seen edge-on',
@@ -235,7 +229,6 @@ const en = {
   'dr4.pixels': 'The pixels: the star itself',
   'dr4.pixels.caption':
     'This is what Gaia actually kept of your star. Not a picture of the sky around it: a small window of pixels read out around it on each of the {n} CCDs it crossed on this pass ({window}). Every number on this page was measured from windows like these. DR4 publishes all of them, 113 TB, and on {date} the real ones replace this schematic: whoever opens them is the first to see the star itself.',
-  source: 'Source',
   'cert.record': 'Observation record',
   'cert.firstLook.body':
     'Not in SIMBAD, the database of objects studied individually in the astronomical literature, when checked on {date}.',
@@ -470,8 +463,6 @@ const es: Dict = {
   'cert.hr.cooler': 'más fría',
   'cert.hr.brighter': 'más brillante',
   'cert.mw.sun': 'Sol',
-  'cert.mw.centre': 'centro',
-  'cert.chart': 'El cielo justo encima',
   'cert.footer':
     'Datos: ESA/Gaia/DPAC (Gaia DR3, DR4) · SIMBAD, CDS Estrasburgo · My Gaia Star — independiente, sin relación con la ESA',
   'kind.white-dwarf': 'Enana blanca',
@@ -511,13 +502,9 @@ const es: Dict = {
   'kind.size': 'Unas {x} veces el tamaño del Sol',
   'kind.sizeUnknown': 'Tamaño desconocido',
   'kind.sun': 'Sol',
-  'kind.notToScale': '(no a escala)',
-  'fact.kind': 'Tipo de estrella',
-  'fact.constellation': 'Constelación',
   'card.kind': 'Qué tipo de estrella es',
   'card.where': 'Dónde mirar',
   'chart.yourStar': 'Tu estrella',
-  'cert.constellation': 'Constelación',
   'cert.kind': 'Qué tipo de estrella es',
   'galaxy.centre': 'Centro galáctico',
   'cert.edge': 'Vista de canto',
@@ -603,7 +590,6 @@ const es: Dict = {
   'dr4.pixels': 'Los píxeles: la estrella misma',
   'dr4.pixels.caption':
     'Esto es lo que Gaia guardó realmente de tu estrella. No una foto del cielo que la rodea, sino una pequeña ventana de píxeles leída a su alrededor en cada uno de los {n} CCD que cruzó en este paso ({window}). Cada número de esta página se midió a partir de ventanas como estas. DR4 las publica todas, 113 TB, y el {date} las reales sustituyen a este esquema: quien las abra será la primera persona en ver la estrella misma.',
-  source: 'Fuente',
   'cert.record': 'Registro de observación',
   'cert.firstLook.body':
     'No figura en SIMBAD, la base de datos de los objetos estudiados individualmente en la literatura astronómica, según la consulta del {date}.',
@@ -835,8 +821,6 @@ const ca: Dict = {
   'cert.hr.cooler': 'més fred',
   'cert.hr.brighter': 'més brillant',
   'cert.mw.sun': 'Sol',
-  'cert.mw.centre': 'centre',
-  'cert.chart': 'El cel just damunt',
   'cert.footer':
     'Dades: ESA/Gaia/DPAC (Gaia DR3, DR4) · SIMBAD, CDS Estrasburg · My Gaia Star — independent, sense relació amb l’ESA',
   'kind.white-dwarf': 'Nana blanca',
@@ -876,13 +860,9 @@ const ca: Dict = {
   'kind.size': 'Unes {x} vegades la mida del Sol',
   'kind.sizeUnknown': 'Mida desconeguda',
   'kind.sun': 'Sol',
-  'kind.notToScale': '(no a escala)',
-  'fact.kind': 'Tipus d’estel',
-  'fact.constellation': 'Constel·lació',
   'card.kind': 'Quin tipus d’estel és',
   'card.where': 'On mirar',
   'chart.yourStar': 'El teu estel',
-  'cert.constellation': 'Constel·lació',
   'cert.kind': 'Quin tipus d’estel és',
   'galaxy.centre': 'Centre galàctic',
   'cert.edge': 'Vista de cantell',
@@ -968,7 +948,6 @@ const ca: Dict = {
   'dr4.pixels': 'Els píxels: l’estrella mateixa',
   'dr4.pixels.caption':
     'Això és el que Gaia va guardar realment de la teva estrella. No una foto del cel que l’envolta, sinó una petita finestra de píxels llegida al seu voltant a cadascun dels {n} CCD que va creuar en aquest pas ({window}). Cada nombre d’aquesta pàgina es va mesurar a partir de finestres com aquestes. DR4 les publica totes, 113 TB, i el {date} les reals substitueixen aquest esquema: qui les obri serà la primera persona que vegi l’estrella mateixa.',
-  source: 'Font',
   'cert.record': 'Registre d’observació',
   'cert.firstLook.body':
     'No figura a SIMBAD, la base de dades dels objectes estudiats individualment a la literatura astronòmica, segons la consulta del {date}.',

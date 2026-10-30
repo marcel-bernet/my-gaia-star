@@ -63,7 +63,7 @@ function FollowView({
           [Math.max(-85, lat - r), lon - r / cos],
           [Math.min(85, lat + r), lon + r / cos],
         ],
-        // The panel sits beside the map now, not over it; leave room for the readout.
+        // Leave room at the top for the readout that sits over the map.
         { duration: 1.4, paddingTopLeft: [24, wide() ? 72 : 48], paddingBottomRight: [24, 24] },
       );
     }

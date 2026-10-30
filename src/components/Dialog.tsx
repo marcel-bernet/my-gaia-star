@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useI18n } from '../i18n';
 
 /** Native <dialog>: focus trapping, Esc and backdrop come for free. */
 export default function Dialog({
@@ -12,6 +13,7 @@ export default function Dialog({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     // No close() on cleanup: it would fire onClose; unmounting removes it anyway.
@@ -28,7 +30,7 @@ export default function Dialog({
       <div className="dialog-inner">
         <header>
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={onClose} aria-label={t('close')}>
             ✕
           </button>
         </header>
