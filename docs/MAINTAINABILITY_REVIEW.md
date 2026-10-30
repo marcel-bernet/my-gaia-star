@@ -185,6 +185,8 @@ src/
 
 Each phase is behaviour-preserving and can be checked the same way: `npm test`, `npm run build`, then click through one search, one star, one certificate and one share in each language.
 
+**Status, 30 October 2026:** phases 0, 1 and 2 are done (see the git log from `d2d77de` on). Two items changed on the way: `geo.ts` keeps its own small cache, because its key isn't enough to redo the lookup; and the DR4 plot greys stay slightly different from the certificate's, now as named constants in `theme.ts` (`PLOT_*`), so no pixels changed. Phases 3 and 4 are still open.
+
 **Phase 0 — before 2 December (½ day).** DR4 post-release text (§3.5). Confirm the DataLink names on the day, using the checklist in `DATA_ACCESS.md`.
 
 **Phase 1 — tidy-up, no structural change (½–1 day).**
@@ -208,17 +210,19 @@ Each phase is behaviour-preserving and can be checked the same way: `npm test`, 
 
 ## 6. "Where do I change…?" (for the new maintainer)
 
-| I want to… | Today | After the refactor |
-|---|---|---|
-| Change map tiles or the geocoder | `SkyMap.tsx` (literal URL), `geo.ts` | `config.ts` |
-| Switch the cone search to Gaia DR4 | `sky/gaia.ts` (`I/355/gaiadr3`, `gaia.dr3lite`, column names) | `config.ts` + the column mapping in `sky/gaia.ts` |
-| Turn on real DR4 data | Deploy `proxy/worker.js`, build with `VITE_DR4_PROXY` | Same, plus `proxy/wrangler.toml` |
-| Edit or translate text | `i18n.tsx` (all three languages in one 965-line file) | `i18n/es.ts` etc. |
-| Change the certificate layout | `certificate/render.ts` (`renderCertificate`, one long function) | The relevant `draw…Section` function |
-| Change colours | `styles.css` + `certificate/theme.ts` + `dr4/plots.ts` + inline copies | `styles.css` + `draw/theme.ts` |
-| Change the search depths | `sky/gaia.ts` (cone constants) + `Panel.tsx` (`DEPTH_MAG`) + `i18n` hints | Same; consider one `DEPTHS` table holding all three |
-| Rebuild the bundled data | `scripts/*.py` (dependencies in the docstrings) | `pip install -r scripts/requirements.txt` |
-| Host somewhere other than GitHub Pages | `BASE_PATH=/ npm run build`, upload `dist/` | Unchanged |
+| I want to… | Where |
+|---|---|
+| Change map tiles or the geocoder | `src/config.ts` (`SERVICES`) |
+| Switch the cone search to Gaia DR4 | `src/sky/gaia.ts`: `VIZIER_TABLE`/`VIZIER_COLUMNS`, `GAVO_TABLE`/`GAVO_COLUMNS` and the two `from…` mappings |
+| Turn on real DR4 data | `cd proxy && npx wrangler deploy` (settings in `proxy/wrangler.toml`), then build with `VITE_DR4_PROXY` |
+| Edit or translate text | `src/i18n/en.ts` (reference), `es.ts`, `ca.ts` |
+| Change the certificate layout | `src/certificate/render.ts` (`renderCertificate`) |
+| Change colours or fonts | `src/styles.css` (page) and `src/certificate/theme.ts` (canvas): keep them in step |
+| Change what happens on a search | `src/state/useStarSearch.ts` |
+| Change the search depths | `src/sky/gaia.ts` (cone constants), `Panel.tsx` (`DEPTH_MAG`), the `depth.*` strings |
+| Rebuild the bundled data | `pip install -r scripts/requirements.txt`, then `scripts/*.py` |
+| Check everything before pushing | `npm run check` (types, lint, format, tests; CI runs the same) |
+| Host somewhere other than GitHub Pages | `BASE_PATH=/ npm run build`, upload `dist/` |
 
 ## 7. What not to change
 
