@@ -103,6 +103,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const sampleLabel = (e: PreviewEntry) => `${e.meta.name ?? `G ${nf(e.meta.g, 1)} ${t(`dr4.group.${e.meta.group}`)}`}`;
 
   let fig = firstFig - 1;
+  const nextFig = () => ++fig;
   return (
     <section className="dr4" aria-labelledby="dr4-title">
       <header className="dr4-head">
@@ -142,7 +143,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
       {data && (
         <>
           <Figure
-            n={++fig}
+            n={nextFig()}
             className="hero"
             kicker={t('dr4.pixels.kicker')}
             title={t('dr4.pixels')}
@@ -153,7 +154,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             </div>
           </Figure>
 
-          <Figure n={++fig} title={t('dr4.timeline')} caption={t('dr4.timeline.caption', { n: pts.length })}>
+          <Figure n={nextFig()} title={t('dr4.timeline')} caption={t('dr4.timeline.caption', { n: pts.length })}>
             <CanvasArt width={TL_W} height={92} draw={drawT} label={t('dr4.timeline')} onPick={pickTransit} />
             <div className="transit-readout">
               <button className="icon-btn small" onClick={() => step(-1)} aria-label="←">
@@ -177,7 +178,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
 
           {fit && (
             <Figure
-              n={++fig}
+              n={nextFig()}
               title={t('dr4.wobble')}
               caption={
                 isQso ? (
@@ -207,7 +208,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
 
           {fit && (
             <Figure
-              n={++fig}
+              n={nextFig()}
               title={t('dr4.residuals')}
               caption={wobbly ? t('dr4.residuals.wobble', { uwe: nf(fit.uwe, 1) }) : t('dr4.residuals.single', { rms: nf(fit.rms) })}
             >

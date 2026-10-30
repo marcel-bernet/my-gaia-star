@@ -258,10 +258,11 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
 
   // Fig. 1: where to look — fills whatever space is left.
   let fig = 0;
+  const nextFig = () => ++fig;
   const abbr = constellationOf(star.ra, star.dec);
   const conName = sky.constellations[abbr].names[lang];
   const chartTitleY = y + 66;
-  figTitle(ctx, ++fig, `${t('card.where')} — ${conName}`, M, chartTitleY, t);
+  figTitle(ctx, nextFig(), `${t('card.where')} — ${conName}`, M, chartTitleY, t);
   const chartTop = chartTitleY + 22;
   const chartBottom = tableTop - 100;
   plate(ctx, M, chartTop, W, chartBottom - chartTop);
@@ -300,9 +301,9 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   const px = [M, M + pw + gap, M + 2 * (pw + gap)];
   const top = panelsTop + 26;
   const kind = classify(star);
-  figTitle(ctx, ++fig, t('cert.kind'), px[0], panelsTop, t);
-  figTitle(ctx, ++fig, t('cert.hr'), px[1], panelsTop, t);
-  figTitle(ctx, ++fig, t('cert.mw'), px[2], panelsTop, t);
+  figTitle(ctx, nextFig(), t('cert.kind'), px[0], panelsTop, t);
+  figTitle(ctx, nextFig(), t('cert.hr'), px[1], panelsTop, t);
+  figTitle(ctx, nextFig(), t('cert.mw'), px[2], panelsTop, t);
   for (const x of px) plate(ctx, x, top, pw, ph);
 
   drawStarPortrait(ctx, { x: px[0], y: top + 10, w: pw, h: ph - 80 }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') });

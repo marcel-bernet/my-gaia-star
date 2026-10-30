@@ -182,6 +182,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   };
 
   let fig = 0;
+  const nextFig = () => ++fig;
   return (
     <article className="dossier" ref={ref}>
       <header className="dossier-head">
@@ -231,7 +232,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
 
       {kind && (
         <Figure
-          n={++fig}
+          n={nextFig()}
           title={t('card.kind')}
           caption={
             <>
@@ -245,7 +246,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
       )}
 
       <Figure
-        n={++fig}
+        n={nextFig()}
         title={`${t('card.where')} — ${sky ? sky.constellations[abbr].names[lang] : '…'}`}
         caption={
           <>
@@ -266,7 +267,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
       </Figure>
 
       <Figure
-        n={++fig}
+        n={nextFig()}
         title={t('card.galaxy')}
         caption={
           height === null
