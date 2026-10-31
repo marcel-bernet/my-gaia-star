@@ -11,6 +11,7 @@ import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
 import { formatMoment } from '../sky/time';
 import Dialog from './Dialog';
+import LangSwitch from './LangSwitch';
 
 interface Props {
   star: Star;
@@ -23,7 +24,9 @@ interface Props {
 
 export default function CertificateDialog({ star, result, placeName, literature, onClose }: Props) {
   const { t, lang } = useI18n();
-  const [title, setTitle] = useState(t('cert.defaultTitle'));
+  // null = the default title, which follows the language.
+  const [title, setTitle] = useState<string | null>(null);
+  const shownTitle = title ?? t('cert.defaultTitle');
   const [dedication, setDedication] = useState('');
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +52,7 @@ export default function CertificateDialog({ star, result, placeName, literature,
       const c = await renderCertificate({
         star,
         frame: result.frame,
-        title: title.trim() || t('cert.defaultTitle'),
+        title: shownTitle.trim() || t('cert.defaultTitle'),
         dedication,
         literature,
         dr4,
@@ -65,7 +68,7 @@ export default function CertificateDialog({ star, result, placeName, literature,
       live = false;
       clearTimeout(id);
     };
-  }, [star, result, title, dedication, placeName, literature, dr4, t, lang]);
+  }, [star, result, shownTitle, dedication, placeName, literature, dr4, t, lang]);
 
   useEffect(() => {
     const host = preview.current;
@@ -86,12 +89,12 @@ export default function CertificateDialog({ star, result, placeName, literature,
   };
 
   return (
-    <Dialog title={t('cert.title')} onClose={onClose} wide>
+    <Dialog title={t('cert.title')} onClose={onClose} wide actions={<LangSwitch />}>
       <div className="cert">
         <div className="cert-form">
           <label className="field">
             <span className="label">{t('cert.field.title')}</span>
-            <input value={title} maxLength={60} onChange={e => setTitle(e.target.value)} />
+            <input value={shownTitle} maxLength={60} onChange={e => setTitle(e.target.value)} />
           </label>
           <label className="field">
             <span className="label">{t('cert.field.dedication')}</span>

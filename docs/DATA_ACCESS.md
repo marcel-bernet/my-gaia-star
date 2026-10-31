@@ -23,6 +23,7 @@ Measured on 23 Oct 2026 by sending an `Origin` header and reading the response h
 | `vizier.cds.unistra.fr/viz-bin/asu-tsv` | Yes (`*`) |
 | `dc.g-vo.org/tap` (GAVO) | Yes (echoes origin) |
 | `simbad.cds.unistra.fr/simbad/sim-tap` | Yes (`*`) |
+| `simbad.harvard.edu/simbad/sim-tap` (CfA mirror, fallback) | Yes |
 | `gaia.aip.de/tap` | No |
 
 DR4 epoch products will be served first (and possibly only) by ESA, so the site needs a small server-side hop. `proxy/worker.js` is a ~70-line Cloudflare Worker: it maps `/epoch-astrometry/<source_id>` to DataLink, adds CORS, and caches each answer for a year (a data release never changes).

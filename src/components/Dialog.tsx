@@ -7,11 +7,14 @@ export default function Dialog({
   onClose,
   children,
   wide,
+  actions,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Extra controls in the header, beside the close button. */
+  actions?: ReactNode;
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
@@ -30,6 +33,7 @@ export default function Dialog({
       <div className="dialog-inner">
         <header>
           <h2>{title}</h2>
+          {actions}
           <button className="icon-btn" onClick={onClose} aria-label={t('close')}>
             ✕
           </button>

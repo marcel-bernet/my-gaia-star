@@ -2,8 +2,9 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import type { Place, Status } from '../types';
 import type { WallTime } from '../sky/time';
 import { searchPlace } from '../geo';
-import { LANGS, useI18n, type Key, type Lang } from '../i18n';
+import { useI18n, type Key } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
+import LangSwitch from './LangSwitch';
 import StarFinder from './StarFinder';
 import ZenithMark from './ZenithMark';
 
@@ -48,7 +49,7 @@ interface Props {
 }
 
 export default function Panel(p: Props) {
-  const { t, lang, setLang } = useI18n();
+  const { t, lang } = useI18n();
   const [query, setQuery] = useState('');
   const [placeMsg, setPlaceMsg] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -96,13 +97,7 @@ export default function Panel(p: Props) {
             {t(p.mapHidden ? 'reading.show' : 'reading.hide')}
           </button>
         )}
-        <div className="langs" role="group" aria-label={t('language')}>
-          {(Object.keys(LANGS) as Lang[]).map(l => (
-            <button key={l} lang={l} aria-pressed={lang === l} title={LANGS[l]} onClick={() => setLang(l)}>
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <LangSwitch />
       </header>
 
       <section className={`hero${hasResult ? ' compact' : ''}`}>

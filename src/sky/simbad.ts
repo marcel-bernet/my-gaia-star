@@ -4,7 +4,7 @@
  * mention each. Most Gaia stars are not in it: no one has ever singled them out.
  *
  * One small TAP query per star looked at, straight from the browser (SIMBAD
- * sends CORS headers). CDS asks for at most ~6 queries per second per IP;
+ * and its CfA mirror send CORS headers). CDS asks for at most ~6 queries per second per IP;
  * each visitor has their own IP, and we debounce and cache, so a busy site
  * does not add up against one limit.
  */
@@ -32,7 +32,17 @@ const lookUp = oncePerKey(async (gaiaDr3Id: string) => {
     'SELECT b.main_id, b.nbref, b.otype FROM basic AS b JOIN ident AS i ON i.oidref = b.oid ' +
     `WHERE i.id = 'Gaia DR3 ${gaiaDr3Id}'`;
   const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-  const r = await fetch(`${SERVICES.simbadTap}?${params}`, { signal: AbortSignal.timeout(15_000) });
-  if (!r.ok) throw new Error(`SIMBAD: HTTP ${r.status}`);
-  return parseLiterature(await r.text());
+  // The answer takes well under a second; a server that hangs (CDS does, when
+  // it is down) is given up on quickly so the mirror gets its turn.
+  let lastError: unknown;
+  for (const tap of SERVICES.simbadTap) {
+    try {
+      const r = await fetch(`${tap}?${params}`, { signal: AbortSignal.timeout(6_000) });
+      if (!r.ok) throw new Error(`SIMBAD: HTTP ${r.status}`);
+      return parseLiterature(await r.text());
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError;
 });

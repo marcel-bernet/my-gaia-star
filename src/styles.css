@@ -1041,6 +1041,10 @@ textarea {
   border-bottom: 1px solid var(--text);
 }
 
+.dialog header .langs {
+  margin: 0 10px 0 auto;
+}
+
 .dialog h2 {
   margin: 0;
   font: 500 20px/1.2 var(--mono);
@@ -1128,16 +1132,19 @@ textarea {
 @media (max-width: 860px) {
   :root {
     --pad: 16px;
+    /* The masthead becomes a slim bar pinned above the map. */
+    --bar-h: 38px;
   }
 
   .app {
     display: block;
     height: auto;
+    padding-top: var(--bar-h);
   }
 
   .stage {
     position: sticky;
-    top: 0;
+    top: var(--bar-h);
     z-index: 20;
     height: 40dvh;
     border-bottom: 1px solid var(--text);
@@ -1150,7 +1157,34 @@ textarea {
   }
 
   .masthead {
-    position: static;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    height: var(--bar-h);
+    padding-top: 0;
+    padding-bottom: 0;
+    gap: 8px;
+  }
+
+  .wordmark {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .map-toggle {
+    margin-right: 0;
+    padding: 4px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .langs button {
+    padding: 4px 4px;
   }
 
   .hero {
@@ -1163,7 +1197,11 @@ textarea {
   }
 
   .dossier {
-    scroll-margin-top: calc(40dvh + 8px);
+    scroll-margin-top: calc(var(--bar-h) + 40dvh + 8px);
+  }
+
+  .app.reading .dossier {
+    scroll-margin-top: calc(var(--bar-h) + 8px);
   }
 
   /* The DR4 hero figure bleeds exactly to the screen edge, not past it. */

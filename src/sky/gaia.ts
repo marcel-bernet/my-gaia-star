@@ -56,6 +56,11 @@ const BRIGHT_PROBE: Cone = { radiusDeg: 0.25, maxMag: 13, limit: LIMIT };
 const BRIGHT_MAX_RADIUS_DEG = 1.5;
 
 const TIMEOUT_MS = 30_000;
+/**
+ * VizieR answers in a second or two. When CDS is down it hangs instead of
+ * failing, so it gets less time: GAVO, the fallback, keeps the full wait.
+ */
+const VIZIER_TIMEOUT_MS = 10_000;
 
 export class CatalogueUnavailable extends Error {}
 
@@ -67,8 +72,8 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-async function get(url: string, signal?: AbortSignal): Promise<Response> {
-  const timeout = AbortSignal.timeout(TIMEOUT_MS);
+async function get(url: string, signal?: AbortSignal, timeoutMs = TIMEOUT_MS): Promise<Response> {
+  const timeout = AbortSignal.timeout(timeoutMs);
   const res = await fetch(url, { signal: signal ? AbortSignal.any([signal, timeout]) : timeout }).catch(e => {
     if (signal?.aborted) throw e;
     throw new CatalogueUnavailable(String(e));
@@ -97,7 +102,7 @@ const VIZIER_COLUMNS = ['Source', 'RA_ICRS', 'DE_ICRS', 'Gmag', 'BP-RP', 'Plx', 
 /** A VizieR ASU query on the Gaia DR3 table; `params` add the search. */
 async function vizier(params: Record<string, string>, signal?: AbortSignal): Promise<Star[]> {
   const query = new URLSearchParams({ '-source': VIZIER_TABLE, '-out': VIZIER_COLUMNS.join(','), ...params });
-  const res = await get(`${SERVICES.vizier}?${query}`, signal);
+  const res = await get(`${SERVICES.vizier}?${query}`, signal, VIZIER_TIMEOUT_MS);
   return parseTsv(await res.text()).flatMap(fromVizier);
 }
 
