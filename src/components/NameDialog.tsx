@@ -13,6 +13,14 @@ import {
 import Dialog from './Dialog';
 
 const BITS = 63;
+
+/** The scramble, step by step: the operation, and what it does in words. The constants are in the recipe. */
+const MIX_STEPS = (s1: bigint, s2: bigint): [string, Key][] => [
+  ['× C₁', 'name.how.mix.mul'],
+  [`x ⊕ (x ≫ ${s1})`, 'name.how.mix.fold'],
+  ['× C₂', 'name.how.mix.mul2'],
+  [`x ⊕ (x ≫ ${s2})`, 'name.how.mix.fold2'],
+];
 const hex = (n: bigint) => `0x${n.toString(16).toUpperCase().padStart(16, '0')}`;
 
 /** A 63-bit number as a strip of squares, lowest bit first; optionally cut into the eleven choices. */
@@ -101,10 +109,15 @@ export default function NameDialog({ id, onClose }: { id: string; onClose: () =>
             <p className="step-label">
               <span className="num">2</span> {t('name.how.step.mix')}
             </p>
-            <p className="mono bit-op">
-              × {hex(SCRAMBLE.C1)} · x ⊕ (x ≫ {String(SCRAMBLE.S1)}) · × {hex(SCRAMBLE.C2)} · x ⊕ (x ≫ {String(SCRAMBLE.S2)}) ·
-              mod 2⁶³
-            </p>
+            <dl className="mix-steps">
+              {MIX_STEPS(SCRAMBLE.S1, SCRAMBLE.S2).map(([op, key]) => (
+                <div key={key}>
+                  <dt className="mono">{op}</dt>
+                  <dd>{t(key)}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="hint mix-note">{t('name.how.mix.note')}</p>
             <p className="mono bit-value">{mixed.toString()}</p>
             <BitStrip x={mixed} />
           </div>

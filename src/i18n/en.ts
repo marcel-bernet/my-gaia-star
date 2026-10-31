@@ -423,6 +423,12 @@ export const en = {
   'name.how.code.download': 'Download the word lists (JSON)',
   'name.how.code.back':
     'To go back from the choices to the number, rebuild x from the choices (last slot first: x = x × size + choice), then undo each step in reverse: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. Spanish and Catalan read the same choices, with gender and number agreement.',
+  'name.how.mix.mul': 'multiply by a large odd number: each bit spills into the ones above it',
+  'name.how.mix.fold': 'fold the top bits back down onto the bottom ones',
+  'name.how.mix.mul2': 'multiply again, by a second odd number',
+  'name.how.mix.fold2': 'fold again',
+  'name.how.mix.note':
+    'All modulo 2⁶³, so the number stays 63 bits long, and every step can be undone. C₁ and C₂ are written out in the recipe below.',
 } as const;
 
 export type Key = keyof typeof en;

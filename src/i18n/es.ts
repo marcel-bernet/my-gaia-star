@@ -424,4 +424,10 @@ export const es: Dict = {
   'name.how.code.download': 'Descargar las listas de palabras (JSON)',
   'name.how.code.back':
     'Para volver de las elecciones al número, reconstruye x a partir de las elecciones (empezando por la última: x = x × tamaño + elección) y deshaz cada paso en orden inverso: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. El castellano y el catalán leen las mismas elecciones, con concordancia de género y número.',
+  'name.how.mix.mul': 'multiplicar por un número impar grande: cada bit se derrama sobre los de encima',
+  'name.how.mix.fold': 'doblar los bits de arriba sobre los de abajo',
+  'name.how.mix.mul2': 'multiplicar otra vez, por un segundo número impar',
+  'name.how.mix.fold2': 'doblar otra vez',
+  'name.how.mix.note':
+    'Todo módulo 2⁶³, así que el número sigue teniendo 63 bits, y cada paso se puede deshacer. C₁ y C₂ aparecen completos en la receta de abajo.',
 };

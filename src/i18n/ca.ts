@@ -425,4 +425,10 @@ export const ca: Dict = {
   'name.how.code.download': 'Descarrega les llistes de paraules (JSON)',
   'name.how.code.back':
     'Per tornar de les eleccions al número, reconstrueix x a partir de les eleccions (començant per l’última: x = x × mida + elecció) i desfés cada pas en ordre invers: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. El castellà i el català llegeixen les mateixes eleccions, amb concordança de gènere i nombre.',
+  'name.how.mix.mul': 'multiplicar per un nombre senar gran: cada bit es vessa sobre els de sobre',
+  'name.how.mix.fold': 'doblegar els bits de dalt sobre els de baix',
+  'name.how.mix.mul2': 'multiplicar un altre cop, per un segon nombre senar',
+  'name.how.mix.fold2': 'doblegar un altre cop',
+  'name.how.mix.note':
+    'Tot mòdul 2⁶³, així que el número continua tenint 63 bits, i cada pas es pot desfer. C₁ i C₂ apareixen complets a la recepta de sota.',
 };
