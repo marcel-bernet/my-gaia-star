@@ -17,5 +17,5 @@ export const PLOT_FAINT = '#6f6f6b';
 export const PLOT_RULE = 'rgba(233, 231, 226, 0.12)';
 
 export const SERIF = '"Source Serif 4 Variable", Georgia, serif';
-export const SANS = '"Inter Variable", system-ui, sans-serif';
+export const SANS = '"IBM Plex Sans", system-ui, sans-serif';
 export const MONO = '"IBM Plex Mono", ui-monospace, monospace';

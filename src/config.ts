@@ -8,7 +8,7 @@
  *   VITE_DR4_PROXY  base URL of the DR4 epoch-data proxy (proxy/worker.js); unset = preview data only
  */
 
-/** Source code, linked from the footer and the About dialog. */
+/** Source code. Not linked from the site for now; kept so the link is easy to put back. */
 export const REPO_URL = 'https://github.com/marcel-bernet/my-gaia-star';
 
 export const SERVICES = {

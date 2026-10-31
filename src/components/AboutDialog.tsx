@@ -1,4 +1,3 @@
-import { REPO_URL } from '../config';
 import { useI18n } from '../i18n';
 import Dialog from './Dialog';
 
@@ -7,16 +6,12 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
   return (
     <Dialog title={t('about.title')} onClose={onClose}>
       <div className="prose">
+        <p className="byline">{t('about.by')}</p>
         <p>{t('about.p1')}</p>
         <p>{t('about.p2')}</p>
         <p>{t('about.p4')}</p>
         <p>{t('about.p3')}</p>
         <p className="hint">{t('independent')}</p>
-        <p className="hint">
-          <a href={REPO_URL} target="_blank" rel="noreferrer">
-            {REPO_URL.replace(/^https:\/\//, '')}
-          </a>
-        </p>
       </div>
     </Dialog>
   );

@@ -164,6 +164,7 @@ export const ca: Dict = {
   independent: 'Un projecte independent que fa servir dades de Gaia de l’ESA; no està afiliat a l’ESA ni avalat per ella.',
   about: 'Quant a',
   'about.title': 'Quant a My Gaia Star',
+  'about.by': 'My Gaia Star l’ha preparat Marcel Bernet.',
   'about.p1':
     'La missió Gaia de l’Agència Espacial Europea ha mesurat la posició, la brillantor, el color i la distància de gairebé dos mil milions d’estrelles. My Gaia Star busca quina d’elles era just a sobre d’un lloc en un moment donat i consulta SIMBAD —la base de dades dels objectes estudiats a la literatura astronòmica— per veure si algú l’ha estudiada individualment. Gairebé sempre només hi apareix com una entrada més entre milions del catàleg de Gaia: cap article no s’hi ha fixat.',
   'about.p2':

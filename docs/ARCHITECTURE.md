@@ -1,6 +1,6 @@
 # Architecture: how My Gaia Star works, for whoever maintains it next
 
-Read this first, then [DATA_ACCESS.md](DATA_ACCESS.md) for the outside services and their limits.
+Read this first, then [DATA_ACCESS.md](DATA_ACCESS.md) for the outside services and their limits. For the visual rules (type, colour, what not to add), see [DESIGN.md](DESIGN.md).
 
 ## The short version
 
