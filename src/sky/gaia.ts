@@ -16,6 +16,7 @@
  * brightness in the cone, so the "bright" depth probes a small cone first and
  * only then asks for the radius it actually needs.
  */
+import { apiCone, apiEnabled, apiStarById, ApiUnavailable } from '../api/client';
 import { SERVICES } from '../config';
 import { fetchBundled, once } from '../lib/cache';
 import { parseCsv } from '../lib/csv';
@@ -174,6 +175,11 @@ async function withFallback(fromVizier: () => Promise<Star[]>, fromGavo: () => P
   }
 }
 
+/** The UI already explains CatalogueUnavailable; a server failure is the same thing to a visitor. */
+function unavailable(e: unknown): never {
+  throw e instanceof ApiUnavailable ? new CatalogueUnavailable(e.message) : e;
+}
+
 // ---- Searches ----------------------------------------------------------------
 
 /** Exported for the live tests; the app uses `cone`. */
@@ -238,6 +244,9 @@ export async function starsAround(ra: number, dec: number, depth: Depth, signal?
   let stars: Star[];
   if (depth === 'naked-eye') {
     stars = (await loadNakedEye()).filter(s => sepDeg(ra, dec, s.ra, s.dec) <= NAKED_EYE_RADIUS_DEG);
+  } else if (apiEnabled()) {
+    // Our own server chooses the cone size and limit for each depth.
+    stars = await apiCone(ra, dec, depth, signal).catch(unavailable);
   } else if (depth === 'bright') {
     stars = await cone(ra, dec, BRIGHT_PROBE, signal);
     const r = radiusFor(BRIGHT_PROBE.radiusDeg, stars.length, LIMIT, BRIGHT_MAX_RADIUS_DEG);
@@ -254,6 +263,7 @@ export async function starsAround(ra: number, dec: number, depth: Depth, signal?
 /** One star by its Gaia DR3 source_id, or null if there is none. */
 export async function starById(id: string, signal?: AbortSignal): Promise<Star | null> {
   if (!/^\d{1,19}$/.test(id)) return null;
+  if (apiEnabled()) return apiStarById(id, signal).catch(unavailable);
   const stars = await withFallback(
     () => vizier({ Source: id, '-out.max': '1' }, signal),
     () => gavo(`SELECT ${GAVO_COLUMNS} FROM ${GAVO_TABLE} WHERE source_id=${id}`, signal),

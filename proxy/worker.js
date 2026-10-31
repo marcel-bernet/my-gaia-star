@@ -32,6 +32,7 @@ export default {
       'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       Vary: 'Origin',
+      'X-Content-Type-Options': 'nosniff',
     };
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405, headers: cors });

@@ -8,6 +8,7 @@
  * each visitor has their own IP, and we debounce and cache, so a busy site
  * does not add up against one limit.
  */
+import { apiEnabled, apiLiterature } from '../api/client';
 import { SERVICES } from '../config';
 import { abortable, oncePerKey } from '../lib/cache';
 import { parseCsvLine } from '../lib/csv';
@@ -28,6 +29,7 @@ export function literatureFor(gaiaDr3Id: string, signal?: AbortSignal): Promise<
 }
 
 const lookUp = oncePerKey(async (gaiaDr3Id: string) => {
+  if (apiEnabled()) return apiLiterature(gaiaDr3Id);
   const adql =
     'SELECT b.main_id, b.nbref, b.otype FROM basic AS b JOIN ident AS i ON i.oidref = b.oid ' +
     `WHERE i.id = 'Gaia DR3 ${gaiaDr3Id}'`;

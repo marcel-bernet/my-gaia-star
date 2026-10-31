@@ -5,8 +5,10 @@
  * ESA's June 2026 pre-release, clearly labelled as a stand-in. After that, if
  * the site is built with VITE_DR4_PROXY, each star's own data is fetched
  * through that proxy — ESA's archive sends no CORS headers, so a browser
- * cannot call it directly. See docs/DATA_ACCESS.md and proxy/.
+ * cannot call it directly. With VITE_API_BASE, our own server answers instead
+ * (same path and format as the proxy). See docs/DATA_ACCESS.md and proxy/.
  */
+import { apiEnabled, apiEpochAstrometry } from '../api/client';
 import { DR4_PROXY as PROXY, DR4_RELEASE } from '../config';
 import { abortable, fetchBundled, once, oncePerKey } from '../lib/cache';
 import type { Star } from '../sky/gaia';
@@ -49,7 +51,7 @@ export type Dr4Result =
  */
 export async function epochAstrometryFor(star: Pick<Star, 'id'>, signal?: AbortSignal): Promise<Dr4Result> {
   if (!dr4IsOut()) return { kind: 'preview', reason: 'not-yet' };
-  if (!PROXY) return { kind: 'preview', reason: 'no-proxy' };
+  if (!PROXY && !apiEnabled()) return { kind: 'preview', reason: 'no-proxy' };
   try {
     const data = await abortable(fetchLive(star.id), signal);
     return data ? { kind: 'live', data } : { kind: 'preview', reason: 'not-found' };
@@ -62,6 +64,10 @@ export async function epochAstrometryFor(star: Pick<Star, 'id'>, signal?: AbortS
 
 /** One star's epoch astrometry from the proxy, fetched once; null if DR4 has none. */
 const fetchLive = oncePerKey(async (id: string) => {
+  if (apiEnabled()) {
+    const votable = await apiEpochAstrometry(id);
+    return votable === null ? null : (fromVotable(votable)[0] ?? null);
+  }
   const r = await fetch(`${PROXY!.replace(/\/$/, '')}/epoch-astrometry/${id}`);
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`DR4 proxy: HTTP ${r.status}`);
