@@ -1,24 +1,37 @@
 import type { Result } from '../types';
-import { magnitudeScale, STAR_RADII } from '../draw/mapStars';
-import { CREAM } from '../draw/theme';
+import { useEffect, useRef } from 'react';
+import { drawStar, magnitudeScale, STAR_RADII, starExtent } from '../draw/mapStars';
+import { INK } from '../draw/theme';
 import { formatDec, formatRa } from '../format';
 import { useI18n } from '../i18n';
 
-/** The map's dot sizes, faintest to brightest, as drawn by SkyMap. */
+// The key draws the signs at 60%, spaced by their dots so glows and spikes may overlap a little.
+const KEY_K = 0.6;
+const KEY_R = STAR_RADII.map(r => r * KEY_K);
+const KEY_X = KEY_R.reduce<number[]>((xs, r, i) => [...xs, i ? xs[i - 1] + KEY_R[i - 1] + 9 + r : 0], []);
+// Room for the faintest sign on the left and the brightest one's spikes on the right.
+const KEY_LEFT = starExtent(0, KEY_K);
+const KEY_PAD = starExtent(STAR_RADII.length - 1, KEY_K);
+const KEY_W = KEY_LEFT + KEY_X[KEY_X.length - 1] + KEY_PAD;
+const KEY_H = 2 * KEY_PAD;
+
+/** The map's star signs, faintest to brightest, drawn by the same function as the map. */
 function MagnitudeKey({ faintest, brightest, lang }: { faintest: number; brightest: number; lang: string }) {
   const nf = new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const gap = 4;
-  const xs = STAR_RADII.reduce<number[]>((acc, r, i) => [...acc, i ? acc[i - 1] + STAR_RADII[i - 1] + gap + r : r], []);
-  const width = xs[xs.length - 1] + STAR_RADII[STAR_RADII.length - 1];
-  const h = 2 * STAR_RADII[STAR_RADII.length - 1];
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current!;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = KEY_W * dpr;
+    c.height = KEY_H * dpr;
+    const ctx = c.getContext('2d')!;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    KEY_X.forEach((x, cls) => drawStar(ctx, KEY_LEFT + x, KEY_H / 2, cls, KEY_K, INK));
+  }, []);
   return (
     <span className="mag-key">
       G {nf.format(faintest)}
-      <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`}>
-        {STAR_RADII.map((r, i) => (
-          <circle key={i} cx={xs[i]} cy={h / 2} r={r} fill={CREAM} />
-        ))}
-      </svg>
+      <canvas ref={ref} style={{ width: KEY_W, height: KEY_H }} />
       {nf.format(brightest)}
     </span>
   );

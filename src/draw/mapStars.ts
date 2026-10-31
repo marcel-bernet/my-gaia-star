@@ -1,8 +1,9 @@
 /**
- * How stars are drawn on the map: points of light in their own colours on
- * the dark plate of sky laid over the map, in a few size classes by
- * brightness, so a size means something and the readout can show a key.
- * Your star is the orange one.
+ * How stars are drawn on the map: ink on the paper, in a few size classes
+ * by brightness so a size means something and the readout can show a key.
+ * Each star is a dot in a soft ink glow; the brightest also get the
+ * diffraction spikes a telescope puts on a bright star. Your star is the
+ * only coloured one.
  */
 
 /** Dot radius (px) for each class, faintest first. */
@@ -45,13 +46,62 @@ export function magnitudeScale(gs: number[]): MagnitudeScale {
   };
 }
 
+/** Classes from this one up get diffraction spikes: only the few bright stars. */
+const SPIKED_FROM = 3;
+
+const rgb = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(', ');
+
+/** How far a star's drawing reaches from its centre (px): the area to repaint. */
+export function starExtent(cls: number, k: number) {
+  const r = STAR_RADII[cls] * k;
+  const glow = r * (2.4 + 0.3 * cls);
+  const spike = cls >= SPIKED_FROM ? r * (2.6 + 1.1 * (cls - SPIKED_FROM)) : 0;
+  return Math.ceil(Math.max(glow, r + spike)) + 1;
+}
+
 /**
- * A star's colour as the eye sees it at night: a tint, not a hue. Mixing the
- * real colour (an `rgb(r,g,b)` string) halfway to white keeps blue stars
- * bluish and red ones warm, and leaves full orange to your star alone.
+ * One star at (x, y): glow, spikes, then the dot. `colour` is a #rrggbb ink;
+ * `k` scales the class sizes to the screen (dotScale).
  */
-export function starTint(rgb: string, toWhite = 0.5): string {
-  const [r, g, b] = (rgb.match(/\d+/g) ?? ['255', '255', '255']).map(Number);
-  const mix = (c: number) => Math.round(c + (255 - c) * toWhite);
-  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+export function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, cls: number, k: number, colour: string) {
+  const r = STAR_RADII[cls] * k;
+  const ink = rgb(colour);
+
+  // A soft glow: stronger and wider for brighter stars, nothing for the faintest.
+  if (cls > 0) {
+    const reach = r * (2.4 + 0.3 * cls);
+    const glow = ctx.createRadialGradient(x, y, r * 0.6, x, y, reach);
+    glow.addColorStop(0, `rgba(${ink}, ${0.1 + 0.035 * cls})`);
+    glow.addColorStop(1, `rgba(${ink}, 0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, reach, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  // Four hairline spikes, fading towards their tips.
+  if (cls >= SPIKED_FROM) {
+    const len = r + r * (2.6 + 1.1 * (cls - SPIKED_FROM));
+    ctx.lineWidth = Math.max(0.75, 0.5 * k + 0.35);
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      const fade = ctx.createLinearGradient(x, y, x + dx * len, y + dy * len);
+      fade.addColorStop(0, `rgba(${ink}, 0.85)`);
+      fade.addColorStop(1, `rgba(${ink}, 0)`);
+      ctx.strokeStyle = fade;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + dx * len, y + dy * len);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 2 * Math.PI);
+  ctx.fill();
 }

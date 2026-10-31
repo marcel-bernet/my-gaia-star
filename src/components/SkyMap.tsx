@@ -1,14 +1,13 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useState } from 'react';
-import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { starToLatLng } from '../sky/zenith';
-import { dotScale, magnitudeScale, STAR_RADII, starTint } from '../draw/mapStars';
-import { INK, MAP_LINE, MAP_SKY_OPACITY, PLATE, SIGNAL } from '../draw/theme';
-import { starColor } from '../sky/physics';
+import { dotScale, drawStar, magnitudeScale, STAR_RADII, starExtent } from '../draw/mapStars';
+import { INK, INK_3, SIGNAL_INK } from '../draw/theme';
 import type { Result } from '../types';
 
 interface Props {
@@ -26,11 +25,44 @@ interface Props {
 interface Placed {
   s: Star;
   pos: ReturnType<typeof starToLatLng>;
-  /** Radius of its brightness class, before scaling to the screen. */
-  r: number;
+  /** Brightness class (mapStars.ts). */
+  cls: number;
 }
 
-/** The star dots, sized to how large the search circle is on screen right now. */
+type StarMarkOptions = L.CircleMarkerOptions & { cls: number; k: number; colour: string };
+
+/** The bits of Leaflet 1.9's canvas path internals that StarMark draws through (leaflet is pinned to 1.9). */
+interface StarMarkInternals {
+  options: StarMarkOptions;
+  _point: L.Point;
+  _pxBounds: L.Bounds;
+  _renderer: { _ctx: CanvasRenderingContext2D; _drawing: boolean };
+  _empty(): boolean;
+}
+
+/**
+ * A CircleMarker that draws a star (glow, spikes, dot) instead of a circle.
+ * Hit-testing stays the circle's own; the repaint area grows to the glow and spikes.
+ */
+const StarMark = L.CircleMarker.extend({
+  _updateBounds(this: StarMarkInternals) {
+    const e = starExtent(this.options.cls, this.options.k);
+    this._pxBounds = L.bounds(this._point.subtract([e, e]), this._point.add([e, e]));
+  },
+  _updatePath(this: StarMarkInternals) {
+    if (!this._renderer._drawing || this._empty()) return;
+    const { cls, k, colour } = this.options;
+    // The canvas is shared by every layer, which leave their alpha and dashes behind (the dashed circle, for one).
+    const ctx = this._renderer._ctx;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+    drawStar(ctx, this._point.x, this._point.y, cls, k, colour);
+    ctx.restore();
+  },
+}) as unknown as new (at: L.LatLngExpression, options: StarMarkOptions) => L.CircleMarker;
+
+/** The stars, sized to how large the search circle is on screen right now. */
 function StarDots({
   placed,
   centre,
@@ -50,22 +82,28 @@ function StarDots({
   // The circle's radius in screen pixels at this zoom (Web Mercator: 256 px tiles).
   const metresPerPx = (40075016.686 * Math.cos((centre[0] * Math.PI) / 180)) / 2 ** (zoom + 8);
   const k = dotScale((radiusDeg * KM_PER_DEG * 1000) / metresPerPx);
-  return placed.map(({ s, pos, r }) => (
-    <CircleMarker
-      key={s.id}
-      // A point of light tinted with the star's own colour; a ring of the plate keeps neighbours apart. Yours is the orange one.
-      center={pos}
-      radius={r * k + 0.5}
-      pathOptions={{
-        color: PLATE,
-        weight: 1,
-        opacity: 1,
-        fillColor: s.id === zenithId ? SIGNAL : starTint(starColor(s)),
-        fillOpacity: 1,
-      }}
-      eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
-    />
-  ));
+
+  useEffect(() => {
+    const layers = L.layerGroup(
+      placed.map(({ s, pos, cls }) =>
+        new StarMark(pos, {
+          renderer,
+          radius: STAR_RADII[cls] * k,
+          cls,
+          k,
+          // Ink on the paper; yours is the one in colour.
+          colour: s.id === zenithId ? SIGNAL_INK : INK,
+        }).on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          onSelectStar(s.id);
+        }),
+      ),
+    ).addTo(map);
+    return () => {
+      layers.remove();
+    };
+  }, [map, placed, k, zenithId, onSelectStar]);
+  return null;
 }
 
 function Remeasure({ visible }: { visible: boolean }) {
@@ -150,7 +188,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
     if (!result) return [];
     const scale = magnitudeScale(result.stars.map(s => s.g));
     return result.stars
-      .map(s => ({ s, pos: starToLatLng(result.frame, s.ra, s.dec), r: STAR_RADII[scale.classOf(s.g)] }))
+      .map(s => ({ s, pos: starToLatLng(result.frame, s.ra, s.dec), cls: scale.classOf(s.g) }))
       .sort((a, b) => b.s.g - a.s.g); // bright on top
   }, [result]);
 
@@ -187,8 +225,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
         <Circle
           center={[result.frame.lat, result.frame.lon]}
           radius={radiusDeg * KM_PER_DEG * 1000}
-          // The sky overhead: a dark plate framed in ink, laid over the map.
-          pathOptions={{ color: INK, weight: 1, opacity: 1, fillColor: PLATE, fillOpacity: MAP_SKY_OPACITY }}
+          pathOptions={{ color: INK, weight: 1, opacity: 0.5, dashArray: '2 5', fill: false }}
           interactive={false}
         />
       )}
@@ -208,17 +245,12 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
             <Polyline
               key={`b${i}`}
               positions={b}
-              pathOptions={{ color: MAP_LINE, weight: 1, opacity: 0.9, dashArray: '3 5' }}
+              pathOptions={{ color: INK_3, weight: 1, opacity: 0.8, dashArray: '3 5' }}
               interactive={false}
             />
           ))}
           {overlay.lines.map((l, i) => (
-            <Polyline
-              key={`l${i}`}
-              positions={l}
-              pathOptions={{ color: MAP_LINE, weight: 1.5, opacity: 1 }}
-              interactive={false}
-            />
+            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: INK, weight: 1.5, opacity: 0.9 }} interactive={false} />
           ))}
           <Marker
             position={overlay.centre}
