@@ -58,6 +58,8 @@ const SIZE: Record<Slot, number> = {
   time: 64,
 };
 export const slotSize = (s: Slot) => SIZE[s];
+/** Every list is a power of two long, so a choice is exactly this many bits of the scrambled number. */
+export const slotBits = (s: Slot) => Math.log2(SIZE[s]);
 export type Digits = Record<Slot, number>;
 
 // ---- ID ↔ digits -----------------------------------------------------------
@@ -99,13 +101,24 @@ function unmix(x: bigint) {
   return (x * C1_INV) & MASK;
 }
 
+/**
+ * The scramble's constants, shown in "How are the words made?" so anyone can
+ * reproduce it. All arithmetic is modulo 2⁶³.
+ */
+export const SCRAMBLE = { C1, C2, S1, S2, C1_INV, C2_INV } as const;
+
+/** The scrambled number a star's choices are read from. */
+export function scramble(id: string | bigint): bigint {
+  return mix(BigInt(id) & MASK);
+}
+
 /** Can this be a Gaia source ID? (A whole number below 2⁶³.) */
 export function isSourceId(s: string): boolean {
   return /^\d{1,19}$/.test(s.trim()) && BigInt(s.trim()) <= MASK;
 }
 
 export function idToDigits(id: string | bigint): Digits {
-  let x = mix(BigInt(id) & MASK);
+  let x = scramble(id);
   const d = {} as Digits;
   for (const s of SLOTS) {
     const n = BigInt(SIZE[s]);
@@ -332,4 +345,23 @@ export function slotOptions(d: Digits, slot: Slot, lang: Lang): string[] {
       .join(' ')
       .replace(/’ /g, '’');
   });
+}
+
+/**
+ * The English word lists by slot, for anyone reproducing a name: creatures
+ * and verbs as [singular, plural] (plural from "two" on); trait, look and
+ * realmLook all read from "adjective".
+ */
+export function englishWordLists() {
+  return {
+    count: COUNT_EN,
+    adjective: ADJECTIVES.map(a => a[0]),
+    creature: CREATURES.map(c => [c[0], c[1]]),
+    verb: VERBS.map(v => [v[0], v[1]]),
+    manner: MANNERS.map(m => m[0]),
+    preposition: PREPOSITIONS.map(p => p[0]),
+    place: PLACES.map(p => p[0]),
+    realm: REALMS.map(r => r[0]),
+    time: TIMES.map(t => t[0]),
+  };
 }

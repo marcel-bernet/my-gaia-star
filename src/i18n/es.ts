@@ -301,7 +301,7 @@ export const es: Dict = {
   'name.slot.realmLook': 'Cómo es',
   'name.slot.time': 'Cuándo',
   'name.how.col.part': 'Parte',
-  'name.how.col.choice': 'Elección',
+  'name.how.col.choice': 'Valor',
   'name.how.col.word': 'Palabra',
   point: 'A ver… ¿y esto para qué sirve?',
   'point.title': 'Vale, pero ¿qué sentido tiene esto?',
@@ -413,4 +413,15 @@ export const es: Dict = {
   'cert.firstLook.bright': 'Muy probablemente nadie la había mirado antes por sí misma.',
   'go.choose.hint':
     'Donde naciste, la noche de tu boda, el momento en que conociste a alguien: encuentra la estrella que estaba justo encima.',
+  'name.how.step.id': 'Su número de Gaia, en binario',
+  'name.how.step.mix': 'Mezclado',
+  'name.how.step.cut': 'Cortado en once elecciones',
+  'name.how.fig.caption':
+    'Cada cuadrado es uno de los 63 bits (relleno = 1), empezando por el más bajo. La mezcla cambia casi todos los bits; el corte no cambia ninguno. Cada tramo es una elección, numerada como en la tabla de abajo: 5 bits para 32 cantidades, 4 bits para 16 preposiciones, 6 bits para cada lista de 64.',
+  'name.how.code.title': 'Reprodúcelo tú',
+  'name.how.code.lede':
+    'Este Python convierte el número de Gaia de esta estrella en sus elecciones y sus palabras en inglés. Solo necesita las listas de palabras, y cada número que imprime aparece arriba.',
+  'name.how.code.download': 'Descargar las listas de palabras (JSON)',
+  'name.how.code.back':
+    'Para volver de las elecciones al número, reconstruye x a partir de las elecciones (empezando por la última: x = x × tamaño + elección) y deshaz cada paso en orden inverso: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. El castellano y el catalán leen las mismas elecciones, con concordancia de género y número.',
 };
