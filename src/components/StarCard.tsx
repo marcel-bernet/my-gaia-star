@@ -152,7 +152,8 @@ export default function StarCard({
 
   // Bring a fresh result into view (the panel scrolls on desktop, the page on phones).
   useEffect(() => {
-    const id = setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const id = setTimeout(() => ref.current?.scrollIntoView({ behavior, block: 'start' }), 120);
     return () => clearTimeout(id);
   }, [result, star.id]);
 

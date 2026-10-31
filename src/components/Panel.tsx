@@ -6,6 +6,7 @@ import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
 import StarFinder from './StarFinder';
+import ZenithMark from './ZenithMark';
 
 export type Mode = 'now' | 'moment';
 
@@ -85,6 +86,7 @@ export default function Panel(p: Props) {
     <aside className={`panel${hasResult ? ' has-result' : ''}`} aria-label={t('brand')}>
       <header className="masthead">
         <a className="wordmark" href={import.meta.env.BASE_URL}>
+          <ZenithMark size={15} />
           {t('brand')}
         </a>
         <div className="langs" role="group" aria-label={t('language')}>
@@ -105,8 +107,8 @@ export default function Panel(p: Props) {
             <dl className="stats">
               {GAIA_STATS.map(([n, label]) => (
                 <div key={label}>
-                  <dt>{nf.format(n)}</dt>
-                  <dd>{t(label)}</dd>
+                  <dt>{t(label)}</dt>
+                  <dd className="mono">{nf.format(n)}</dd>
                 </div>
               ))}
             </dl>
@@ -211,7 +213,9 @@ export default function Panel(p: Props) {
           ) : hasResult ? (
             t('go.again')
           ) : (
-            t('go')
+            <>
+              {t('go')} <ZenithMark />
+            </>
           )}
         </button>
         {p.status.kind === 'error' && (
