@@ -17,6 +17,8 @@ My Gaia Star is set like one of Gaia's own engineering documents: a cool white s
 2. **Reveal.** The literature check is the headline ("No paper has singled out this star." in orange, or its SIMBAD name in ink), then three key facts as a ledger, then its Gaia number in words, then *Observation record* and *Share*.
 3. **In detail.** The figures, the measurements table and the DR4 section, under their own heading.
 
+The masthead carries **Share**, which shares the bare home page (never the visitor's place and time): a preview of the link card, then one ruled card per platform. Instagram takes no links, so its card hands over a story image (`public/story-{lang}.png`) and copies the link for a sticker. The brand marks on those cards are the only colours besides orange, because they are the platforms' own. The link card, the story and the favicon are set on the sheet like the site, with the sky as a dark plate.
+
 Secondary things live in the footer: *Method & limitations*, *Find a star by its Gaia number*, *What's the point?*, *About*, and the author (linked to LinkedIn).
 
 ## Honest wording

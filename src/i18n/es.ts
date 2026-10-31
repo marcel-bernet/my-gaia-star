@@ -74,6 +74,16 @@ export const es: Dict = {
   'share.email': 'Correo',
   'share.copy': 'Copiar texto + enlace',
   'share.copied': '¡Copiado!',
+  'site.share': 'Compartir',
+  'site.share.title': 'Comparte My Gaia Star',
+  'site.share.preview': 'Así se ve el enlace al publicarlo',
+  'site.share.text':
+    'Sobre ti hay una estrella que nadie ha mirado nunca. Casi seguro. Encuentra la tuya en el catálogo Gaia de la ESA ✨',
+  'site.share.subject': 'Sobre ti hay una estrella que nadie ha mirado nunca',
+  'share.copyLink': 'Copiar enlace',
+  'share.instagram.hint':
+    'Instagram no tiene enlace para compartir, así que aquí tienes una historia: la imagen se ha guardado y el enlace se ha copiado. Añádelo a tu historia con un sticker de enlace.',
+  'share.instagram.shared': 'Elige Instagram y añade el enlace copiado con un sticker de enlace.',
   'share.subject': 'He encontrado mi estrella ✨',
   'share.aStar': 'Una estrella',
   'share.text.name': '✨ La estrella sobre mí: Gaia DR3 {id}, «{name}»',

@@ -67,7 +67,7 @@ The layers depend downwards only: `components` and `state` use everything; `cert
 | `public/hr-density.png` | `scripts/hr_density.py` (needs `pip install -r scripts/requirements.txt`) | the HR diagram (`draw/hr.ts`; keep `HR_AXES` in step with the script) |
 | `public/dr4-preview.json`, `src/dr4/fixtures/one-source.vot` | `scripts/dr4_prerelease.py` (from ESA's pre-release file) | the DR4 section until real DR4 data is connected; parser test |
 | `src/sky/calibration.fixtures.json` | `scripts/calibration_stars.py` | star-type calibration test |
-| `public/og-image.png` | `scripts/og_image.html` (screenshot command inside) | link previews |
+| `public/og-image.png`, `public/story-{en,es,ca}.png`, `public/apple-touch-icon.png` | `scripts/share_cards.sh` (renders `scripts/og_image.html`) | link previews, the Instagram story card, the home-screen icon |
 
 Country outlines come from the `world-atlas` npm package. Nothing needs rebuilding unless you want newer data.
 

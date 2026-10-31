@@ -326,7 +326,8 @@ a:hover {
   text-underline-offset: 4px;
 }
 
-.map-toggle {
+.map-toggle,
+.share-btn {
   margin: 0 14px 0 auto;
   padding: 6px 10px;
   border: 1px solid var(--text);
@@ -337,7 +338,24 @@ a:hover {
   cursor: pointer;
 }
 
-.map-toggle:hover {
+.map-toggle + .share-btn {
+  margin-left: 0;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.map-toggle:hover,
+.share-btn:hover {
   background: var(--text);
   color: var(--bg);
 }
@@ -1351,7 +1369,7 @@ textarea {
     height: var(--bar-h);
     padding-top: 0;
     padding-bottom: 0;
-    gap: 8px;
+    gap: 6px;
   }
 
   .wordmark {
@@ -1362,7 +1380,17 @@ textarea {
     overflow: hidden;
   }
 
-  .map-toggle {
+  /* Beside "Hide the map" on a phone, Share keeps only its glyph so the wordmark stays whole. */
+  .map-toggle + .share-btn span {
+    display: none;
+  }
+
+  .map-toggle + .share-btn {
+    padding: 4px 6px;
+  }
+
+  .map-toggle,
+  .share-btn {
     margin-right: 0;
     padding: 4px 8px;
     font-size: 10px;
@@ -1929,20 +1957,28 @@ textarea {
 
 .share-targets {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   gap: 8px;
 }
 
+/* One card per platform: its mark above its name, square corners, ruled like the rest of the sheet. */
 .share-target {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 84px;
+  margin: 0;
+  padding: 14px 8px 12px;
   border: 1px solid var(--rule-2);
   border-radius: var(--radius);
   background: transparent;
   color: var(--text);
-  font: 500 14px var(--sans);
+  font: 500 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -1951,19 +1987,22 @@ textarea {
 }
 
 .share-target:hover {
-  border-color: var(--text-2);
+  border-color: var(--text);
   background: var(--surface);
 }
 
 .share-target svg {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   fill: currentColor;
 }
 
 .share-target.whatsapp svg {
   color: #25d366;
+}
+.share-target.instagram svg {
+  color: #d62976;
 }
 .share-target.telegram svg {
   color: #2aabee;
@@ -1973,6 +2012,63 @@ textarea {
 }
 .share-target.facebook svg {
   color: #1877f2;
+}
+.share-target.linkedin svg {
+  color: #0a66c2;
+}
+
+/* The link preview, as a chat app would show it. */
+.share-card {
+  margin: 0;
+  border: 1px solid var(--text);
+  background: var(--field);
+}
+
+.share-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.share-card figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.share-card figcaption .mono {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.share-card strong {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.share-story {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+.share-story img {
+  flex: none;
+  width: 72px;
+  height: auto;
+  border: 1px solid var(--rule-2);
+}
+
+.share-story p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
 }
 
 /* Motion is only ever feedback; drop it when asked. */
