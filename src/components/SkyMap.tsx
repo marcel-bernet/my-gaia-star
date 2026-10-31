@@ -6,6 +6,7 @@ import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
 import { starColor } from '../sky/physics';
 import { starToLatLng } from '../sky/zenith';
+import { INK, INK_3 } from '../draw/theme';
 import type { Result } from '../types';
 
 interface Props {
@@ -16,6 +17,16 @@ interface Props {
   onSelectStar: (id: string) => void;
   /** The selected star's constellation, laid on the ground. */
   overlay: (GroundShape & { name: string }) | null;
+  /** False while the map is put away; Leaflet needs its size re-read when it comes back. */
+  visible: boolean;
+}
+
+function Remeasure({ visible }: { visible: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (visible) map.invalidateSize({ pan: false });
+  }, [map, visible]);
+  return null;
 }
 
 const placeIcon = L.divIcon({ className: 'place-pin', html: '<span></span>', iconSize: [28, 28] });
@@ -87,7 +98,7 @@ function FitOverlay({ overlay }: { overlay: Props['overlay'] }) {
   return null;
 }
 
-export default function SkyMap({ place, result, selectedId, onPick, onSelectStar, overlay }: Props) {
+export default function SkyMap({ place, result, selectedId, onPick, onSelectStar, overlay, visible }: Props) {
   const placed = useMemo(() => {
     if (!result) return [];
     const gs = result.stars.map(s => s.g);
@@ -122,18 +133,19 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
       attributionControl
     >
       <TileLayer
-        // Plain OSM tiles (no API key), turned into a night map by CSS (see .leaflet-tile-pane).
+        // Plain OSM tiles (no API key), printed in grey on the page by CSS (see .leaflet-tile-pane).
         attribution={SERVICES.tilesAttribution}
         url={SERVICES.tiles}
         maxZoom={19}
       />
       <ClickToPick onPick={onPick} />
+      <Remeasure visible={visible} />
       <FollowView place={place} result={result} radiusDeg={radiusDeg} overlayOn={!!overlay} />
       {result && (
         <Circle
           center={[result.frame.lat, result.frame.lon]}
           radius={radiusDeg * KM_PER_DEG * 1000}
-          pathOptions={{ color: '#e9e7e2', weight: 1, opacity: 0.25, dashArray: '2 5', fill: false }}
+          pathOptions={{ color: INK, weight: 1, opacity: 0.5, dashArray: '2 5', fill: false }}
           interactive={false}
         />
       )}
@@ -142,7 +154,8 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
           key={s.id}
           center={pos}
           radius={r}
-          pathOptions={{ stroke: false, fillColor: color, fillOpacity: 0.95 }}
+          // The star's own colour, outlined in ink so pale stars still read on the sheet.
+          pathOptions={{ color: INK, weight: 0.75, opacity: 0.85, fillColor: color, fillOpacity: 1 }}
           eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
         />
       ))}
@@ -153,17 +166,12 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
             <Polyline
               key={`b${i}`}
               positions={b}
-              pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }}
+              pathOptions={{ color: INK_3, weight: 1, opacity: 0.8, dashArray: '3 5' }}
               interactive={false}
             />
           ))}
           {overlay.lines.map((l, i) => (
-            <Polyline
-              key={`l${i}`}
-              positions={l}
-              pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }}
-              interactive={false}
-            />
+            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: INK, weight: 1.5, opacity: 0.9 }} interactive={false} />
           ))}
           <Marker
             position={overlay.centre}

@@ -42,6 +42,9 @@ interface Props {
   onAbout: () => void;
   onPoint: () => void;
   onFound: (star: Star, when: Date | null) => void;
+  mapHidden: boolean;
+  /** Present once a star is on screen. */
+  onToggleMapHidden?: () => void;
 }
 
 export default function Panel(p: Props) {
@@ -88,6 +91,11 @@ export default function Panel(p: Props) {
           <ZenithMark size={15} />
           {t('brand')}
         </a>
+        {p.onToggleMapHidden && (
+          <button className="map-toggle" onClick={p.onToggleMapHidden}>
+            {t(p.mapHidden ? 'reading.show' : 'reading.hide')}
+          </button>
+        )}
         <div className="langs" role="group" aria-label={t('language')}>
           {(Object.keys(LANGS) as Lang[]).map(l => (
             <button key={l} lang={l} aria-pressed={lang === l} title={LANGS[l]} onClick={() => setLang(l)}>

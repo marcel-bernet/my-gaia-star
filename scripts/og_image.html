@@ -10,9 +10,8 @@
     <meta charset="UTF-8" />
     <style>
       @font-face {
-        font-family: Serif;
-        src: url(../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2);
-        font-weight: 200 900;
+        font-family: MonoHead;
+        src: url(../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2);
       }
       @font-face {
         font-family: Sans;
@@ -55,8 +54,7 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: #e8c98f;
-        box-shadow: 0 0 14px #e8c98f;
+        background: #ff7a3d;
       }
       .kicker {
         margin: 52px 0 14px;
@@ -67,12 +65,12 @@
       }
       h1 {
         margin: 0;
-        font: 500 56px/1.08 Serif;
-        letter-spacing: -0.015em;
+        font: 50px/1.1 MonoHead;
+        letter-spacing: -0.03em;
       }
       h1 em {
         font-style: normal;
-        color: #e8c98f;
+        color: #ff7a3d;
       }
       p {
         margin: 24px 0 0;
@@ -206,7 +204,7 @@
           .map(s => ({ s, d: Math.hypot(s.p[0] - (CX - 40), s.p[1] - (CY + 85)) }))
           .sort((a, b) => a.d - b.d)[0].s;
         const [mx, my] = mine.p;
-        ctx.strokeStyle = '#e8c98f';
+        ctx.strokeStyle = '#ff7a3d';
         ctx.lineWidth = 1.4;
         ctx.beginPath();
         ctx.arc(mx, my, 15, 0, 2 * Math.PI);
@@ -232,7 +230,7 @@
         ctx.font = '11px Mono';
         ctx.fillStyle = 'rgba(8,9,11,0.8)';
         ctx.fillRect(mx + 34, my - 18, ctx.measureText(`Gaia DR3 ${mine.id}`).width + 8, 36);
-        ctx.fillStyle = '#e8c98f';
+        ctx.fillStyle = '#ff7a3d';
         ctx.font = '12px Mono';
         ctx.fillText('YOUR STAR', mx + 38, my - 4);
         ctx.fillStyle = 'rgba(233,231,226,0.55)';

@@ -254,6 +254,8 @@ export const es: Dict = {
   'map.show': 'Ver en el mapa',
   'map.hide': 'Quitar del mapa',
   'map.hint': 'Pon la constelación sobre el mapa, al tamaño que ocupa en el cielo.',
+  'reading.hide': 'Ocultar el mapa',
+  'reading.show': 'Mostrar el mapa',
   'galaxy.ly': '{ly} a. l.',
   'galaxy.plane': 'Plano galáctico',
   'galaxy.above': 'Vista desde arriba',

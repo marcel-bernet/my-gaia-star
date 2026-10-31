@@ -17,7 +17,6 @@
     "check": "tsc --noEmit && eslint . && prettier --check . && vitest run"
   },
   "dependencies": {
-    "@fontsource-variable/source-serif-4": "^5.3.1",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/ibm-plex-sans": "^5.3.0",
     "@photostructure/tz-lookup": "^11.7.0",

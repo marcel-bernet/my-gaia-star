@@ -4,7 +4,7 @@ import { simbadUrl } from '../config';
 import { drawConstellation, type ChartGround } from '../draw/constellation';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../draw/galaxy';
 import { drawStarPortrait } from '../draw/portrait';
-import { CREAM, GOLD, MUTED, SANS } from '../draw/theme';
+import { CREAM, SIGNAL, MUTED, SANS } from '../draw/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
 import { twoSigFigs } from '../format';
@@ -140,7 +140,7 @@ export default function StarCard({
             sky,
             abbr,
             target: { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
-            style: { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 0.9 },
+            style: { gold: SIGNAL, cream: CREAM, muted: MUTED, font: SANS, scale: 0.9 },
             ground,
             furniture: { north: t('chart.north'), east: t('chart.east') },
           },
