@@ -1,6 +1,6 @@
 # My Gaia Star
 
-**Above you is a star no one has ever written about. Almost certainly.** ESA's Gaia has measured almost two billion stars; at most one in a hundred has ever been studied on its own. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether any paper has singled it out, and lets you keep an observation record of it.
+**Above you is a star no one has ever looked at. Almost certainly.** ESA's Gaia has measured almost two billion stars; at most one in a hundred has ever been studied on its own. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether any paper has singled it out, and lets you keep an observation record of it.
 
 When Gaia DR4 comes out (2 December 2026) it will publish, for the first time, the raw measurements behind the catalogue: every pass Gaia made over every star, and the pixels it recorded. Each star's page already has a DR4 section, filled for now with real data from ESA's June 2026 pre-release; see [docs/DATA_ACCESS.md](docs/DATA_ACCESS.md) for how it switches to each star's own data, and for what could rate-limit a public deployment.
 

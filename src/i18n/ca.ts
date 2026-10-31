@@ -2,7 +2,7 @@ import type { Dict } from './en';
 
 export const ca: Dict = {
   brand: 'My Gaia Star',
-  tagline: 'Sobre teu hi ha una estrella sobre la qual ningú no ha escrit mai. Gairebé segur.',
+  tagline: 'Sobre teu hi ha una estrella que ningú no ha mirat mai. Gairebé segur.',
   intro:
     'La nau Gaia de l’ESA ha mesurat gairebé dos mil milions d’estrelles. Com a molt una de cada cent s’ha estudiat per si mateixa. Trobem la que és just a sobre teu i la busquem a la literatura astronòmica.',
   'mode.now': 'Ara mateix',

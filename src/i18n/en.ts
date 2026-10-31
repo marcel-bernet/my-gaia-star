@@ -5,7 +5,7 @@
  */
 export const en = {
   brand: 'My Gaia Star',
-  tagline: 'Above you is a star no one has ever written about. Almost certainly.',
+  tagline: 'Above you is a star no one has ever looked at. Almost certainly.',
   intro:
     'ESA’s Gaia spacecraft has measured almost two billion stars. At most one in a hundred has ever been studied on its own. We find the one straight above you, then check the astronomical literature for it.',
   'mode.now': 'Right now',
