@@ -1,10 +1,10 @@
 # My Gaia Star
 
-**Above you is a star no one has ever looked at closely.** ESA's Gaia has measured almost two billion stars. Nearly all of them are points in a catalogue — counted in statistics, plotted by the million — and only a tiny fraction has ever been studied on its own. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether anyone has ever singled it out, and lets you make a certificate of it.
+**Above you is a star no one has ever written about. Almost certainly.** ESA's Gaia has measured almost two billion stars; at most one in a hundred has ever been studied on its own. My Gaia Star finds the star that is — or was — straight above you, checks the astronomical literature (SIMBAD) to see whether any paper has singled it out, and lets you keep an observation record of it.
 
 When Gaia DR4 comes out (2 December 2026) it will publish, for the first time, the raw measurements behind the catalogue: every pass Gaia made over every star, and the pixels it recorded. Each star's page already has a DR4 section, filled for now with real data from ESA's June 2026 pre-release; see [docs/DATA_ACCESS.md](docs/DATA_ACCESS.md) for how it switches to each star's own data, and for what could rate-limit a public deployment.
 
-Pick a place (search, your location, or tap the map), choose *right now* or any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Every star also gets a name: a sentence made from its Gaia number (*Seven wise dolphins climb gracefully beyond the red mirror of the giant sky, under the full moon*), the same star in English, Spanish and Catalan. Type a Gaia ID or a name, and the site takes you to wherever on Earth that star is overhead, now or at any moment. Then download an A4 certificate (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link. English, Spanish and Catalan.
+Press *Find my star* (your location, right now), or pick a place (search, or tap the map) and any past moment, and My Gaia Star draws the stars overhead on the map — one degree of sky from the zenith becomes one degree on the ground, in the same compass direction. The result leads with the literature check, then three facts: what kind of star it is, when the light you see left it (with Gaia's uncertainty), and where to look. Tap any star for its distance, colour, brightness and motion, what kind of star it is (red dwarf, Sun-like star, red giant…) drawn to scale next to the Sun, and a finder chart of the constellation it lies in. Every star's Gaia number can also be read as words: a sentence that encodes it (*Seven wise dolphins climb gracefully beyond the red mirror of the giant sky, under the full moon*), the same star in English, Spanish and Catalan. It is an encoding, not a name — only the IAU names stars. Type a Gaia ID or its words, and the site takes you to wherever on Earth that star is overhead, now or at any moment. Then download an A4 observation record (PDF or PNG) with the constellation chart, the star's portrait, its place on Gaia's colour–magnitude diagram and its position in the Milky Way. Every result is a shareable link that brings back the same star. *Method & limitations*, in the footer, explains each number for astronomers. English, Spanish and Catalan.
 
 It is a **static site**: no backend, no accounts, nothing to keep running.
 
@@ -21,9 +21,9 @@ It is a **static site**: no backend, no accounts, nothing to keep running.
 | DR4 epoch astrometry | Today: ESA's DR4 pre-release, bundled (`public/dr4-preview.json`). After 2 Dec 2026: ESA DataLink through `proxy/worker.js`. Parsed and fitted (position, parallax, proper motion) in the browser (`src/dr4/`) |
 | Kind of star and size | From its position relative to the main sequence on the HR diagram; radius from luminosity and temperature (`src/sky/classify.ts`) |
 | Constellation | IAU boundaries via astronomy-engine; finder chart from bundled `public/sky-chart.json` (`src/sky/constellation.ts`), with the country below drawn under it (Natural Earth 1:50m via `world-atlas`, `src/sky/country.ts`); it can also be laid on the map at true size |
-| Star names | The 63-bit source_id, scrambled reversibly and split into eleven word choices (32 × 16 × 64⁹ = 2⁶³ sentences, one per ID), with Spanish and Catalan agreement (`src/names/`) |
+| A star's number in words | The 63-bit source_id, scrambled reversibly and split into eleven word choices (32 × 16 × 64⁹ = 2⁶³ sentences, one per ID), with Spanish and Catalan agreement (`src/names/`) |
 | Find a star again | Gaia DR3 lookup by source_id (VizieR, GAVO fallback), then the point on Earth where it is at the zenith (`subStellarPoint` in `src/sky/zenith.ts`) |
-| Certificate | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
+| Observation record | Drawn on a `<canvas>`, saved with jsPDF (`src/certificate/`) |
 | Place names | OpenStreetMap Nominatim |
 
 Why not the ESA Gaia archive directly? It sends no CORS headers, so browsers can't call it. VizieR's *TAP* endpoint is unusable from browsers too (it sends `Access-Control-Allow-Origin` twice). Wide magnitude-limited cones are slow on every mirror, which is why the naked-eye stars ship with the site and the "bright" depth probes a small cone before choosing its radius.
@@ -37,7 +37,7 @@ Why not the ESA Gaia archive directly? It sends no CORS headers, so browsers can
 | Faint | the 400 nearest with G < 19, within 0.3° | 0.6–1.5 s |
 | Deepest | the 400 nearest of any brightness, within 400″ | < 1 s |
 
-"Your star" is the nearest star to the zenith whose Gaia parallax is good to 20% and which has a colour — so its certificate can place it on the HR diagram and in the Galaxy.
+"Your star" is the nearest star to the zenith whose Gaia parallax is good to 20% and which has a colour — so its observation record can place it on the HR diagram and in the Galaxy.
 
 ## Develop
 

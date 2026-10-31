@@ -5,9 +5,9 @@ import { drawConstellation, type ChartGround } from '../draw/constellation';
 import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../draw/galaxy';
 import { drawStarPortrait } from '../draw/portrait';
 import { CREAM, SIGNAL, MUTED, SANS } from '../draw/theme';
-import { starFacts } from '../facts';
+import { distanceText, firstLookTier, lightDeparture, starFacts } from '../facts';
 import { starName } from '../names/name';
-import { twoSigFigs } from '../format';
+import { formatNumber, twoSigFigs } from '../format';
 import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
 import { constellationOf, loadSkyChart, type SkyChartData } from '../sky/constellation';
@@ -33,32 +33,42 @@ interface Props {
   onCertificate: () => void;
 }
 
-function FirstLook({ literature, id }: { literature: Props['literature']; id: string }) {
-  const { t } = useI18n();
+/**
+ * The headline of the result: has anyone written about this star? Until
+ * SIMBAD answers, the star's kind stands in.
+ */
+function Verdict({ literature, star }: { literature: Props['literature']; star: Star }) {
+  const { t, lang } = useI18n();
+  const id = star.id;
   if (literature === null || literature === 'loading') {
     return (
-      <div className="first-look pending" aria-live="polite">
-        <span className="spinner" aria-hidden /> {t('first.checking')}
+      <div className="verdict pending" aria-live="polite">
+        <h2>
+          <span className="spinner" aria-hidden /> {t('first.checking')}
+        </h2>
       </div>
     );
   }
   if (literature === 'error') {
-    return <div className="first-look pending">{t('first.error')}</div>;
+    return (
+      <div className="verdict pending" aria-live="polite">
+        <h2>{t('first.error')}</h2>
+      </div>
+    );
   }
   if (!literature.known) {
     return (
-      <div className="first-look unknown" aria-live="polite">
-        <p className="badge mono">{t('first.badge')}</p>
-        <p className="first-title">{t('first.unknown.title')}</p>
-        <p className="first-body">{t('first.unknown.body')}</p>
+      <div className="verdict unknown" aria-live="polite">
+        <h2>{t('first.unknown.title')}</h2>
+        <p className="verdict-body">{t(`first.unknown.body.${firstLookTier(star)}`, { g: formatNumber(star.g, lang, 1) })}</p>
       </div>
     );
   }
   const papers = literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers });
   return (
-    <div className="first-look known" aria-live="polite">
-      <p className="first-title">{t('first.known.title', { name: literature.name })}</p>
-      <p className="first-body">
+    <div className="verdict known" aria-live="polite">
+      <h2>{t('first.known.title', { name: literature.name })}</h2>
+      <p className="verdict-body">
         {t('first.known.body', { papers })}{' '}
         <a href={simbadUrl(id)} target="_blank" rel="noreferrer">
           SIMBAD ↗
@@ -82,6 +92,7 @@ export default function StarCard({
   const [sharing, setSharing] = useState(false);
   const isZenith = star.id === result.zenithId;
   const facts = starFacts(star, result.frame.date, t, lang);
+  const light = lightDeparture(star, result.frame.date, t, lang);
   const where = placeName || t('place.unnamed');
   const ref = useRef<HTMLElement>(null);
   const kind = useMemo(() => classify(star), [star]);
@@ -174,12 +185,30 @@ export default function StarCard({
         <p className="kicker">
           {isZenith ? t('result.zenith') : t('result.selected')} · {t('result.count', { n: result.stars.length, place: where })}
         </p>
-        <div className="star-head">
-          <span className="swatch" style={{ background: starColor(star) }} aria-hidden />
-          <h2>{kind ? t(`kind.${kind.kind}`) : t('fact.id')}</h2>
-        </div>
+        <Verdict literature={literature} star={star} />
         <p className="moment">{formatMoment(result.frame.date, result.zone, lang)}</p>
       </header>
+
+      <dl className="key-facts">
+        <div>
+          <dt>{t('key.what')}</dt>
+          <dd>
+            <span className="swatch" style={{ background: starColor(star) }} aria-hidden />
+            {kind ? t(`kind.${kind.kind}`) : t('kind.unknown')}
+          </dd>
+          {kind?.radiusSun != null && <dd className="sub">{t('kind.size', { x: twoSigFigs(kind.radiusSun, lang) })}</dd>}
+        </div>
+        <div>
+          <dt>{t('fact.light')}</dt>
+          <dd>{light?.when ?? '—'}</dd>
+          <dd className="sub">{distanceText(star, t, lang)}</dd>
+        </div>
+        <div>
+          <dt>{t('key.where')}</dt>
+          <dd>{sky ? sky.constellations[abbr].names[lang] : '…'}</dd>
+          <dd className="sub">{t(`see.${visibility(star)}`)}</dd>
+        </div>
+      </dl>
 
       <section className="name-block" aria-label={t('card.name')}>
         <p className="badge mono">{t('card.name')}</p>
@@ -203,8 +232,6 @@ export default function StarCard({
       </section>
       {nameHelp && <NameDialog id={star.id} onClose={() => setNameHelp(false)} />}
 
-      <FirstLook literature={literature} id={star.id} />
-
       <div className="actions">
         <button className="primary" onClick={onCertificate}>
           {t('action.certificate')}
@@ -216,6 +243,11 @@ export default function StarCard({
       {sharing && (
         <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />
       )}
+
+      <header className="act">
+        <p className="kicker">{t('detail.kicker')}</p>
+        <h2>{t('detail.title')}</h2>
+      </header>
 
       {kind && (
         <Figure
@@ -292,9 +324,11 @@ export default function StarCard({
             ← {t('result.backToZenith')}
           </button>
         )}
-        <a className="link" href={simbadUrl(star.id)} target="_blank" rel="noreferrer">
-          {t('action.simbad')} ↗
-        </a>
+        {literature && typeof literature === 'object' && literature.known && (
+          <a className="link" href={simbadUrl(star.id)} target="_blank" rel="noreferrer">
+            {t('action.simbad')} ↗
+          </a>
+        )}
       </div>
       <p className="hint">{t('result.tapHint')}</p>
     </article>

@@ -15,7 +15,7 @@ function localNow() {
 
 /**
  * Find a star again by its Gaia ID or its name, and go to wherever on Earth
- * it is straight overhead — now, or at a chosen moment.
+ * it is straight overhead — now, or at a chosen moment. Shown in a dialog.
  */
 export default function StarFinder({
   current,
@@ -72,101 +72,96 @@ export default function StarFinder({
   };
 
   return (
-    <details className="finder" open={!current}>
-      <summary>
-        <span className="step-label">{t('find.title')}</span>
-      </summary>
-      <form className="finder-body" onSubmit={go}>
-        <p className="hint">{t('find.lede')}</p>
-        <div className="segmented" role="radiogroup" aria-label={t('find.title')}>
-          {(['name', 'id'] as By[]).map(b => (
-            <button type="button" key={b} role="radio" aria-checked={by === b} onClick={() => setBy(b)}>
-              {t(b === 'id' ? 'find.byId' : 'find.byName')}
-            </button>
-          ))}
-        </div>
+    <form className="finder-body" onSubmit={go}>
+      <p className="hint">{t('find.lede')}</p>
+      <div className="segmented" role="radiogroup" aria-label={t('find.title')}>
+        {(['name', 'id'] as By[]).map(b => (
+          <button type="button" key={b} role="radio" aria-checked={by === b} onClick={() => setBy(b)}>
+            {t(b === 'id' ? 'find.byId' : 'find.byName')}
+          </button>
+        ))}
+      </div>
 
-        {by === 'id' ? (
-          <input
-            className="finder-id mono"
-            inputMode="numeric"
-            value={id}
-            onChange={e => setId(e.target.value.replace(/[^\d]/g, ''))}
-            placeholder={t('find.id.placeholder')}
-            aria-label={t('find.byId')}
-          />
-        ) : (
-          <>
-            <p className="madlib" lang={lang}>
-              {segs.map((s, i) => {
-                const space = i > 0 && !segs[i - 1].glue && s.text !== ',' && s.text !== '.' ? ' ' : '';
-                if (!s.slot) return <span key={i}>{space + s.text}</span>;
-                const slot = s.slot;
-                const opts = slotOptions(digits, slot, lang);
-                const shown =
-                  i === 0 ? opts[digits[slot]].charAt(0).toUpperCase() + opts[digits[slot]].slice(1) : opts[digits[slot]];
-                return (
-                  <span key={i}>
-                    {space}
-                    <span className="choice">
-                      {shown}
-                      <select
-                        value={digits[slot]}
-                        onChange={e => setDigits(d => ({ ...d, [slot]: Number(e.target.value) }))}
-                        aria-label={slot}
-                      >
-                        {opts.map((o, v) => (
-                          <option key={v} value={v}>
-                            {i === 0 ? o.charAt(0).toUpperCase() + o.slice(1) : o}
-                          </option>
-                        ))}
-                      </select>
-                    </span>
+      {by === 'id' ? (
+        <input
+          className="finder-id mono"
+          inputMode="numeric"
+          value={id}
+          onChange={e => setId(e.target.value.replace(/[^\d]/g, ''))}
+          placeholder={t('find.id.placeholder')}
+          aria-label={t('find.byId')}
+        />
+      ) : (
+        <>
+          <p className="madlib" lang={lang}>
+            {segs.map((s, i) => {
+              const space = i > 0 && !segs[i - 1].glue && s.text !== ',' && s.text !== '.' ? ' ' : '';
+              if (!s.slot) return <span key={i}>{space + s.text}</span>;
+              const slot = s.slot;
+              const opts = slotOptions(digits, slot, lang);
+              const shown =
+                i === 0 ? opts[digits[slot]].charAt(0).toUpperCase() + opts[digits[slot]].slice(1) : opts[digits[slot]];
+              return (
+                <span key={i}>
+                  {space}
+                  <span className="choice">
+                    {shown}
+                    <select
+                      value={digits[slot]}
+                      onChange={e => setDigits(d => ({ ...d, [slot]: Number(e.target.value) }))}
+                      aria-label={slot}
+                    >
+                      {opts.map((o, v) => (
+                        <option key={v} value={v}>
+                          {i === 0 ? o.charAt(0).toUpperCase() + o.slice(1) : o}
+                        </option>
+                      ))}
+                    </select>
                   </span>
-                );
-              })}
-            </p>
-            <input
-              className="finder-paste"
-              value={paste}
-              onChange={e => readPaste(e.target.value)}
-              placeholder={t('find.paste')}
-              aria-label={t('find.paste')}
-            />
-            {pasteMsg && <p className="hint">{pasteMsg}</p>}
-            <p className="mono finder-for">Gaia DR3 {nameId}</p>
-          </>
-        )}
-
-        <div className="segmented" role="radiogroup" aria-label={t('when')}>
-          {[true, false].map(n => (
-            <button type="button" key={String(n)} role="radio" aria-checked={now === n} onClick={() => setNow(n)}>
-              {t(n ? 'mode.now' : 'mode.moment')}
-            </button>
-          ))}
-        </div>
-        {!now && (
-          <>
-            <input type="datetime-local" value={moment} onChange={e => setMoment(e.target.value)} aria-label={t('when')} />
-            <p className="hint">{t('find.when.zone')}</p>
-          </>
-        )}
-
-        <button className="primary" type="submit" disabled={status.kind === 'loading' || (by === 'id' && !id)}>
-          {status.kind === 'loading' ? (
-            <>
-              <span className="spinner" aria-hidden /> {t('find.looking')}
-            </>
-          ) : (
-            t('find.go')
-          )}
-        </button>
-        {status.kind === 'error' && (
-          <p className="error" role="alert">
-            {status.message}
+                </span>
+              );
+            })}
           </p>
+          <input
+            className="finder-paste"
+            value={paste}
+            onChange={e => readPaste(e.target.value)}
+            placeholder={t('find.paste')}
+            aria-label={t('find.paste')}
+          />
+          {pasteMsg && <p className="hint">{pasteMsg}</p>}
+          <p className="mono finder-for">Gaia DR3 {nameId}</p>
+        </>
+      )}
+
+      <div className="segmented" role="radiogroup" aria-label={t('when')}>
+        {[true, false].map(n => (
+          <button type="button" key={String(n)} role="radio" aria-checked={now === n} onClick={() => setNow(n)}>
+            {t(n ? 'mode.now' : 'mode.moment')}
+          </button>
+        ))}
+      </div>
+      {!now && (
+        <>
+          <input type="datetime-local" value={moment} onChange={e => setMoment(e.target.value)} aria-label={t('when')} />
+          <p className="hint">{t('find.when.zone')}</p>
+        </>
+      )}
+
+      <button className="primary" type="submit" disabled={status.kind === 'loading' || (by === 'id' && !id)}>
+        {status.kind === 'loading' ? (
+          <>
+            <span className="spinner" aria-hidden /> {t('find.looking')}
+          </>
+        ) : (
+          t('find.go')
         )}
-      </form>
-    </details>
+      </button>
+      {status.kind === 'error' && (
+        <p className="error" role="alert">
+          {status.message}
+        </p>
+      )}
+    </form>
   );
 }

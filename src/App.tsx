@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import AboutDialog from './components/AboutDialog';
 import CertificateDialog from './components/CertificateDialog';
+import FindDialog from './components/FindDialog';
+import MethodDialog from './components/MethodDialog';
 import Panel, { type Mode } from './components/Panel';
 import PointDialog from './components/PointDialog';
 import Readout from './components/Readout';
@@ -45,12 +47,16 @@ export default function App() {
   // With a star on screen, the map can be put away so the panel reads as one column.
   const [mapHidden, setMapHidden] = useState(false);
   const overlay = useConstellationOverlay(onMap, result, selected);
-  useUrlSync(result, selectedId, mode === 'moment');
+  useUrlSync(result, selectedId);
+  // The place-and-moment form stays folded until asked for: the main path is one button.
+  const [formOpen, setFormOpen] = useState(false);
 
   // Dialogs.
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [pointOpen, setPointOpen] = useState(false);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
 
   // A shared link runs its search straight away. Only on load: `search`
   // changes with the language, and switching language must not search again.
@@ -63,7 +69,19 @@ export default function App() {
     if (!place) return;
     const when = mode === 'now' || !zone ? new Date() : wallTimeToInstant(wall, zone);
     setMapHidden(false);
+    setFormOpen(false);
     search(place, when, depth);
+  };
+
+  // "Find my star": here, now, every star Gaia saw.
+  const findHere = (lat: number, lon: number) => {
+    const here = { lat, lon, name: null };
+    setPlace(here);
+    setMode('now');
+    setDepth('all');
+    setMapHidden(false);
+    setFormOpen(false);
+    search(here, new Date(), 'all');
   };
 
   // Back to a star found by ID or name: wherever on Earth it is (or was) straight overhead.
@@ -76,24 +94,28 @@ export default function App() {
     setMode(when ? 'moment' : 'now');
     if (when) setWall(instantToWallTime(when, timeZoneAt(p.lat, p.lon)));
     setMapHidden(false);
+    setFormOpen(false);
     search(there, at, 'all', star.id);
   };
 
   const pick = (lat: number, lon: number, name: string | null = null) => {
     setPlace({ lat, lon, name });
+    setFormOpen(true);
     clearStatus();
   };
 
   const reading = mapHidden && !!selected;
+  // Nothing to show on the map yet: phones hide it and lead with the words.
+  const idle = !result && !formOpen;
 
   // The result's place, with its name once geocoding has found one.
   const resultPlace = result && place && result.place.lat === place.lat && result.place.lon === place.lon ? place : result?.place;
 
   return (
-    <div className={`app${reading ? ' reading' : ''}`}>
+    <div className={`app${reading ? ' reading' : ''}${idle ? ' idle' : ''}`}>
       <div className="stage">
         <SkyMap
-          visible={!reading}
+          visible={!reading && !idle}
           place={place}
           result={result}
           selectedId={selectedId}
@@ -106,6 +128,9 @@ export default function App() {
       <Panel
         place={place}
         onPlace={pick}
+        onFindHere={findHere}
+        formOpen={formOpen}
+        onFormOpen={setFormOpen}
         mode={mode}
         onMode={setMode}
         wall={wall}
@@ -117,8 +142,9 @@ export default function App() {
         onRun={run}
         currentStarId={selected?.id ?? null}
         onAbout={() => setAboutOpen(true)}
+        onMethod={() => setMethodOpen(true)}
         onPoint={() => setPointOpen(true)}
-        onFound={goToStar}
+        onFind={() => setFindOpen(true)}
         mapHidden={reading}
         onToggleMapHidden={selected ? () => setMapHidden(h => !h) : undefined}
       >
@@ -150,6 +176,8 @@ export default function App() {
       )}
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
       {pointOpen && <PointDialog onClose={() => setPointOpen(false)} />}
+      {methodOpen && <MethodDialog onClose={() => setMethodOpen(false)} />}
+      {findOpen && <FindDialog current={selected?.id ?? null} onFound={goToStar} onClose={() => setFindOpen(false)} />}
     </div>
   );
 }

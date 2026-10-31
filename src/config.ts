@@ -8,6 +8,9 @@
  *   VITE_DR4_PROXY  base URL of the DR4 epoch-data proxy (proxy/worker.js); unset = preview data only
  */
 
+/** The author, linked from the footer. */
+export const AUTHOR_URL = 'https://es.linkedin.com/in/marcel-bernet-marti';
+
 /** Source code. Not linked from the site for now; kept so the link is easy to put back. */
 export const REPO_URL = 'https://github.com/marcel-bernet/my-gaia-star';
 

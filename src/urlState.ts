@@ -2,7 +2,7 @@
  * Everything needed to reproduce a search lives in the URL, so any result can
  * be shared or bookmarked — no server required.
  *   ?lat=41.38&lon=2.17&t=2025-07-28T10:29Z&depth=all&star=4057…
- * `t` is omitted for "right now".
+ * `t` is the moment of the search; a link without it searches "right now".
  */
 import { DEPTHS, type Depth } from './sky/gaia';
 
@@ -29,7 +29,14 @@ export function readUrl(search = window.location.search): UrlState | null {
 
 export function urlFor(s: UrlState): string {
   const p = new URLSearchParams({ lat: s.lat.toFixed(5), lon: s.lon.toFixed(5) });
-  if (s.t) p.set('t', s.t.toISOString().replace(/:00\.000Z$/, 'Z'));
+  if (s.t)
+    p.set(
+      't',
+      s.t
+        .toISOString()
+        .replace(/\.\d{3}Z$/, 'Z')
+        .replace(/:00Z$/, 'Z'),
+    );
   p.set('depth', s.depth);
   if (s.star) p.set('star', s.star);
   return `${window.location.pathname}?${p}`;

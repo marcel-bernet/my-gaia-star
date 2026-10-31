@@ -33,7 +33,14 @@ export function timelineYearAt(px: number, w: number) {
 }
 
 /** Timeline: one tick per passage, taller for more CCDs used. */
-export function drawTimeline(ctx: Ctx, w: number, h: number, pts: TransitPoint[], selected: number | null) {
+export function drawTimeline(
+  ctx: Ctx,
+  w: number,
+  h: number,
+  pts: TransitPoint[],
+  selected: number | null,
+  accent: string = SIGNAL,
+) {
   const left = 8;
   const right = w - 8;
   const base = h - 22;
@@ -55,7 +62,7 @@ export function drawTimeline(ctx: Ctx, w: number, h: number, pts: TransitPoint[]
   const maxUsed = Math.max(...pts.map(p => p.nCcd), 1);
   pts.forEach((p, i) => {
     const hh = 6 + ((base - top - 6) * p.nUsed) / maxUsed;
-    ctx.fillStyle = i === selected ? SIGNAL : 'rgba(233, 231, 226, 0.55)';
+    ctx.fillStyle = i === selected ? accent : 'rgba(233, 231, 226, 0.55)';
     ctx.fillRect(Math.round(x(p.year)) - (i === selected ? 1 : 0.5), base - hh, i === selected ? 2.5 : 1.5, hh);
   });
 }
@@ -149,6 +156,7 @@ export function drawSkyPath(
   pts: TransitPoint[],
   selected: number | null,
   range: PathRange,
+  accent: string = SIGNAL,
 ) {
   const [e0, e1, n0, n1] = pathExtent(ea, fit, pts, range);
   const m = { l: 22, r: 14, t: 18, b: 26 };
@@ -207,7 +215,7 @@ export function drawSkyPath(
   });
 
   // Model: the track, with a tick on each 1 January.
-  ctx.strokeStyle = SIGNAL;
+  ctx.strokeStyle = accent;
   ctx.lineWidth = 1.8;
   ctx.lineJoin = 'round';
   ctx.beginPath();
@@ -221,8 +229,8 @@ export function drawSkyPath(
   for (let yr = Math.ceil(range.from * 4) / 4; yr <= range.to; yr += 0.25) {
     const p = modelAt(ea, fit, yr, range.noPm);
     const whole = Math.abs(yr - Math.round(yr)) < 1e-6;
-    ctx.fillStyle = whole ? SIGNAL : 'rgba(10, 11, 13, 0.9)';
-    ctx.strokeStyle = SIGNAL;
+    ctx.fillStyle = whole ? accent : 'rgba(10, 11, 13, 0.9)';
+    ctx.strokeStyle = accent;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.arc(X(p.e), Y(p.n), whole ? 3 : 2, 0, Math.PI * 2);
@@ -253,7 +261,7 @@ export function drawSkyPath(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeText(String(yr), lx, ly);
-    ctx.fillStyle = SIGNAL;
+    ctx.fillStyle = accent;
     ctx.fillText(String(yr), lx, ly);
   }
 
@@ -272,7 +280,15 @@ export function drawSkyPath(
 }
 
 /** What the five-parameter model leaves unexplained, passage by passage. */
-export function drawResiduals(ctx: Ctx, w: number, h: number, fit: Fit, pts: TransitPoint[], selected: number | null) {
+export function drawResiduals(
+  ctx: Ctx,
+  w: number,
+  h: number,
+  fit: Fit,
+  pts: TransitPoint[],
+  selected: number | null,
+  accent: string = SIGNAL,
+) {
   const left = 40;
   const right = w - 8;
   const top = 8;
@@ -301,13 +317,13 @@ export function drawResiduals(ctx: Ctx, w: number, h: number, fit: Fit, pts: Tra
     const v = Math.max(-R, Math.min(R, res[i]));
     const px = x(p.year);
     const on = i === selected;
-    ctx.strokeStyle = on ? SIGNAL : 'rgba(233, 231, 226, 0.35)';
+    ctx.strokeStyle = on ? accent : 'rgba(233, 231, 226, 0.35)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(px, y(Math.max(-R, v - p.e)));
     ctx.lineTo(px, y(Math.min(R, v + p.e)));
     ctx.stroke();
-    ctx.fillStyle = on ? SIGNAL : CREAM;
+    ctx.fillStyle = on ? accent : CREAM;
     ctx.beginPath();
     ctx.arc(px, y(v), on ? 3.5 : 2.2, 0, Math.PI * 2);
     ctx.fill();
@@ -330,7 +346,7 @@ export const pixelsHeight = (gClass: number) => ((WINDOWS[gClass] ?? WINDOWS[3])
  * CCD it crossed, one enlarged above and all of them, in order, below.
  * The light in each pixel is a smooth made-up profile, not data.
  */
-export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd: number) {
+export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd: number, accent: string = SIGNAL) {
   const win = WINDOWS[gClass] ?? WINDOWS[3];
   const twoD = win.ac > 1;
   const sigmaAl = win.al / 9;
@@ -367,7 +383,7 @@ export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd:
   const oy = 14 + profileH;
   if (!twoD) {
     // The light profile along the scan, as a line over the strip.
-    ctx.strokeStyle = SIGNAL;
+    ctx.strokeStyle = accent;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     for (let k = 0; k <= 120; k++) {

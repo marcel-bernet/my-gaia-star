@@ -10,7 +10,7 @@
  * ink, and orange only for the star itself.
  */
 import { dr4IsOut } from '../dr4/source';
-import { starFacts } from '../facts';
+import { firstLookTier, starFacts } from '../facts';
 import { formatLongDate, twoSigFigs } from '../format';
 import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
@@ -245,7 +245,7 @@ function drawHeader(ctx: Ctx, { title, dedication, subtitle, star, made, t, lang
 }
 
 /** The literature check, as a ruled note: "No one has studied this star" (orange rule) or its SIMBAD name. Returns the y below it. */
-function drawFirstLook(ctx: Ctx, { literature, made, t, lang }: CertificateInput, y: number): number {
+function drawFirstLook(ctx: Ctx, { star, literature, made, t, lang }: CertificateInput, y: number): number {
   const boxTop = y + 50;
   const statement =
     literature === null
@@ -260,11 +260,11 @@ function drawFirstLook(ctx: Ctx, { literature, made, t, lang }: CertificateInput
         ? t('first.known.body', {
             papers: literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers }),
           })
-        : t('cert.firstLook.body', { date: formatLongDate(made, lang) });
+        : `${t('cert.firstLook.body', { date: formatLongDate(made, lang) })} ${t(`cert.firstLook.${firstLookTier(star)}`)}`;
   ctx.font = `500 34px ${SANS}`;
   const stLines = wrap(ctx, statement, W - 70).slice(0, 3);
   ctx.font = `400 23px ${SANS}`;
-  const dtLines = detail ? wrap(ctx, detail, W - 70).slice(0, 2) : [];
+  const dtLines = detail ? wrap(ctx, detail, W - 70).slice(0, 3) : [];
   const boxH = 46 + (literature && !literature.known ? 34 : 0) + stLines.length * 50 + dtLines.length * 32 + 20;
   ctx.fillStyle = literature && !literature.known ? SIGNAL_INK : INK_RULE;
   ctx.fillRect(M, boxTop, 5, boxH);
