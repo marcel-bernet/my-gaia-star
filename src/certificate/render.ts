@@ -13,7 +13,7 @@ import { formatLongDate, twoSigFigs } from '../format';
 import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
-import { constellationOf, loadSkyChart } from '../sky/constellation';
+import { constellationOf, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import type { Literature } from '../sky/simbad';
 import { hasDistance, visibility } from '../sky/physics';
@@ -53,6 +53,8 @@ export interface CertificateInput {
 // A4 at 200 dpi.
 export const PAGE_W = 1654;
 export const PAGE_H = 2339;
+type Ctx = CanvasRenderingContext2D;
+
 const M = 130;
 const W = PAGE_W - 2 * M;
 
@@ -179,7 +181,6 @@ function cornerMarks(ctx: CanvasRenderingContext2D) {
 
 export async function renderCertificate(input: CertificateInput): Promise<HTMLCanvasElement> {
   const [, sky] = await Promise.all([fontsReady(), loadSkyChart()]);
-  const { star, frame, t, lang, literature } = input;
   const canvas = document.createElement('canvas');
   canvas.width = PAGE_W;
   canvas.height = PAGE_H;
@@ -190,26 +191,44 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   ctx.fillRect(0, 0, PAGE_W, PAGE_H);
   cornerMarks(ctx);
 
-  // Record header.
-  const made = formatLongDate(input.made, lang);
+  // The top of the page flows downwards, as long as the title and dedication need.
+  let y = drawHeader(ctx, input);
+  y = drawFirstLook(ctx, input, y);
+
+  // The bottom is laid out upwards from the footer, at fixed heights.
+  const footerY = PAGE_H - 100;
+  const dr4Top = footerY - 50 - (input.dr4 ? 200 : 128);
+  const figuresTop = dr4Top - 64 - (FIGURE_H + 26 + 40 + 3 * 29);
+  const tableTop = figuresTop - 60 - 236;
+
+  // The finder chart fills whatever space is left in between.
+  drawFinderChart(ctx, input, sky, y, tableTop);
+  drawMeasurements(ctx, input, tableTop);
+  await drawFigures(ctx, input, figuresTop);
+  drawDr4(ctx, input, dr4Top);
+  drawFooter(ctx, input, footerY);
+  return canvas;
+}
+
+/** Record line, title, dedication, the moment and place, the Gaia ID and the star's name. Returns the y below it. */
+function drawHeader(ctx: Ctx, { title, dedication, subtitle, star, made, t, lang }: CertificateInput): number {
   kicker(ctx, `My Gaia Star · ${t('cert.record')}`, M, 150);
-  kicker(ctx, made, M + W, 150, FAINT, 'right');
+  kicker(ctx, formatLongDate(made, lang), M + W, 150, FAINT, 'right');
   rule(ctx, 172);
 
-  // Title, dedication, moment.
   let y = 290;
   ctx.fillStyle = CREAM;
   ctx.textAlign = 'left';
   ctx.font = `500 84px ${SERIF}`;
-  for (const line of wrap(ctx, input.title, W).slice(0, 2)) {
+  for (const line of wrap(ctx, title, W).slice(0, 2)) {
     ctx.fillText(line, M, y);
     y += 92;
   }
   y -= 30;
-  if (input.dedication.trim()) {
+  if (dedication.trim()) {
     ctx.font = `italic 400 38px ${SERIF}`;
     ctx.fillStyle = MUTED;
-    for (const line of wrap(ctx, input.dedication.trim(), W).slice(0, 2)) {
+    for (const line of wrap(ctx, dedication.trim(), W).slice(0, 2)) {
       y += 52;
       ctx.fillText(line, M, y);
     }
@@ -218,7 +237,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   y += 56;
   ctx.font = `400 28px ${SANS}`;
   ctx.fillStyle = MUTED;
-  ctx.fillText(input.subtitle, M, y);
+  ctx.fillText(subtitle, M, y);
   y += 44;
   ctx.font = `400 24px ${MONO}`;
   ctx.fillStyle = CREAM;
@@ -230,10 +249,12 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     y += 42;
     ctx.fillText(line, M, y);
   }
+  return y;
+}
 
-  // First look: the literature check.
-  y += 50;
-  const boxTop = y;
+/** The literature check, in a box: "No one has studied this star" (gold) or its SIMBAD name. Returns the y below it. */
+function drawFirstLook(ctx: Ctx, { literature, made, t, lang }: CertificateInput, y: number): number {
+  const boxTop = y + 50;
   const statement =
     literature === null
       ? t('cert.narrative')
@@ -247,7 +268,7 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
         ? t('first.known.body', {
             papers: literature.papers === 1 ? t('papers.one') : t('papers.many', { n: literature.papers }),
           })
-        : t('cert.firstLook.body', { date: made });
+        : t('cert.firstLook.body', { date: formatLongDate(made, lang) });
   ctx.font = `500 40px ${SERIF}`;
   const stLines = wrap(ctx, statement, W - 70).slice(0, 2);
   ctx.font = `400 23px ${SANS}`;
@@ -275,23 +296,15 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     ctx.fillText(l, M + 36, by - 8);
     by += 32;
   });
-  y = boxTop + boxH;
+  return boxTop + boxH;
+}
 
-  // Fixed blocks, laid out from the bottom up.
-  const footerY = PAGE_H - 100;
-  const dr4H = input.dr4 ? 200 : 128;
-  const dr4Top = footerY - 50 - dr4H;
-  const ph = 290;
-  const panelsTop = dr4Top - 64 - (ph + 26 + 40 + 3 * 29);
-  const tableTop = panelsTop - 60 - 236;
-
-  // Fig. 1: where to look — fills whatever space is left.
-  let fig = 0;
-  const nextFig = () => ++fig;
+/** Fig. 1: where to look, between `top` and the measurements table. */
+function drawFinderChart(ctx: Ctx, { star, t, lang }: CertificateInput, sky: SkyChartData, top: number, tableTop: number) {
   const abbr = constellationOf(star.ra, star.dec);
   const conName = sky.constellations[abbr].names[lang];
-  const chartTitleY = y + 66;
-  figTitle(ctx, nextFig(), `${t('card.where')} — ${conName}`, M, chartTitleY, t);
+  const chartTitleY = top + 66;
+  figTitle(ctx, 1, `${t('card.where')} — ${conName}`, M, chartTitleY, t);
   const chartTop = chartTitleY + 22;
   const chartBottom = tableTop - 100;
   plate(ctx, M, chartTop, W, chartBottom - chartTop);
@@ -306,8 +319,10 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     },
   );
   caption(ctx, `${t('fact.see')}: ${t(`see.${visibility(star)}`)}.`, M, chartBottom + 36, W, 1);
+}
 
-  // Table: measurements, three columns.
+/** Table 1: six measurements in three columns. */
+function drawMeasurements(ctx: Ctx, { star, frame, t, lang }: CertificateInput, tableTop: number) {
   const facts = starFacts(star, frame.date, t, lang)
     .filter(f => ![t('fact.position'), t('fact.rv'), t('fact.see')].includes(f.label))
     .slice(0, 6);
@@ -327,19 +342,25 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
       .slice(0, 2)
       .forEach((l, k) => ctx.fillText(l, fx, fy + 70 + k * 32));
   });
+}
 
-  // Three figures: what kind of star, HR diagram, Milky Way.
+/** Height of the plates for figs. 2–4. */
+const FIGURE_H = 290;
+
+/** Figs. 2–4 side by side: what kind of star, the HR diagram, the Milky Way. */
+async function drawFigures(ctx: Ctx, { star, t, lang }: CertificateInput, top: number) {
+  const ph = FIGURE_H;
   const gap = 44;
   const pw = (W - 2 * gap) / 3;
   const px = [M, M + pw + gap, M + 2 * (pw + gap)];
-  const top = panelsTop + 26;
+  const plateTop = top + 26;
   const kind = classify(star);
-  figTitle(ctx, nextFig(), t('cert.kind'), px[0], panelsTop, t);
-  figTitle(ctx, nextFig(), t('cert.hr'), px[1], panelsTop, t);
-  figTitle(ctx, nextFig(), t('cert.mw'), px[2], panelsTop, t);
-  for (const x of px) plate(ctx, x, top, pw, ph);
+  figTitle(ctx, 2, t('cert.kind'), px[0], top, t);
+  figTitle(ctx, 3, t('cert.hr'), px[1], top, t);
+  figTitle(ctx, 4, t('cert.mw'), px[2], top, t);
+  for (const x of px) plate(ctx, x, plateTop, pw, ph);
 
-  drawStarPortrait(ctx, { x: px[0], y: top + 10, w: pw, h: ph - 80 }, star, kind, {
+  drawStarPortrait(ctx, { x: px[0], y: plateTop + 10, w: pw, h: ph - 80 }, star, kind, {
     sun: t('kind.sun'),
     star: t('chart.yourStar'),
   });
@@ -347,18 +368,18 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     ctx.font = `500 34px ${SERIF}`;
     ctx.fillStyle = CREAM;
     ctx.textAlign = 'center';
-    ctx.fillText(t(`kind.${kind.kind}`), px[0] + pw / 2, top + ph - 26);
+    ctx.fillText(t(`kind.${kind.kind}`), px[0] + pw / 2, plateTop + ph - 26);
   }
   const side = Math.min(pw, ph) - 20;
-  await drawHr(ctx, { x: px[1] + (pw - side * 0.86) / 2, y: top + 10, w: side * 0.86, h: side }, star, {
+  await drawHr(ctx, { x: px[1] + (pw - side * 0.86) / 2, y: plateTop + 10, w: side * 0.86, h: side }, star, {
     hotter: t('cert.hr.hotter'),
     cooler: t('cert.hr.cooler'),
     brighter: t('cert.hr.brighter'),
     yourStar: t('chart.yourStar'),
   });
-  drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: top + 10, w: side, h: side }, star, galaxyLabels(t, lang));
+  drawGalaxyFaceOn(ctx, { x: px[2] + (pw - side) / 2, y: plateTop + 10, w: side, h: side }, star, galaxyLabels(t, lang));
 
-  const capY = top + ph + 40;
+  const capY = plateTop + ph + 40;
   const sizeText =
     kind?.radiusSun != null
       ? t('kind.size', { x: twoSigFigs(kind.radiusSun, lang) })
@@ -369,24 +390,29 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   caption(ctx, hasDistance(star) ? t('cert.hr.caption') : t('cert.hr.unknown'), px[1], capY, pw);
   const mwCaption = isCloseUp(star) ? t('cert.mw.closeup') : hasDistance(star) ? t('cert.mw.caption') : t('cert.mw.unknown');
   caption(ctx, mwCaption, px[2], capY, pw);
+}
 
-  // Gaia DR4.
-  rule(ctx, dr4Top);
-  kicker(ctx, 'Gaia DR4', M, dr4Top + 46, input.dr4 ? GOLD : FAINT);
-  if (input.dr4) {
-    const d = input.dr4;
+/** Gaia DR4: this star's own passes and parallax when we have them, else when (or that) they were published. */
+function drawDr4(ctx: Ctx, { dr4, dr4Date, made, t, lang }: CertificateInput, top: number) {
+  rule(ctx, top);
+  kicker(ctx, 'Gaia DR4', M, top + 46, dr4 ? GOLD : FAINT);
+  if (dr4) {
     ctx.font = `400 24px ${SANS}`;
     ctx.fillStyle = CREAM;
     ctx.textAlign = 'left';
     const nf = new Intl.NumberFormat(lang, { maximumFractionDigits: 3, minimumFractionDigits: 3 });
-    wrap(ctx, t('cert.dr4.live', { n: d.years.length, plx: `${nf.format(d.parallax)} ± ${nf.format(d.parallaxErr)}` }), W - 260)
+    wrap(
+      ctx,
+      t('cert.dr4.live', { n: dr4.years.length, plx: `${nf.format(dr4.parallax)} ± ${nf.format(dr4.parallaxErr)}` }),
+      W - 260,
+    )
       .slice(0, 2)
-      .forEach((l, k) => ctx.fillText(l, M + 260, dr4Top + 46 + k * 32));
+      .forEach((l, k) => ctx.fillText(l, M + 260, top + 46 + k * 32));
     // One tick per pass, 2014–2020.
-    const ty = dr4Top + 170;
+    const ty = top + 170;
     const x = (yr: number) => M + 260 + ((yr - 2014.5) / 5.7) * (W - 260);
     ctx.fillStyle = 'rgba(233, 231, 226, 0.6)';
-    for (const yr of d.years) ctx.fillRect(Math.round(x(yr)) - 1, ty - 60, 2, 60);
+    for (const yr of dr4.years) ctx.fillRect(Math.round(x(yr)) - 1, ty - 60, 2, 60);
     rule(ctx, ty, M + 260, W - 260);
     ctx.font = `400 18px ${MONO}`;
     ctx.fillStyle = FAINT;
@@ -396,52 +422,16 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
     ctx.font = `400 23px ${SANS}`;
     ctx.fillStyle = MUTED;
     ctx.textAlign = 'left';
-    wrap(ctx, t(dr4IsOut(input.made) ? 'cert.dr4.out' : 'cert.dr4.pending', { date: input.dr4Date }), W - 260)
+    wrap(ctx, t(dr4IsOut(made) ? 'cert.dr4.out' : 'cert.dr4.pending', { date: dr4Date }), W - 260)
       .slice(0, 3)
-      .forEach((l, k) => ctx.fillText(l, M + 260, dr4Top + 46 + k * 31));
+      .forEach((l, k) => ctx.fillText(l, M + 260, top + 46 + k * 31));
   }
+}
 
-  // Footer.
+function drawFooter(ctx: Ctx, { t }: CertificateInput, footerY: number) {
   rule(ctx, footerY - 40);
   ctx.font = `400 17px ${MONO}`;
   ctx.fillStyle = FAINT;
   ctx.textAlign = 'left';
   ctx.fillText(t('cert.footer'), M, footerY);
-
-  return canvas;
-}
-
-/** "3.4", "0.012", "1,200" — two significant figures. */
-
-export async function downloadPng(canvas: HTMLCanvasElement, filename: string) {
-  const blob = await new Promise<Blob>(r => canvas.toBlob(b => r(b!), 'image/png'));
-  await save(blob, filename, 'image/png');
-}
-
-export async function downloadPdf(canvas: HTMLCanvasElement, filename: string) {
-  const { jsPDF } = await import('jspdf');
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-  pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
-  await save(pdf.output('blob'), filename, 'application/pdf');
-}
-
-/** On phones, hand the file to the share sheet (save to Photos/Files, send…); elsewhere, download it. */
-async function save(blob: Blob, filename: string, type: string) {
-  const file = new File([blob], filename, { type });
-  if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file] });
-      return;
-    } catch (e) {
-      if ((e as DOMException).name === 'AbortError') return; // user closed the sheet
-    }
-  }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

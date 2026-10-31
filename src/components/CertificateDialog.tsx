@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Result } from '../types';
-import { downloadPdf, downloadPng, renderCertificate, type Dr4Summary } from '../certificate/render';
+import { downloadPdf, downloadPng } from '../certificate/download';
+import { renderCertificate, type Dr4Summary } from '../certificate/render';
 import { fitFiveParameters, transitPoints } from '../dr4/epoch';
 import { DR4_RELEASE } from '../config';
 import { epochAstrometryFor } from '../dr4/source';
