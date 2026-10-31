@@ -1,12 +1,13 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
-import { starColor } from '../sky/physics';
+import type { Star } from '../sky/gaia';
 import { starToLatLng } from '../sky/zenith';
-import { INK, INK_3 } from '../draw/theme';
+import { dotScale, magnitudeScale, STAR_RADII } from '../draw/mapStars';
+import { INK, INK_3, SHEET, SIGNAL_INK } from '../draw/theme';
 import type { Result } from '../types';
 
 interface Props {
@@ -19,6 +20,51 @@ interface Props {
   overlay: (GroundShape & { name: string }) | null;
   /** False while the map is put away; Leaflet needs its size re-read when it comes back. */
   visible: boolean;
+}
+
+interface Placed {
+  s: Star;
+  pos: ReturnType<typeof starToLatLng>;
+  /** Radius of its brightness class, before scaling to the screen. */
+  r: number;
+}
+
+/** The star dots, sized to how large the search circle is on screen right now. */
+function StarDots({
+  placed,
+  centre,
+  radiusDeg,
+  zenithId,
+  onSelectStar,
+}: {
+  placed: Placed[];
+  centre: [number, number];
+  radiusDeg: number;
+  zenithId: string | undefined;
+  onSelectStar: Props['onSelectStar'];
+}) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
+  // The circle's radius in screen pixels at this zoom (Web Mercator: 256 px tiles).
+  const metresPerPx = (40075016.686 * Math.cos((centre[0] * Math.PI) / 180)) / 2 ** (zoom + 8);
+  const k = dotScale((radiusDeg * KM_PER_DEG * 1000) / metresPerPx);
+  return placed.map(({ s, pos, r }) => (
+    <CircleMarker
+      key={s.id}
+      // An ink dot with a ring of paper around it, so overlapping stars stay apart. Yours is the one in colour.
+      center={pos}
+      radius={r * k + 0.75}
+      pathOptions={{
+        color: SHEET,
+        weight: 1.5,
+        opacity: 1,
+        fillColor: s.id === zenithId ? SIGNAL_INK : INK,
+        fillOpacity: 1,
+      }}
+      eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
+    />
+  ));
 }
 
 function Remeasure({ visible }: { visible: boolean }) {
@@ -101,14 +147,9 @@ function FitOverlay({ overlay }: { overlay: Props['overlay'] }) {
 export default function SkyMap({ place, result, selectedId, onPick, onSelectStar, overlay, visible }: Props) {
   const placed = useMemo(() => {
     if (!result) return [];
-    const gs = result.stars.map(s => s.g);
-    const gMin = Math.min(...gs);
-    const span = Math.max(Math.max(...gs) - gMin, 1);
+    const scale = magnitudeScale(result.stars.map(s => s.g));
     return result.stars
-      .map(s => {
-        const bright = 1 - (s.g - gMin) / span;
-        return { s, pos: starToLatLng(result.frame, s.ra, s.dec), r: 2.5 + 7 * bright * bright, color: starColor(s) };
-      })
+      .map(s => ({ s, pos: starToLatLng(result.frame, s.ra, s.dec), r: STAR_RADII[scale.classOf(s.g)] }))
       .sort((a, b) => b.s.g - a.s.g); // bright on top
   }, [result]);
 
@@ -149,16 +190,15 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
           interactive={false}
         />
       )}
-      {placed.map(({ s, pos, r, color }) => (
-        <CircleMarker
-          key={s.id}
-          center={pos}
-          radius={r}
-          // The star's own colour, outlined in ink so pale stars still read on the sheet.
-          pathOptions={{ color: INK, weight: 0.75, opacity: 0.85, fillColor: color, fillOpacity: 1 }}
-          eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
+      {result && (
+        <StarDots
+          placed={placed}
+          centre={[result.frame.lat, result.frame.lon]}
+          radiusDeg={radiusDeg}
+          zenithId={result.zenithId}
+          onSelectStar={onSelectStar}
         />
-      ))}
+      )}
       <FitOverlay overlay={overlay} />
       {overlay && (
         <>

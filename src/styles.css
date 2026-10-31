@@ -263,6 +263,16 @@ a:hover {
   margin-right: 6px;
 }
 
+.mag-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  color: var(--text);
+}
+
 /* Masthead & hero -------------------------------------------------------- */
 
 .masthead {
