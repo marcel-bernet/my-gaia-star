@@ -164,6 +164,7 @@ export const es: Dict = {
   independent: 'Un proyecto independiente que usa datos de Gaia de la ESA; no está afiliado a la ESA ni respaldado por ella.',
   about: 'Acerca de',
   'about.title': 'Acerca de My Gaia Star',
+  'about.by': 'My Gaia Star ha sido preparado por Marcel Bernet.',
   'about.p1':
     'La misión Gaia de la Agencia Espacial Europea ha medido la posición, el brillo, el color y la distancia de casi dos mil millones de estrellas. My Gaia Star busca cuál de ellas estaba justo encima de un lugar en un momento dado y consulta SIMBAD —la base de datos de los objetos estudiados en la literatura astronómica— para ver si alguien la ha estudiado individualmente. Casi siempre solo aparece como una entrada más entre millones del catálogo de Gaia: ningún artículo se ha fijado en ella.',
   'about.p2':

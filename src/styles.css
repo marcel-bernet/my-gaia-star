@@ -988,6 +988,16 @@ textarea {
   text-wrap: pretty;
 }
 
+.prose .hint {
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.prose .byline {
+  font-style: italic;
+  color: var(--text);
+}
+
 .cert {
   display: grid;
   grid-template-columns: 280px 1fr;

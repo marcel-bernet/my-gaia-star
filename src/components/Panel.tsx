@@ -1,6 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { Place, Status } from '../types';
-import { REPO_URL } from '../config';
 import type { WallTime } from '../sky/time';
 import { searchPlace } from '../geo';
 import { LANGS, useI18n, type Key, type Lang } from '../i18n';
@@ -236,9 +235,6 @@ export default function Panel(p: Props) {
         <button className="link" onClick={p.onPoint}>
           {t('point')}
         </button>
-        <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
-          GitHub
-        </a>
         <span className="credit">ESA/Gaia/DPAC · CDS · OSM</span>
       </footer>
     </aside>

@@ -165,6 +165,7 @@ export const en = {
   independent: 'An independent project using ESA Gaia data; not affiliated with or endorsed by ESA.',
   about: 'About',
   'about.title': 'About My Gaia Star',
+  'about.by': 'My Gaia Star was prepared by Marcel Bernet.',
   'about.p1':
     'The European Space Agency’s Gaia mission has measured the position, brightness, colour and distance of almost two billion stars. My Gaia Star looks up which of them was directly overhead at a given place and time, and checks SIMBAD — the database of objects studied in the astronomical literature — to see whether anyone has studied it individually. Almost always it appears only as one entry among millions in Gaia’s catalogue: no paper has singled it out.',
   'about.p2':
