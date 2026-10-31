@@ -431,4 +431,9 @@ export const ca: Dict = {
   'name.how.mix.fold2': 'doblegar un altre cop',
   'name.how.mix.note':
     'Tot mòdul 2⁶³, així que el número continua tenint 63 bits, i cada pas es pot desfer. C₁ i C₂ apareixen complets a la recepta de sota.',
+  'name.how.try':
+    'Escriu qualsevol número de Gaia, o toca un quadrat per canviar un bit, i mira com tot el que hi ha a sota el segueix. Canvia un sol bit i canvia més o menys la meitat dels bits barrejats: per això estrelles veïnes reben paraules sense relació. Qualsevol número de 63 bits té paraules; només 1.800 milions són estrelles.',
+  'name.how.reset': 'Torna a aquesta estrella',
+  'name.how.changed': 'han canviat {n} de 63 bits',
+  'name.how.bit': 'Bit',
 };

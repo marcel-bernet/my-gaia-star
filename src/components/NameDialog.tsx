@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import {
   englishWordLists,
   idToDigits,
+  isSourceId,
   scramble,
   SCRAMBLE,
   sentence,
@@ -23,10 +25,32 @@ const MIX_STEPS = (s1: bigint, s2: bigint): [string, Key][] => [
 ];
 const hex = (n: bigint) => `0x${n.toString(16).toUpperCase().padStart(16, '0')}`;
 
-/** A 63-bit number as a strip of squares, lowest bit first; optionally cut into the eleven choices. */
-function BitStrip({ x, cut }: { x: bigint; cut?: boolean }) {
-  const bit = (i: number) => <span key={i} className={(x >> BigInt(i)) & 1n ? 'bit on' : 'bit'} />;
-  if (!cut) return <div className="bits">{Array.from({ length: BITS }, (_, i) => bit(i))}</div>;
+/** Bits set in `x`: how many of the 63 differ between two numbers. */
+const popcount = (x: bigint) => x.toString(2).replace(/0/g, '').length;
+
+/**
+ * A 63-bit number as a strip of squares, lowest bit first; optionally cut
+ * into the eleven choices. With `onFlip`, each square is a button that flips
+ * its bit. Squares change colour in a quick left-to-right wave.
+ */
+function BitStrip({ x, cut, onFlip, label }: { x: bigint; cut?: boolean; onFlip?: (i: number) => void; label?: string }) {
+  const bit = (i: number) => {
+    const on = ((x >> BigInt(i)) & 1n) === 1n;
+    const style = { transitionDelay: `${i * 5}ms` };
+    return onFlip ? (
+      <button
+        key={i}
+        type="button"
+        className={on ? 'bit on' : 'bit'}
+        style={style}
+        onClick={() => onFlip(i)}
+        aria-label={`${label} ${i}: ${on ? 1 : 0}`}
+      />
+    ) : (
+      <span key={i} className={on ? 'bit on' : 'bit'} style={style} />
+    );
+  };
+  if (!cut) return <div className={onFlip ? 'bits flippable' : 'bits'}>{Array.from({ length: BITS }, (_, i) => bit(i))}</div>;
   let at = 0;
   return (
     <div className="bits cut">
@@ -86,12 +110,41 @@ function downloadWordLists() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-/** How a star's words are made from its Gaia number, worked through for this star. */
-export default function NameDialog({ id, onClose }: { id: string; onClose: () => void }) {
+/**
+ * How a star's words are made from its Gaia number, worked through for this
+ * star — or for any number typed in, or any bit flipped: everything below
+ * follows the number in the box.
+ */
+export default function NameDialog({ id: starId, onClose }: { id: string; onClose: () => void }) {
   const { t, lang } = useI18n();
+  // What is typed, and the last valid number it held.
+  const [text, setText] = useState(starId);
+  const [id, setId] = useState(starId);
   const digits = idToDigits(id);
   const mixed = scramble(id);
   const nf = new Intl.NumberFormat(lang);
+
+  // How many scrambled bits the last edit changed: the scramble's whole point.
+  const [changed, setChanged] = useState<number | null>(null);
+  const goTo = (next: string) => {
+    setChanged(next === id ? null : popcount(scramble(next) ^ mixed));
+    setId(next);
+  };
+  const type = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setText(digitsOnly);
+    if (isSourceId(digitsOnly)) goTo(BigInt(digitsOnly).toString());
+  };
+  const flip = (i: number) => {
+    const next = (BigInt(id) ^ (1n << BigInt(i))).toString();
+    setText(next);
+    goTo(next);
+  };
+  const reset = () => {
+    setText(starId);
+    goTo(starId);
+    setChanged(null);
+  };
   return (
     <Dialog title={t('name.how.title')} onClose={onClose} wide>
       <div className="prose name-how">
@@ -102,8 +155,23 @@ export default function NameDialog({ id, onClose }: { id: string; onClose: () =>
             <p className="step-label">
               <span className="num">1</span> {t('name.how.step.id')}
             </p>
-            <p className="mono bit-value">{id}</p>
-            <BitStrip x={BigInt(id)} />
+            <div className="bit-input-row">
+              <input
+                className="mono bit-input"
+                inputMode="numeric"
+                value={text}
+                onChange={e => type(e.target.value)}
+                aria-label={t('name.how.step.id')}
+                aria-invalid={!isSourceId(text)}
+              />
+              {id !== starId && (
+                <button type="button" className="link" onClick={reset}>
+                  ↺ {t('name.how.reset')}
+                </button>
+              )}
+            </div>
+            <BitStrip x={BigInt(id)} onFlip={flip} label={t('name.how.bit')} />
+            <p className="hint">{isSourceId(text) ? t('name.how.try') : t('find.id.bad')}</p>
           </div>
           <div className="bit-step">
             <p className="step-label">
@@ -118,7 +186,10 @@ export default function NameDialog({ id, onClose }: { id: string; onClose: () =>
               ))}
             </dl>
             <p className="hint mix-note">{t('name.how.mix.note')}</p>
-            <p className="mono bit-value">{mixed.toString()}</p>
+            <p className="mono bit-value">
+              {mixed.toString()}
+              {changed !== null && <span className="bit-changed"> · {t('name.how.changed', { n: changed })}</span>}
+            </p>
             <BitStrip x={mixed} />
           </div>
           <div className="bit-step">

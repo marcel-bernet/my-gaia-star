@@ -430,4 +430,9 @@ export const es: Dict = {
   'name.how.mix.fold2': 'doblar otra vez',
   'name.how.mix.note':
     'Todo módulo 2⁶³, así que el número sigue teniendo 63 bits, y cada paso se puede deshacer. C₁ y C₂ aparecen completos en la receta de abajo.',
+  'name.how.try':
+    'Escribe cualquier número de Gaia, o toca un cuadrado para cambiar un bit, y mira cómo todo lo de abajo lo sigue. Cambia un solo bit y cambia más o menos la mitad de los bits mezclados: por eso estrellas vecinas reciben palabras sin relación. Cualquier número de 63 bits tiene palabras; solo 1.800 millones son estrellas.',
+  'name.how.reset': 'Volver a esta estrella',
+  'name.how.changed': 'han cambiado {n} de 63 bits',
+  'name.how.bit': 'Bit',
 };

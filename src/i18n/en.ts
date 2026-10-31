@@ -429,6 +429,11 @@ export const en = {
   'name.how.mix.fold2': 'fold again',
   'name.how.mix.note':
     'All modulo 2⁶³, so the number stays 63 bits long, and every step can be undone. C₁ and C₂ are written out in the recipe below.',
+  'name.how.try':
+    'Type any Gaia number, or tap a square to flip one bit, and watch everything below follow. Flip a single bit and about half of the scrambled bits change: that is why neighbouring stars get unrelated words. Any 63-bit number has words; only 1.8 billion of them are stars.',
+  'name.how.reset': 'Back to this star',
+  'name.how.changed': '{n} of 63 bits changed',
+  'name.how.bit': 'Bit',
 } as const;
 
 export type Key = keyof typeof en;
