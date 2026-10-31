@@ -185,7 +185,11 @@ src/
 
 Each phase is behaviour-preserving and can be checked the same way: `npm test`, `npm run build`, then click through one search, one star, one certificate and one share in each language.
 
-**Status, 30 October 2026:** phases 0, 1 and 2 are done (see the git log from `d2d77de` on). Two items changed on the way: `geo.ts` keeps its own small cache, because its key isn't enough to redo the lookup; and the DR4 plot greys stay slightly different from the certificate's, now as named constants in `theme.ts` (`PLOT_*`), so no pixels changed. Phases 3 and 4 are still open.
+**Status, 31 October 2026:** all phases are done (see the git log from `d2d77de` on), and `docs/ARCHITECTURE.md` is now the maintainer's starting point. Where the work differed from the plan:
+- `geo.ts` keeps its own small cache, because its key isn't enough to redo the lookup.
+- The DR4 plot greys stay slightly different from the certificate's, now as named constants in `draw/theme.ts` (`PLOT_*`), so no pixels changed.
+- `CanvasArt` did not get a `deps` prop. The figure callbacks stay `useCallback`, which the hooks linter checks, and share a `Draw` type instead.
+- The certificate's HR/portrait helpers became `draw/hr.ts`, `draw/portrait.ts` and `draw/canvas.ts`, rather than one file.
 
 **Phase 0 — before 2 December (½ day).** DR4 post-release text (§3.5). Confirm the DataLink names on the day, using the checklist in `DATA_ACCESS.md`.
 
