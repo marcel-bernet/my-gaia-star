@@ -16,7 +16,7 @@ import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
 import { galacticHeightKpc, LY_PER_KPC, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
-import CanvasArt from './CanvasArt';
+import CanvasArt, { type Draw } from './CanvasArt';
 import Dr4Section from './Dr4Section';
 import Figure, { FIGURE_W } from './Figure';
 import NameDialog from './NameDialog';
@@ -116,23 +116,22 @@ export default function StarCard({
   // The place's own name for its country ("Barcelona, España" → "España"), else Natural Earth's.
   const countryName = placeName?.includes(', ') ? placeName.split(', ').pop()! : (country?.name ?? '');
 
-  const drawPortrait = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) =>
-      drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
+  const drawPortrait = useCallback<Draw>(
+    (ctx, w, h) => drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
     [star, kind, t],
   );
   const galaxyText = useMemo(() => galaxyLabels(t, lang), [t, lang]);
-  const drawFaceOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+  const drawFaceOn = useCallback<Draw>(
+    (ctx, w, h) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
     [star, galaxyText],
   );
-  const drawEdgeOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+  const drawEdgeOn = useCallback<Draw>(
+    (ctx, w, h) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
     [star, galaxyText],
   );
   const height = galacticHeightKpc(star);
-  const drawChart = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const drawChart = useCallback<Draw>(
+    (ctx, w, h) => {
       if (sky) {
         drawConstellation(
           ctx,

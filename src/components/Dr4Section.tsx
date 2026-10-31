@@ -28,7 +28,7 @@ import { DR4_RELEASE } from '../config';
 import { formatLongDate } from '../format';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
-import CanvasArt from './CanvasArt';
+import CanvasArt, { type Draw } from './CanvasArt';
 import Figure, { FIGURE_W } from './Figure';
 
 export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: number }) {
@@ -59,10 +59,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const fit = useMemo(() => (data ? fitFiveParameters(data) : null), [data]);
   useEffect(() => setSel(null), [data]);
 
-  const drawT = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawTimeline(ctx, w, h, pts, sel),
-    [pts, sel],
-  );
+  const drawPassTimeline = useCallback<Draw>((ctx, w, h) => drawTimeline(ctx, w, h, pts, sel), [pts, sel]);
   const selPt = sel !== null ? pts[sel] : null;
   const zoomed = fit !== null && needsZoom(fit);
   const fullH = useMemo(
@@ -73,20 +70,20 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
     () => (data && fit && zoomed ? pathHeight(pathExtent(data, fit, pts, LOOP_PATH), FIGURE_W) : 0),
     [data, fit, pts, zoomed],
   );
-  const drawFull = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const drawFullPath = useCallback<Draw>(
+    (ctx, w, h) => {
       if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, FULL_PATH);
     },
     [data, fit, pts, sel],
   );
-  const drawNear = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const drawLoopPath = useCallback<Draw>(
+    (ctx, w, h) => {
       if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, LOOP_PATH);
     },
     [data, fit, pts, sel],
   );
-  const drawR = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const drawResidualPlot = useCallback<Draw>(
+    (ctx, w, h) => {
       if (fit) drawResiduals(ctx, w, h, fit, pts, sel);
     },
     [fit, pts, sel],
@@ -94,10 +91,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const shown = selPt ?? pts[0];
   const gClass = shown?.gClass ?? 3;
   const nCcd = shown?.nCcd ?? 9;
-  const drawP = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawPixels(ctx, w, h, gClass, nCcd),
-    [gClass, nCcd],
-  );
+  const drawPixelWindows = useCallback<Draw>((ctx, w, h) => drawPixels(ctx, w, h, gClass, nCcd), [gClass, nCcd]);
 
   const pickTransit = (x: number) => {
     const year = timelineYearAt(x, FIGURE_W);
@@ -169,12 +163,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             caption={t('dr4.pixels.caption', { n: nCcd, window: WINDOWS[gClass]?.label ?? WINDOWS[3].label, date: releaseDate })}
           >
             <div className="plate pixels">
-              <CanvasArt width={FIGURE_W} height={pixelsHeight(gClass)} draw={drawP} label={t('dr4.pixels')} />
+              <CanvasArt width={FIGURE_W} height={pixelsHeight(gClass)} draw={drawPixelWindows} label={t('dr4.pixels')} />
             </div>
           </Figure>
 
           <Figure n={nextFig()} title={t('dr4.timeline')} caption={t('dr4.timeline.caption', { n: pts.length })}>
-            <CanvasArt width={FIGURE_W} height={92} draw={drawT} label={t('dr4.timeline')} onPick={pickTransit} />
+            <CanvasArt width={FIGURE_W} height={92} draw={drawPassTimeline} label={t('dr4.timeline')} onPick={pickTransit} />
             <div className="transit-readout">
               <button className="icon-btn small" onClick={() => step(-1)} aria-label="←">
                 ←
@@ -215,12 +209,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             >
               <div className="plate">
                 {zoomed && <p className="panel-label mono">a · {t('dr4.wobble.full')}</p>}
-                <CanvasArt width={FIGURE_W} height={fullH} draw={drawFull} label={t('dr4.wobble')} />
+                <CanvasArt width={FIGURE_W} height={fullH} draw={drawFullPath} label={t('dr4.wobble')} />
               </div>
               {zoomed && (
                 <div className="plate">
                   <p className="panel-label mono">b · {t('dr4.wobble.year')}</p>
-                  <CanvasArt width={FIGURE_W} height={nearH} draw={drawNear} label={t('dr4.wobble.year')} />
+                  <CanvasArt width={FIGURE_W} height={nearH} draw={drawLoopPath} label={t('dr4.wobble.year')} />
                 </div>
               )}
             </Figure>
@@ -234,7 +228,7 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
                 wobbly ? t('dr4.residuals.wobble', { uwe: nf(fit.uwe, 1) }) : t('dr4.residuals.single', { rms: nf(fit.rms) })
               }
             >
-              <CanvasArt width={FIGURE_W} height={150} draw={drawR} label={t('dr4.residuals')} />
+              <CanvasArt width={FIGURE_W} height={150} draw={drawResidualPlot} label={t('dr4.residuals')} />
             </Figure>
           )}
         </>

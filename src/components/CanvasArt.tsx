@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 
+/** Draws a figure into a canvas `w` × `h` drawing units wide. Wrap it in useCallback so it only redraws when its inputs change. */
+export type Draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => void | Promise<void>;
+
 /** A crisp canvas (device-pixel-ratio aware) redrawn whenever `draw` changes. */
 export default function CanvasArt({
   width,
@@ -10,7 +13,7 @@ export default function CanvasArt({
 }: {
   width: number;
   height: number;
-  draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void | Promise<void>;
+  draw: Draw;
   label: string;
   /** Called with the x of a click/tap, in drawing units (0…width). */
   onPick?: (x: number) => void;
