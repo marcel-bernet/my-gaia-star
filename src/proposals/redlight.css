@@ -1,0 +1,119 @@
+/*
+ * Proposal B — Red Light.
+ * Observers read their charts by red torchlight, which leaves the eye
+ * adapted to the dark. The whole interface is that light: dim reds on
+ * black, the map and the drawings included. One thing is not red — your
+ * star, the only white light on the page. Headlines are large italic
+ * serif, like the hand-lettered titles of old star atlases.
+ */
+:root[data-style='redlight'] {
+  --bg: #0a0404;
+  --surface: #130707;
+  --surface-2: #1d0b0a;
+  --plate: #070202;
+  --rule: rgba(240, 125, 105, 0.14);
+  --rule-2: rgba(240, 125, 105, 0.3);
+  --text: #f2a593;
+  --text-2: #c97c69;
+  --text-3: #a9665a;
+  --star: #fff3e6;
+  --danger: #f2c46d;
+  --radius: 0;
+
+  & ::selection {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  /* The map under red light; the star markers above it stay unfiltered. */
+  /* #redlight (injected in main.tsx): luminance → red, green × 0.42, blue × 0.3. */
+  & .leaflet-tile-pane {
+    filter: invert(1) grayscale(1) brightness(0.8) contrast(1.15) url(#redlight);
+  }
+
+  & .leaflet-overlay-pane,
+  & .panel canvas {
+    filter: url(#redlight);
+  }
+
+  & .readout {
+    background: rgba(10, 4, 4, 0.86);
+  }
+
+  & .constellation-label span {
+    color: var(--text);
+  }
+
+  & .wordmark {
+    font: italic 500 19px/1 var(--serif);
+  }
+
+  & .hero h1 {
+    font: italic 400 52px/1 var(--serif);
+    font-variation-settings: 'opsz' 60;
+    letter-spacing: -0.025em;
+  }
+
+  & .hero.compact h1 {
+    font-size: 28px;
+  }
+
+  & .lede {
+    font: 400 16px/1.6 var(--sans);
+  }
+
+  & .hint,
+  & .fig-caption,
+  & .first-body,
+  & .facts dd,
+  & .dr4 .note,
+  & .prose p {
+    font-family: var(--sans);
+  }
+
+  & .dossier-head h2,
+  & .dr4-head h2 {
+    font: italic 400 46px/1.02 var(--serif);
+    font-variation-settings: 'opsz' 60;
+    letter-spacing: -0.02em;
+  }
+
+  & .star-name {
+    font-size: 30px;
+    line-height: 1.25;
+  }
+
+  & .name-block .badge,
+  & .first-look .badge,
+  & .fig.hero .badge {
+    color: var(--text-2);
+  }
+
+  & .madlib .choice {
+    border-bottom-color: rgba(255, 243, 230, 0.4);
+  }
+
+  & .fig-title {
+    font: italic 400 21px/1.25 var(--serif);
+  }
+
+  & .fig.hero .plate {
+    border-color: rgba(255, 243, 230, 0.3);
+  }
+
+  & .primary:hover:not(:disabled) {
+    background: #ffbcab;
+  }
+
+  & .dialog::backdrop {
+    background: rgba(0, 0, 0, 0.82);
+  }
+
+  & .dialog h2 {
+    font: italic 400 30px/1.15 var(--serif);
+  }
+
+  & .point h3 {
+    font: italic 400 22px/1.2 var(--serif);
+  }
+}
