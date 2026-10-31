@@ -4,7 +4,7 @@ One-off build step (the output is committed). The Gaia archive bins every
 well-measured star within 200 pc server-side, so only the histogram comes
 back. The PNG is greyscale log-density; the app colours it.
 
-    python3 -m venv .venv && .venv/bin/pip install pillow numpy
+    python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
     .venv/bin/python scripts/hr_density.py
 """
 import csv, io, json, sys, urllib.parse, urllib.request
@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-# Axis ranges; keep in sync with HR_AXES in src/certificate/hr.ts.
+# Axis ranges; keep in sync with HR_AXES in src/draw/hr.ts.
 X_MIN, X_MAX, X_BINS = -0.6, 4.6, 520   # BP-RP colour
 Y_MIN, Y_MAX, Y_BINS = -4.0, 17.0, 700  # absolute G magnitude (bright at top)
 

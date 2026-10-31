@@ -1,4 +1,4 @@
-"""Build public/naked-eye.json: every Gaia DR3 star brighter than G = 6 (the old app's naked-eye cut).
+"""Build public/naked-eye.json: every Gaia DR3 star brighter than G = 6.
 
 One-off build step (the output is committed). The naked-eye depth reads this
 file instead of querying a service: a 20° cone with a magnitude cut is slow

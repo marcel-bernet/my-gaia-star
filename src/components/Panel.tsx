@@ -1,13 +1,20 @@
-import { useState, type FormEvent } from 'react';
-import type { Place, Result, Status } from '../App';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import type { Place, Status } from '../types';
+import { REPO_URL } from '../config';
+import type { WallTime } from '../sky/time';
 import { searchPlace } from '../geo';
-import { LANGS, useI18n, type Lang } from '../i18n';
-import type { Literature } from '../sky/simbad';
+import { LANGS, useI18n, type Key, type Lang } from '../i18n';
 import { DEPTHS, type Depth, type Star } from '../sky/gaia';
-import StarCard from './StarCard';
 import StarFinder from './StarFinder';
 
 export type Mode = 'now' | 'moment';
+
+/** Headline numbers on the landing page (ESA's published counts). */
+const GAIA_STATS: [number, Key][] = [
+  [1_811_709_771, 'stat.dr3'],
+  [2_793_009_568, 'stat.dr4'],
+  [129_625_750_708, 'stat.passes'],
+];
 
 const DEPTH_MAG: Record<Depth, string> = {
   'naked-eye': 'G < 6',
@@ -21,21 +28,17 @@ interface Props {
   onPlace: (lat: number, lon: number, name: string | null) => void;
   mode: Mode;
   onMode: (m: Mode) => void;
-  wall: { date: string; time: string };
-  onWall: (w: { date: string; time: string }) => void;
+  wall: WallTime;
+  onWall: (w: WallTime) => void;
   zone: string | null;
   depth: Depth;
   onDepth: (d: Depth) => void;
   status: Status;
   onRun: () => void;
-  result: Result | null;
-  resultPlaceName: string | null;
-  selected: Star | null;
-  literature: Literature | 'loading' | 'error' | null;
-  onBackToZenith: () => void;
-  onMap: boolean;
-  onToggleMap: () => void;
-  onCertificate: () => void;
+  /** The star on screen, if any. */
+  currentStarId: string | null;
+  /** The star card, shown below the form. */
+  children?: ReactNode;
   onAbout: () => void;
   onPoint: () => void;
   onFound: (star: Star, when: Date | null) => void;
@@ -75,7 +78,7 @@ export default function Panel(p: Props) {
   };
 
   const loading = p.status.kind === 'loading';
-  const hasResult = !!p.result && !!p.selected;
+  const hasResult = p.currentStarId !== null;
   const nf = new Intl.NumberFormat(lang, { notation: 'compact', compactDisplay: 'long', maximumSignificantDigits: 3 });
 
   return (
@@ -100,18 +103,12 @@ export default function Panel(p: Props) {
           <>
             <p className="lede">{t('intro')}</p>
             <dl className="stats">
-              <div>
-                <dt>{nf.format(1_811_709_771)}</dt>
-                <dd>{t('stat.dr3')}</dd>
-              </div>
-              <div>
-                <dt>{nf.format(2_793_009_568)}</dt>
-                <dd>{t('stat.dr4')}</dd>
-              </div>
-              <div>
-                <dt>{nf.format(129_625_750_708)}</dt>
-                <dd>{t('stat.passes')}</dd>
-              </div>
+              {GAIA_STATS.map(([n, label]) => (
+                <div key={label}>
+                  <dt>{nf.format(n)}</dt>
+                  <dd>{t(label)}</dd>
+                </div>
+              ))}
             </dl>
             <button className="point-btn" onClick={p.onPoint}>
               <span aria-hidden="true">?</span> {t('point')}
@@ -142,14 +139,21 @@ export default function Panel(p: Props) {
               placeholder={t('place.search')}
               autoComplete="off"
             />
-            <button type="button" className="icon-btn" onClick={locate} title={t('place.locate')} aria-label={t('place.locate')} disabled={locating}>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={locate}
+              title={t('place.locate')}
+              aria-label={t('place.locate')}
+              disabled={locating}
+            >
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
                 <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
           </form>
-          <p className="hint">{locating ? t('place.locating') : placeMsg ?? (!p.place ? t('place.hint') : '')}</p>
+          <p className="hint">{locating ? t('place.locating') : (placeMsg ?? (!p.place ? t('place.hint') : ''))}</p>
         </div>
 
         <div className="step">
@@ -166,8 +170,18 @@ export default function Panel(p: Props) {
           {p.mode === 'moment' && (
             <>
               <div className="when">
-                <input type="date" value={p.wall.date} onChange={e => p.onWall({ ...p.wall, date: e.target.value })} aria-label={t('when.date')} />
-                <input type="time" value={p.wall.time} onChange={e => p.onWall({ ...p.wall, time: e.target.value })} aria-label={t('when.time')} />
+                <input
+                  type="date"
+                  value={p.wall.date}
+                  onChange={e => p.onWall({ ...p.wall, date: e.target.value })}
+                  aria-label={t('when.date')}
+                />
+                <input
+                  type="time"
+                  value={p.wall.time}
+                  onChange={e => p.onWall({ ...p.wall, time: e.target.value })}
+                  aria-label={t('when.time')}
+                />
               </div>
               {p.zone && <p className="hint">{t('when.zone', { zone: p.zone.replaceAll('_', ' ') })}</p>}
             </>
@@ -207,20 +221,9 @@ export default function Panel(p: Props) {
         )}
       </section>
 
-      <StarFinder current={p.selected?.id ?? null} onFound={p.onFound} />
+      <StarFinder current={p.currentStarId} onFound={p.onFound} />
 
-      {hasResult && p.result && p.selected && (
-        <StarCard
-          star={p.selected}
-          result={p.result}
-          placeName={p.resultPlaceName}
-          literature={p.literature}
-          onBackToZenith={p.onBackToZenith}
-          onMap={p.onMap}
-          onToggleMap={p.onToggleMap}
-          onCertificate={p.onCertificate}
-        />
-      )}
+      {p.children}
 
       <footer className="colophon">
         <button className="link" onClick={p.onAbout}>
@@ -229,7 +232,7 @@ export default function Panel(p: Props) {
         <button className="link" onClick={p.onPoint}>
           {t('point')}
         </button>
-        <a className="link" href="https://github.com/marcel-bernet/my-gaia-star" target="_blank" rel="noreferrer">
+        <a className="link" href={REPO_URL} target="_blank" rel="noreferrer">
           GitHub
         </a>
         <span className="credit">ESA/Gaia/DPAC · CDS · OSM</span>

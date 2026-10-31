@@ -1,0 +1,3 @@
+# Only scripts/hr_density.py needs these; the other scripts use the standard library.
+numpy
+pillow

@@ -41,15 +41,18 @@ Why not the ESA Gaia archive directly? It sends no CORS headers, so browsers can
 
 ## Develop
 
+Maintaining or extending the site? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how it fits together, where things are, and what not to break.
+
 ```bash
 npm install
 npm run dev        # http://localhost:5173/my-gaia-star/
 npm test           # unit tests (offline)
+npm run check      # types, lint, formatting and tests, as CI runs them
 LIVE=1 npx vitest run gaia.live   # also query the real Gaia services
 npm run build      # static site in dist/
 ```
 
-The bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `numpy` and `pillow`):
+The bundled data files are built once and committed. To rebuild them (needs Python 3; the HR map also needs `pip install -r scripts/requirements.txt`):
 
 ```bash
 python3 scripts/naked_eye_stars.py

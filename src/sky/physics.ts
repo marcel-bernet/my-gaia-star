@@ -3,6 +3,7 @@ import type { Star } from './gaia';
 
 const DEG = Math.PI / 180;
 export const LY_PER_PC = 3.26156;
+export const LY_PER_KPC = LY_PER_PC * 1000;
 
 /** Effective temperature (K): Gaia's own GSP-Phot value, else from BP−RP colour. */
 export function temperature(star: Pick<Star, 'teff' | 'bpRp'>): number | null {
@@ -105,14 +106,14 @@ export function toGalactic(raDeg: number, decDeg: number): { l: number; b: numbe
   // ICRS→Galactic rotation (Hipparcos definition).
   const M = [
     [-0.0548755604162154, -0.873437090234885, -0.4838350155487132],
-    [0.4941094278755837, -0.4448296299600112, 0.7469822444972189],
+    [0.4941094278755837, -0.4448296299600112, 0.746982244497219],
     [-0.8676661490190047, -0.1980763734312015, 0.4559837761750669],
   ];
   const ra = raDeg * DEG;
   const dec = decDeg * DEG;
   const v = [Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec)];
   const [x, y, z] = M.map(r => r[0] * v[0] + r[1] * v[1] + r[2] * v[2]);
-  return { l: ((Math.atan2(y, x) / DEG) + 360) % 360, b: Math.asin(z) / DEG };
+  return { l: (Math.atan2(y, x) / DEG + 360) % 360, b: Math.asin(z) / DEG };
 }
 
 export const SUN_GALACTOCENTRIC_KPC = 8.2;

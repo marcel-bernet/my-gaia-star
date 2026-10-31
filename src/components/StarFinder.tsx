@@ -1,21 +1,29 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18n } from '../i18n';
+import { localWallTime } from '../sky/time';
+import type { Status } from '../types';
 import { digitsToId, idToDigits, isSourceId, parseName, segments, slotOptions, type Digits } from '../names/name';
 import { CatalogueUnavailable, starById, type Star } from '../sky/gaia';
 
 type By = 'id' | 'name';
 
+/** Now on the visitor's clock, as <input type="datetime-local"> wants it. */
 function localNow() {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const { date, time } = localWallTime();
+  return `${date}T${time}`;
 }
 
 /**
  * Find a star again by its Gaia ID or its name, and go to wherever on Earth
  * it is straight overhead — now, or at a chosen moment.
  */
-export default function StarFinder({ current, onFound }: { current: string | null; onFound: (star: Star, when: Date | null) => void }) {
+export default function StarFinder({
+  current,
+  onFound,
+}: {
+  current: string | null;
+  onFound: (star: Star, when: Date | null) => void;
+}) {
   const { t, lang } = useI18n();
   const [by, setBy] = useState<By>('name');
   const [id, setId] = useState('');
@@ -24,7 +32,7 @@ export default function StarFinder({ current, onFound }: { current: string | nul
   const [pasteMsg, setPasteMsg] = useState<string | null>(null);
   const [now, setNow] = useState(true);
   const [moment, setMoment] = useState(localNow);
-  const [status, setStatus] = useState<{ kind: 'idle' } | { kind: 'loading' } | { kind: 'error'; message: string }>({ kind: 'idle' });
+  const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Start from the star on screen, so its own name is what you see first.
   useEffect(() => {
@@ -95,22 +103,23 @@ export default function StarFinder({ current, onFound }: { current: string | nul
                 if (!s.slot) return <span key={i}>{space + s.text}</span>;
                 const slot = s.slot;
                 const opts = slotOptions(digits, slot, lang);
-                const shown = i === 0 ? opts[digits[slot]].charAt(0).toUpperCase() + opts[digits[slot]].slice(1) : opts[digits[slot]];
+                const shown =
+                  i === 0 ? opts[digits[slot]].charAt(0).toUpperCase() + opts[digits[slot]].slice(1) : opts[digits[slot]];
                 return (
                   <span key={i}>
                     {space}
                     <span className="choice">
                       {shown}
                       <select
-                      value={digits[slot]}
-                      onChange={e => setDigits(d => ({ ...d, [slot]: Number(e.target.value) }))}
-                      aria-label={slot}
-                    >
-                      {opts.map((o, v) => (
-                        <option key={v} value={v}>
-                          {i === 0 ? o.charAt(0).toUpperCase() + o.slice(1) : o}
-                        </option>
-                      ))}
+                        value={digits[slot]}
+                        onChange={e => setDigits(d => ({ ...d, [slot]: Number(e.target.value) }))}
+                        aria-label={slot}
+                      >
+                        {opts.map((o, v) => (
+                          <option key={v} value={v}>
+                            {i === 0 ? o.charAt(0).toUpperCase() + o.slice(1) : o}
+                          </option>
+                        ))}
                       </select>
                     </span>
                   </span>

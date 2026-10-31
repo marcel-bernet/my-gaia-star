@@ -1,3 +1,4 @@
+import { REPO_URL } from '../config';
 import { useI18n } from '../i18n';
 import Dialog from './Dialog';
 
@@ -12,8 +13,8 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
         <p>{t('about.p3')}</p>
         <p className="hint">{t('independent')}</p>
         <p className="hint">
-          <a href="https://github.com/marcel-bernet/my-gaia-star" target="_blank" rel="noreferrer">
-            github.com/marcel-bernet/my-gaia-star
+          <a href={REPO_URL} target="_blank" rel="noreferrer">
+            {REPO_URL.replace(/^https:\/\//, '')}
           </a>
         </p>
       </div>

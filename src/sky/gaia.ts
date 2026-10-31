@@ -16,6 +16,9 @@
  * brightness in the cone, so the "bright" depth probes a small cone first and
  * only then asks for the radius it actually needs.
  */
+import { SERVICES } from '../config';
+import { fetchBundled, once } from '../lib/cache';
+import { parseCsv } from '../lib/csv';
 
 export type Depth = 'naked-eye' | 'bright' | 'faint' | 'all';
 
@@ -52,9 +55,6 @@ const ALL: Cone = { radiusDeg: 400 / 3600, maxMag: null, limit: LIMIT };
 const BRIGHT_PROBE: Cone = { radiusDeg: 0.25, maxMag: 13, limit: LIMIT };
 const BRIGHT_MAX_RADIUS_DEG = 1.5;
 
-const VIZIER_CONE = 'https://vizier.cds.unistra.fr/viz-bin/asu-tsv';
-const VIZIER_COLUMNS = ['Source', 'RA_ICRS', 'DE_ICRS', 'Gmag', 'BP-RP', 'Plx', 'e_Plx', 'pmRA', 'pmDE', 'RV', 'Teff'];
-const GAVO_TAP = 'https://dc.g-vo.org/tap/sync';
 const TIMEOUT_MS = 30_000;
 
 export class CatalogueUnavailable extends Error {}
@@ -88,34 +88,20 @@ export function parseTsv(text: string): Record<string, string>[] {
   });
 }
 
-/** TAP CSV with only numeric cells: a header row, no quoting needed. */
-export function parseCsv(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-  if (lines.length < 1) return [];
-  const names = lines[0].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-  return lines.slice(1).map(l => {
-    const cells = l.split(',');
-    return Object.fromEntries(names.map((n, i) => [n, cells[i] ?? '']));
-  });
+// ---- The two services ------------------------------------------------------
+// Each returns stars in the same shape; the column names differ.
+
+const VIZIER_TABLE = 'I/355/gaiadr3';
+const VIZIER_COLUMNS = ['Source', 'RA_ICRS', 'DE_ICRS', 'Gmag', 'BP-RP', 'Plx', 'e_Plx', 'pmRA', 'pmDE', 'RV', 'Teff'];
+
+/** A VizieR ASU query on the Gaia DR3 table; `params` add the search. */
+async function vizier(params: Record<string, string>, signal?: AbortSignal): Promise<Star[]> {
+  const query = new URLSearchParams({ '-source': VIZIER_TABLE, '-out': VIZIER_COLUMNS.join(','), ...params });
+  const res = await get(`${SERVICES.vizier}?${query}`, signal);
+  return parseTsv(await res.text()).flatMap(fromVizier);
 }
 
-async function vizierCone(ra: number, dec: number, cone: Cone, signal?: AbortSignal): Promise<Star[]> {
-  const sign = dec >= 0 ? '+' : '';
-  const params = new URLSearchParams({
-    '-source': 'I/355/gaiadr3',
-    // Decimal points matter: "180 +40" is not parsed as degrees.
-    '-c': `${ra.toFixed(6)} ${sign}${dec.toFixed(6)}`,
-    '-c.rs': (cone.radiusDeg * 3600).toFixed(1),
-    '-out': VIZIER_COLUMNS.join(','),
-    '-sort': '_r',
-    '-out.max': String(cone.limit),
-  });
-  if (cone.maxMag !== null) params.set('Gmag', `<${cone.maxMag}`);
-  const res = await get(`${VIZIER_CONE}?${params}`, signal);
-  return parseTsv(await res.text()).flatMap(toStar);
-}
-
-function toStar(r: Record<string, string>): Star[] {
+function fromVizier(r: Record<string, string>): Star[] {
   const ra = num(r.RA_ICRS);
   const dec = num(r.DE_ICRS);
   const g = num(r.Gmag);
@@ -137,17 +123,16 @@ function toStar(r: Record<string, string>): Star[] {
   ];
 }
 
-async function gavoCone(ra: number, dec: number, cone: Cone, signal?: AbortSignal): Promise<Star[]> {
-  const where = [`1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${ra},${dec},${cone.radiusDeg}))`];
-  if (cone.maxMag !== null) where.push(`phot_g_mean_mag<${cone.maxMag}`);
-  const adql =
-    `SELECT TOP ${cone.limit} source_id,ra,dec,phot_g_mean_mag,phot_bp_mean_mag-phot_rp_mean_mag AS bp_rp,` +
-    `parallax,parallax_error,pmra,pmdec,radial_velocity,` +
-    `DISTANCE(POINT('ICRS',ra,dec),POINT('ICRS',${ra},${dec})) AS d ` +
-    `FROM gaia.dr3lite WHERE ${where.join(' AND ')} ORDER BY d`;
+const GAVO_TABLE = 'gaia.dr3lite';
+const GAVO_COLUMNS =
+  'source_id,ra,dec,phot_g_mean_mag,phot_bp_mean_mag-phot_rp_mean_mag AS bp_rp,' +
+  'parallax,parallax_error,pmra,pmdec,radial_velocity';
+
+/** An ADQL query on GAVO's Gaia DR3 table. Must select GAVO_COLUMNS. */
+async function gavo(adql: string, signal?: AbortSignal): Promise<Star[]> {
   // CSV rather than JSON: JSON numbers would round the 19-digit Gaia IDs.
-  const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-  const res = await get(`${GAVO_TAP}?${params}`, signal);
+  const query = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
+  const res = await get(`${SERVICES.gavoTap}?${query}`, signal);
   return parseCsv(await res.text()).flatMap(fromGavo);
 }
 
@@ -174,14 +159,48 @@ function fromGavo(r: Record<string, string>): Star[] {
 }
 
 /** VizieR first; GAVO if VizieR is down. */
-async function cone(ra: number, dec: number, c: Cone, signal?: AbortSignal): Promise<Star[]> {
+async function withFallback(fromVizier: () => Promise<Star[]>, fromGavo: () => Promise<Star[]>): Promise<Star[]> {
   try {
-    return await vizierCone(ra, dec, c, signal);
+    return await fromVizier();
   } catch (e) {
     if (!(e instanceof CatalogueUnavailable)) throw e;
     console.warn('VizieR unavailable, trying GAVO:', e.message);
-    return gavoCone(ra, dec, c, signal);
+    return fromGavo();
   }
+}
+
+// ---- Searches ----------------------------------------------------------------
+
+/** Exported for the live tests; the app uses `cone`. */
+export function vizierCone(ra: number, dec: number, cone: Cone, signal?: AbortSignal): Promise<Star[]> {
+  const sign = dec >= 0 ? '+' : '';
+  const params: Record<string, string> = {
+    // Decimal points matter: "180 +40" is not parsed as degrees.
+    '-c': `${ra.toFixed(6)} ${sign}${dec.toFixed(6)}`,
+    '-c.rs': (cone.radiusDeg * 3600).toFixed(1),
+    '-sort': '_r',
+    '-out.max': String(cone.limit),
+  };
+  if (cone.maxMag !== null) params.Gmag = `<${cone.maxMag}`;
+  return vizier(params, signal);
+}
+
+/** Exported for the live tests; the app uses `cone`. */
+export function gavoCone(ra: number, dec: number, cone: Cone, signal?: AbortSignal): Promise<Star[]> {
+  const where = [`1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${ra},${dec},${cone.radiusDeg}))`];
+  if (cone.maxMag !== null) where.push(`phot_g_mean_mag<${cone.maxMag}`);
+  return gavo(
+    `SELECT TOP ${cone.limit} ${GAVO_COLUMNS},DISTANCE(POINT('ICRS',ra,dec),POINT('ICRS',${ra},${dec})) AS d ` +
+      `FROM ${GAVO_TABLE} WHERE ${where.join(' AND ')} ORDER BY d`,
+    signal,
+  );
+}
+
+function cone(ra: number, dec: number, c: Cone, signal?: AbortSignal): Promise<Star[]> {
+  return withFallback(
+    () => vizierCone(ra, dec, c, signal),
+    () => gavoCone(ra, dec, c, signal),
+  );
 }
 
 /** The radius that should hold `want` stars, given `got` in a probe of radius `r`. */
@@ -191,30 +210,21 @@ export function radiusFor(r: number, got: number, want: number, max: number): nu
   return Math.min(max, r * Math.sqrt(want / Math.max(got, 1)) * 1.15);
 }
 
-let nakedEye: Promise<Star[]> | null = null;
-function loadNakedEye(): Promise<Star[]> {
-  nakedEye ??= fetch(`${import.meta.env.BASE_URL}naked-eye.json`)
-    .then(r => {
-      if (!r.ok) throw new CatalogueUnavailable(`naked-eye.json: HTTP ${r.status}`);
-      return r.json() as Promise<{ columns: string[]; rows: (string | number | null)[][] }>;
-    })
-    .then(({ columns, rows }) =>
-      rows.map(row => {
-        const o = Object.fromEntries(columns.map((c, i) => [c, row[i]]));
-        return { ...o, id: String(o.id) } as unknown as Star;
-      }),
-    )
-    .catch(e => {
-      nakedEye = null;
-      throw e;
-    });
-  return nakedEye;
-}
+/** The bundled G < 6 stars (public/naked-eye.json, built by scripts/naked_eye_stars.py). */
+const loadNakedEye = once(async (): Promise<Star[]> => {
+  type Table = { columns: string[]; rows: (string | number | null)[][] };
+  const { columns, rows } = await fetchBundled<Table>('naked-eye.json').catch(e => {
+    throw new CatalogueUnavailable(String(e));
+  });
+  return rows.map(row => {
+    const o = Object.fromEntries(columns.map((c, i) => [c, row[i]]));
+    return { ...o, id: String(o.id) } as unknown as Star;
+  });
+});
 
 export function sepDeg(ra1: number, dec1: number, ra2: number, dec2: number): number {
   const r = Math.PI / 180;
-  const s =
-    Math.sin(dec1 * r) * Math.sin(dec2 * r) + Math.cos(dec1 * r) * Math.cos(dec2 * r) * Math.cos((ra1 - ra2) * r);
+  const s = Math.sin(dec1 * r) * Math.sin(dec2 * r) + Math.cos(dec1 * r) * Math.cos(dec2 * r) * Math.cos((ra1 - ra2) * r);
   return Math.acos(Math.max(-1, Math.min(1, s))) / r;
 }
 
@@ -236,23 +246,12 @@ export async function starsAround(ra: number, dec: number, depth: Depth, signal?
     .map(x => x.s);
 }
 
-/** One star by its Gaia DR3 source_id, or null if there is none. VizieR first; GAVO if VizieR is down. */
+/** One star by its Gaia DR3 source_id, or null if there is none. */
 export async function starById(id: string, signal?: AbortSignal): Promise<Star | null> {
   if (!/^\d{1,19}$/.test(id)) return null;
-  try {
-    const params = new URLSearchParams({ '-source': 'I/355/gaiadr3', Source: id, '-out': VIZIER_COLUMNS.join(','), '-out.max': '1' });
-    const res = await get(`${VIZIER_CONE}?${params}`, signal);
-    return parseTsv(await res.text()).flatMap(r => toStar(r)).find(s => s.id === id) ?? null;
-  } catch (e) {
-    if (!(e instanceof CatalogueUnavailable)) throw e;
-    const adql =
-      'SELECT source_id,ra,dec,phot_g_mean_mag,phot_bp_mean_mag-phot_rp_mean_mag AS bp_rp,' +
-      `parallax,parallax_error,pmra,pmdec,radial_velocity FROM gaia.dr3lite WHERE source_id=${id}`;
-    const params = new URLSearchParams({ REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'csv', QUERY: adql });
-    const res = await get(`${GAVO_TAP}?${params}`, signal);
-    return parseCsv(await res.text()).flatMap(r => fromGavo(r))[0] ?? null;
-  }
+  const stars = await withFallback(
+    () => vizier({ Source: id, '-out.max': '1' }, signal),
+    () => gavo(`SELECT ${GAVO_COLUMNS} FROM ${GAVO_TABLE} WHERE source_id=${id}`, signal),
+  );
+  return stars.find(s => s.id === id) ?? null;
 }
-
-/** For tests: query one service directly. */
-export const _services = { vizierCone, gavoCone };

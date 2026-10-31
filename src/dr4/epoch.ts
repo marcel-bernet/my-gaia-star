@@ -115,7 +115,14 @@ interface Field {
 }
 
 const SIZES: Record<string, number> = {
-  boolean: 1, unsignedByte: 1, char: 1, short: 2, int: 4, long: 8, float: 4, double: 8,
+  boolean: 1,
+  unsignedByte: 1,
+  char: 1,
+  short: 2,
+  int: 4,
+  long: 8,
+  float: 4,
+  double: 8,
 };
 
 function readValue(v: DataView, p: number, type: string): number | bigint | boolean | string {
@@ -124,13 +131,20 @@ function readValue(v: DataView, p: number, type: string): number | bigint | bool
       const c = String.fromCharCode(v.getUint8(p));
       return c === 'T' || c === 't' || c === '1';
     }
-    case 'unsignedByte': return v.getUint8(p);
-    case 'char': return String.fromCharCode(v.getUint8(p));
-    case 'short': return v.getInt16(p);
-    case 'int': return v.getInt32(p);
-    case 'long': return v.getBigInt64(p);
-    case 'float': return v.getFloat32(p);
-    case 'double': return v.getFloat64(p);
+    case 'unsignedByte':
+      return v.getUint8(p);
+    case 'char':
+      return String.fromCharCode(v.getUint8(p));
+    case 'short':
+      return v.getInt16(p);
+    case 'int':
+      return v.getInt32(p);
+    case 'long':
+      return v.getBigInt64(p);
+    case 'float':
+      return v.getFloat32(p);
+    case 'double':
+      return v.getFloat64(p);
   }
   throw new Error(`VOTable datatype ${type} not supported`);
 }

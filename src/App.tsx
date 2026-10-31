@@ -1,128 +1,61 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AboutDialog from './components/AboutDialog';
-import PointDialog from './components/PointDialog';
 import CertificateDialog from './components/CertificateDialog';
 import Panel, { type Mode } from './components/Panel';
-import SkyMap, { type MapResult } from './components/SkyMap';
-import { placeName } from './geo';
-import { useI18n } from './i18n';
-import { CatalogueUnavailable, starsAround, type Depth, type Star } from './sky/gaia';
-import { hasDistance } from './sky/physics';
-import { literatureFor, type Literature } from './sky/simbad';
-import { instantToWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
-import { skyFrame, subStellarPoint } from './sky/zenith';
-import { readUrl, writeUrl } from './urlState';
+import PointDialog from './components/PointDialog';
 import Readout from './components/Readout';
-import { constellationOf, constellationOnGround, loadSkyChart, type SkyChartData } from './sky/constellation';
+import SkyMap from './components/SkyMap';
+import StarCard from './components/StarCard';
+import { useI18n } from './i18n';
+import type { Depth, Star } from './sky/gaia';
+import { instantToWallTime, localWallTime, timeZoneAt, wallTimeToInstant } from './sky/time';
+import { subStellarPoint } from './sky/zenith';
+import { useConstellationOverlay } from './state/useConstellationOverlay';
+import { useLiterature } from './state/useLiterature';
+import { usePlace } from './state/usePlace';
+import { useStarSearch } from './state/useStarSearch';
+import { useUrlSync } from './state/useUrlSync';
+import { readUrl } from './urlState';
 
-export interface Place {
-  lat: number;
-  lon: number;
-  name: string | null;
-}
+/** The time inputs start at midnight today. */
+const todayWall = () => ({ ...localWallTime(), time: '00:00' });
 
-export interface Result extends MapResult {
-  place: Place;
-  depth: Depth;
-  zone: string;
-}
-
-export type Status = { kind: 'idle' } | { kind: 'loading' } | { kind: 'error'; message: string };
-
-function todayWall() {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return { date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, time: '00:00' };
-}
-
+/**
+ * The whole page: the map on one side, the panel (form + star card) on the
+ * other, and the dialogs. The state lives in hooks under src/state/.
+ */
 export default function App() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
+  // A shared link (?lat=…&lon=…&t=…) sets the starting state.
   const initial = useMemo(() => readUrl(), []);
 
-  const [place, setPlace] = useState<Place | null>(initial ? { lat: initial.lat, lon: initial.lon, name: null } : null);
+  // The form.
+  const [place, setPlace] = usePlace(initial ? { lat: initial.lat, lon: initial.lon, name: null } : null);
   const [mode, setMode] = useState<Mode>(initial?.t ? 'moment' : 'now');
   const [wall, setWall] = useState(() =>
     initial?.t ? instantToWallTime(initial.t, timeZoneAt(initial.lat, initial.lon)) : todayWall(),
   );
   const [depth, setDepth] = useState<Depth>(initial?.depth ?? 'all');
-  const [result, setResult] = useState<Result | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(initial?.star ?? null);
-  const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const zone = place ? timeZoneAt(place.lat, place.lon) : null;
+
+  // The search and the selected star.
+  const { result, selected, selectedId, setSelectedId, status, clearStatus, search } = useStarSearch(initial?.star ?? null);
+  const literature = useLiterature(selected?.id);
+  const [onMap, setOnMap] = useState(false);
+  const overlay = useConstellationOverlay(onMap, result, selected);
+  useUrlSync(result, selectedId, mode === 'moment');
+
+  // Dialogs.
   const [certOpen, setCertOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [pointOpen, setPointOpen] = useState(false);
-  const [literature, setLiterature] = useState<Literature | 'loading' | 'error' | null>(null);
-  const [onMap, setOnMap] = useState(false);
-  const [sky, setSky] = useState<SkyChartData | null>(null);
-  const abort = useRef<AbortController | null>(null);
 
-  const zone = place ? timeZoneAt(place.lat, place.lon) : null;
-
-  // Put a name to the chosen point.
-  useEffect(() => {
-    if (!place || place.name !== null) return;
-    let live = true;
-    // Wait for the clicking to settle: Nominatim allows one request per second for the whole site.
-    const id = setTimeout(() => {
-      placeName(place.lat, place.lon, lang).then(name => {
-        if (live) setPlace(p => (p && p.lat === place.lat && p.lon === place.lon ? { ...p, name: name ?? '' } : p));
-      });
-    }, 700);
-    return () => {
-      live = false;
-      clearTimeout(id);
-    };
-  }, [place, lang]);
-
-  const search = useCallback(
-    async (at: Place, when: Date, d: Depth, keepSelection: string | null = null) => {
-      abort.current?.abort();
-      const ctl = new AbortController();
-      abort.current = ctl;
-      setStatus({ kind: 'loading' });
-      try {
-        const frame = skyFrame(at.lat, at.lon, when);
-        const stars = await starsAround(frame.zenith.ra, frame.zenith.dec, d, ctl.signal);
-        if (ctl.signal.aborted) return;
-        if (stars.length === 0) {
-          setResult(null);
-          setStatus({ kind: 'error', message: t('error.none') });
-          return;
-        }
-        // Stars come back nearest-first. "Your star" is the nearest one Gaia
-        // measured a distance and colour for (as the old backend's default
-        // did), so its certificate can place it in the Galaxy.
-        const zenithId = (stars.find(s => hasDistance(s) && s.bpRp !== null) ?? stars[0]).id;
-        setResult({ frame, stars, zenithId, place: at, depth: d, zone: timeZoneAt(at.lat, at.lon) });
-        const sel = keepSelection && stars.some(s => s.id === keepSelection) ? keepSelection : zenithId;
-        setSelectedId(sel);
-        setStatus({ kind: 'idle' });
-      } catch (e) {
-        if (ctl.signal.aborted) return;
-        console.error(e);
-        setStatus({ kind: 'error', message: e instanceof CatalogueUnavailable ? t('error.catalogue') : String(e) });
-      }
-    },
-    [t],
-  );
-
-  // A shared link runs its search straight away.
+  // A shared link runs its search straight away. Only on load: `search`
+  // changes with the language, and switching language must not search again.
   useEffect(() => {
     if (initial) search({ lat: initial.lat, lon: initial.lon, name: null }, initial.t ?? new Date(), initial.depth, initial.star);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Keep the address bar shareable.
-  useEffect(() => {
-    if (!result) return;
-    writeUrl({
-      lat: result.place.lat,
-      lon: result.place.lon,
-      t: mode === 'moment' ? result.frame.date : null,
-      depth: result.depth,
-      star: selectedId === result.zenithId ? null : selectedId,
-    });
-  }, [result, selectedId, mode]);
 
   const run = () => {
     if (!place) return;
@@ -144,35 +77,10 @@ export default function App() {
 
   const pick = (lat: number, lon: number, name: string | null = null) => {
     setPlace({ lat, lon, name });
-    setStatus({ kind: 'idle' });
+    clearStatus();
   };
 
-  const selected: Star | null = result?.stars.find(s => s.id === selectedId) ?? null;
-
-  // Has anyone written about the selected star? Debounced: tapping across the
-  // map should not fire a SIMBAD query per star.
-  useEffect(() => {
-    if (!selected) return;
-    const ctl = new AbortController();
-    setLiterature('loading');
-    const id = setTimeout(() => {
-      literatureFor(selected.id, ctl.signal).then(setLiterature, () => !ctl.signal.aborted && setLiterature('error'));
-    }, 350);
-    return () => {
-      clearTimeout(id);
-      ctl.abort();
-    };
-  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (onMap && !sky) loadSkyChart().then(setSky, e => console.error(e));
-  }, [onMap, sky]);
-  // The selected star's constellation, laid on the ground at the size it spans in the sky.
-  const overlay = useMemo(() => {
-    if (!onMap || !sky || !result || !selected) return null;
-    const abbr = constellationOf(selected.ra, selected.dec);
-    return { ...constellationOnGround(result.frame, sky, abbr), name: sky.constellations[abbr].names[lang] };
-  }, [onMap, sky, result, selected, lang]);
-
+  // The result's place, with its name once geocoding has found one.
   const resultPlace = result && place && result.place.lat === place.lat && result.place.lon === place.lon ? place : result?.place;
 
   return (
@@ -200,18 +108,24 @@ export default function App() {
         onDepth={setDepth}
         status={status}
         onRun={run}
-        result={result}
-        resultPlaceName={resultPlace?.name ?? null}
-        selected={selected}
-        literature={literature}
-        onBackToZenith={() => result && setSelectedId(result.zenithId)}
-        onMap={onMap}
-        onToggleMap={() => setOnMap(v => !v)}
-        onCertificate={() => setCertOpen(true)}
+        currentStarId={selected?.id ?? null}
         onAbout={() => setAboutOpen(true)}
         onPoint={() => setPointOpen(true)}
         onFound={goToStar}
-      />
+      >
+        {result && selected && (
+          <StarCard
+            star={selected}
+            result={result}
+            placeName={resultPlace?.name ?? null}
+            literature={literature}
+            onBackToZenith={() => setSelectedId(result.zenithId)}
+            onMap={onMap}
+            onToggleMap={() => setOnMap(v => !v)}
+            onCertificate={() => setCertOpen(true)}
+          />
+        )}
+      </Panel>
       {certOpen && result && selected && (
         <CertificateDialog
           star={selected}

@@ -1,5 +1,5 @@
-import type { Result } from '../App';
-import { formatDec, formatRa } from '../facts';
+import type { Result } from '../types';
+import { formatDec, formatRa } from '../format';
 import { useI18n } from '../i18n';
 
 /** Instrument-style readout over the map: where the zenith points and what was found there. */

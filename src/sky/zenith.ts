@@ -2,10 +2,10 @@
  * Where is "straight up" on the celestial sphere, and where does each star
  * land relative to it?
  *
- * Replaces the old astropy backend. Gaia positions are ICRS; astronomy-engine
- * gives us the rotation between the observer's horizon frame and J2000 (EQJ,
- * which matches ICRS to ~0.02″). We add annual aberration ourselves so the
- * zenith matches astropy's AltAz→ICRS to within an arcsecond or so.
+ * Gaia positions are ICRS; astronomy-engine gives us the rotation between
+ * the observer's horizon frame and J2000 (EQJ, which matches ICRS to
+ * ~0.02″). We add annual aberration ourselves so the zenith matches
+ * astropy's AltAz→ICRS to within an arcsecond or so (zenith.test.ts).
  */
 import {
   Body,
@@ -133,7 +133,8 @@ export function groundToSky(frame: SkyFrame, lat: number, lon: number): { ra: nu
   const dl = (lon - frame.lon) * DEG;
   const cosD = Math.sin(p1) * Math.sin(p2) + Math.cos(p1) * Math.cos(p2) * Math.cos(dl);
   const sep = Math.acos(Math.max(-1, Math.min(1, cosD))) / DEG;
-  const az = Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / DEG;
+  const az =
+    Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / DEG;
   return frame.at(sep, az);
 }
 

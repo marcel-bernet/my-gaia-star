@@ -1,21 +1,15 @@
-/** Canvas figures for a star's DR4 epoch astrometry. */
-import { GOLD } from '../certificate/theme';
-import { parallaxDisplacement, predictAl, type EpochAstrometry, type Fit, type TransitPoint } from './epoch';
+/** The DR4 section's figures: pixels, passes, the path across the sky, and residuals. */
+import { CREAM, GOLD, MONO, PLOT_FAINT, PLOT_MUTED, PLOT_RULE } from './theme';
+import { parallaxDisplacement, predictAl, type EpochAstrometry, type Fit, type TransitPoint } from '../dr4/epoch';
 
 type Ctx = CanvasRenderingContext2D;
-
-export const INK = '#e9e7e2';
-export const INK_2 = '#a4a39e';
-export const INK_3 = '#6f6f6b';
-export const RULE = 'rgba(233, 231, 226, 0.12)';
-export const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 export const YEAR_MIN = 2014.5;
 export const YEAR_MAX = 2020.2;
 
 const rad = (d: number) => (d * Math.PI) / 180;
 
-function axisText(ctx: Ctx, text: string, x: number, y: number, align: CanvasTextAlign = 'center', color = INK_3) {
+function axisText(ctx: Ctx, text: string, x: number, y: number, align: CanvasTextAlign = 'center', color = PLOT_FAINT) {
   ctx.font = `10.5px ${MONO}`;
   ctx.fillStyle = color;
   ctx.textAlign = align;
@@ -45,7 +39,7 @@ export function drawTimeline(ctx: Ctx, w: number, h: number, pts: TransitPoint[]
   const base = h - 22;
   const top = 10;
   const x = (y: number) => left + ((y - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * (right - left);
-  ctx.strokeStyle = RULE;
+  ctx.strokeStyle = PLOT_RULE;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(left, base + 0.5);
@@ -165,7 +159,7 @@ export function drawSkyPath(
   const Y = (n: number) => cy - (n - (n0 + n1) / 2) * scale;
 
   // Compass and scale bar.
-  ctx.strokeStyle = INK_3;
+  ctx.strokeStyle = PLOT_FAINT;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(30.5, 30.5);
@@ -177,7 +171,7 @@ export function drawSkyPath(
   axisText(ctx, 'E', 7, 30.5);
   const R = Math.max(e1 - e0, n1 - n0);
   const bar = niceStep(R / 2.5, 1);
-  ctx.strokeStyle = INK_2;
+  ctx.strokeStyle = PLOT_MUTED;
   ctx.beginPath();
   ctx.moveTo(w - 14 - bar * scale, h - 10.5);
   ctx.lineTo(w - 14, h - 10.5);
@@ -186,7 +180,7 @@ export function drawSkyPath(
   ctx.moveTo(w - 14.5, h - 14);
   ctx.lineTo(w - 14.5, h - 7);
   ctx.stroke();
-  axisText(ctx, `${fmtMas(bar)} mas`, w - 14 - (bar * scale) / 2, h - 20, 'center', INK_2);
+  axisText(ctx, `${fmtMas(bar)} mas`, w - 14 - (bar * scale) / 2, h - 20, 'center', PLOT_MUTED);
 
   ctx.save();
   ctx.beginPath();
@@ -267,7 +261,7 @@ export function drawSkyPath(
     const mm = meas[selected];
     const x = X(mm.c.e);
     const y = Y(mm.c.n);
-    ctx.strokeStyle = INK;
+    ctx.strokeStyle = CREAM;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(x - mm.u.n * half * 1.5, y + mm.u.e * half * 1.5);
@@ -294,7 +288,7 @@ export function drawResiduals(ctx: Ctx, w: number, h: number, fit: Fit, pts: Tra
 
   ctx.lineWidth = 1;
   for (let v = -Math.floor(R / step) * step; v <= R + 1e-9; v += step) {
-    ctx.strokeStyle = Math.abs(v) < 1e-9 ? 'rgba(233, 231, 226, 0.28)' : RULE;
+    ctx.strokeStyle = Math.abs(v) < 1e-9 ? 'rgba(233, 231, 226, 0.28)' : PLOT_RULE;
     ctx.beginPath();
     ctx.moveTo(left, Math.round(y(v)) + 0.5);
     ctx.lineTo(right, Math.round(y(v)) + 0.5);
@@ -313,7 +307,7 @@ export function drawResiduals(ctx: Ctx, w: number, h: number, fit: Fit, pts: Tra
     ctx.moveTo(px, y(Math.max(-R, v - p.e)));
     ctx.lineTo(px, y(Math.min(R, v + p.e)));
     ctx.stroke();
-    ctx.fillStyle = on ? GOLD : INK;
+    ctx.fillStyle = on ? GOLD : CREAM;
     ctx.beginPath();
     ctx.arc(px, y(v), on ? 3.5 : 2.2, 0, Math.PI * 2);
     ctx.fill();
@@ -398,7 +392,7 @@ export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd:
   const top = oy + gh + 34;
   const rowH = h - top - 16;
   const tw = Math.min(28, (w - 40) / n - 4);
-  const th = twoD ? Math.min(rowH, (tw * win.ac) / win.al * 1.6) : Math.min(rowH, 30);
+  const th = twoD ? Math.min(rowH, ((tw * win.ac) / win.al) * 1.6) : Math.min(rowH, 30);
   const total = n * tw + (n - 1) * 4;
   const sx = (w - total) / 2;
   for (let k = 0; k < n; k++) {

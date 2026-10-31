@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { absoluteMag, galacticHeightKpc, hasDistance, distanceLy, galacticPlanePosition, lightDepartureYear, spectralClass, toGalactic } from './physics';
+import {
+  absoluteMag,
+  galacticHeightKpc,
+  hasDistance,
+  distanceLy,
+  galacticPlanePosition,
+  lightDepartureYear,
+  spectralClass,
+  toGalactic,
+} from './physics';
 
 describe('physics', () => {
   it('puts the Galactic Centre at l=0, b=0', () => {

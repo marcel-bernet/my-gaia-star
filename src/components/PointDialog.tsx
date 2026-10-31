@@ -58,7 +58,10 @@ const DIPPER: [number, number, number][] = [
   [206.885, 49.313, 1.9], // Alkaid
 ];
 // Flat projection around the asterism, east to the left as on the sky.
-const project = ([ra, dec]: [number, number, number]) => [20 + (207.5 - ra) * Math.cos((56 * Math.PI) / 180) * 17, 20 + (62.3 - dec) * 17];
+const project = ([ra, dec]: [number, number, number]) => [
+  20 + (207.5 - ra) * Math.cos((56 * Math.PI) / 180) * 17,
+  20 + (62.3 - dec) * 17,
+];
 
 function mulberry32(seed: number) {
   return () => {
@@ -102,7 +105,14 @@ function DipperFigure() {
     <figure className="point-dipper">
       <svg className="point-fig" viewBox="0 0 440 262" role="img" aria-label={t('point.q.crowded')}>
         <polygon points={bowl.map(p => p.join(',')).join(' ')} fill={gaia ? 'var(--surface-2)' : 'none'} stroke="var(--rule-2)" />
-        <polyline points={pts.slice(3).map(p => p.join(',')).join(' ')} fill="none" stroke="var(--rule-2)" />
+        <polyline
+          points={pts
+            .slice(3)
+            .map(p => p.join(','))
+            .join(' ')}
+          fill="none"
+          stroke="var(--rule-2)"
+        />
         <g className={`point-dots${gaia ? ' on' : ''}`}>
           {dots.map(([x, y], i) => (
             <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r="0.75" fill="var(--text-2)" />
@@ -176,7 +186,9 @@ export default function PointDialog({ onClose }: { onClose: () => void }) {
             {s.a.map(k => (
               <p key={k}>{t(k, NUMBERS(lang))}</p>
             ))}
-            {s.figure === 'zenith' && <ZenithFigure label={t('point.q.zenith')} zenith={t('point.fig.zenith')} horizon={t('point.fig.horizon')} />}
+            {s.figure === 'zenith' && (
+              <ZenithFigure label={t('point.q.zenith')} zenith={t('point.fig.zenith')} horizon={t('point.fig.horizon')} />
+            )}
             {s.figure === 'dipper' && <DipperFigure />}
             {s.figure === 'hundred' && <HundredFigure studied={t('point.fig.studied')} yours={t('point.fig.yours')} />}
           </section>

@@ -2,20 +2,15 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
 import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
-import type { Star } from '../sky/gaia';
 import { starColor } from '../sky/physics';
-import { starToLatLng, type SkyFrame } from '../sky/zenith';
-
-export interface MapResult {
-  frame: SkyFrame;
-  stars: Star[];
-  zenithId: string;
-}
+import { starToLatLng } from '../sky/zenith';
+import type { Result } from '../types';
 
 interface Props {
   place: { lat: number; lon: number } | null;
-  result: MapResult | null;
+  result: Pick<Result, 'frame' | 'stars' | 'zenithId'> | null;
   selectedId: string | null;
   onPick: (lat: number, lon: number) => void;
   onSelectStar: (id: string) => void;
@@ -47,7 +42,7 @@ function FollowView({
   overlayOn,
 }: {
   place: Props['place'];
-  result: MapResult | null;
+  result: Props['result'];
   radiusDeg: number;
   /** While the constellation is shown, FitOverlay frames the map instead. */
   overlayOn: boolean;
@@ -63,7 +58,7 @@ function FollowView({
           [Math.max(-85, lat - r), lon - r / cos],
           [Math.min(85, lat + r), lon + r / cos],
         ],
-        // The panel sits beside the map now, not over it; leave room for the readout.
+        // Leave room at the top for the readout that sits over the map.
         { duration: 1.4, paddingTopLeft: [24, wide() ? 72 : 48], paddingBottomRight: [24, 24] },
       );
     }
@@ -128,8 +123,8 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
     >
       <TileLayer
         // Plain OSM tiles (no API key), turned into a night map by CSS (see .leaflet-tile-pane).
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution={SERVICES.tilesAttribution}
+        url={SERVICES.tiles}
         maxZoom={19}
       />
       <ClickToPick onPick={onPick} />
@@ -155,22 +150,34 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
       {overlay && (
         <>
           {overlay.bounds.map((b, i) => (
-            <Polyline key={`b${i}`} positions={b} pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }} interactive={false} />
+            <Polyline
+              key={`b${i}`}
+              positions={b}
+              pathOptions={{ color: '#9aa3bd', weight: 1.2, opacity: 0.7, dashArray: '3 5' }}
+              interactive={false}
+            />
           ))}
           {overlay.lines.map((l, i) => (
-            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }} interactive={false} />
+            <Polyline
+              key={`l${i}`}
+              positions={l}
+              pathOptions={{ color: '#e8c98f', weight: 2, opacity: 0.85 }}
+              interactive={false}
+            />
           ))}
           <Marker
             position={overlay.centre}
-            icon={L.divIcon({ className: 'constellation-label', html: `<span>${escapeHtml(overlay.name)}</span>`, iconSize: [0, 0] })}
+            icon={L.divIcon({
+              className: 'constellation-label',
+              html: `<span>${escapeHtml(overlay.name)}</span>`,
+              iconSize: [0, 0],
+            })}
             interactive={false}
           />
         </>
       )}
       {place && <Marker position={[place.lat, place.lon]} icon={placeIcon} interactive={false} />}
-      {zenith && (
-        <Marker position={zenith.pos} icon={zenithIcon} eventHandlers={{ click: () => onSelectStar(zenith.s.id) }} />
-      )}
+      {zenith && <Marker position={zenith.pos} icon={zenithIcon} eventHandlers={{ click: () => onSelectStar(zenith.s.id) }} />}
       {selected && <Marker position={selected.pos} icon={selectedIcon} interactive={false} />}
     </MapContainer>
   );

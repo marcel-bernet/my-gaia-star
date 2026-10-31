@@ -9,8 +9,7 @@
  *
  *   GET /epoch-astrometry/<source_id>  →  VOTable (BINARY2), or 404
  *
- * Deploy:  npx wrangler deploy proxy/worker.js --name my-gaia-star-dr4 \
- *            --var ALLOWED_ORIGIN:https://marcel-bernet.github.io
+ * Deploy:  cd proxy && npx wrangler deploy     (settings in proxy/wrangler.toml)
  * Then build the site with VITE_DR4_PROXY=https://my-gaia-star-dr4.<you>.workers.dev
  *
  * TO CHECK ON RELEASE DAY (2 Dec 2026): the DataLink RETRIEVAL_TYPE name for

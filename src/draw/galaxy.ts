@@ -9,22 +9,21 @@
  * seen from the north Galactic pole. Edge-on: horizontal is the face-on y axis
  * (towards the centre), vertical is height above the mid-plane.
  */
+import type { T } from '../i18n';
 import type { Star } from '../sky/gaia';
 import {
   galacticHeightKpc,
   galacticPlanePosition,
-  LY_PER_PC,
+  LY_PER_KPC,
   SUN_GALACTOCENTRIC_KPC,
   SUN_HEIGHT_KPC,
   toGalactic,
 } from '../sky/physics';
-import { haloText, markWithLabel, rng, type Box } from './panels';
-import { CREAM, GOLD, MUTED } from './theme';
+import { haloText, markWithLabel, rng, type Box } from './canvas';
+import { CREAM, GOLD, MONO, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
-const SANS = '"Inter Variable", system-ui, sans-serif';
-const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const DEG = Math.PI / 180;
 const PITCH = 12 * DEG;
 const K = Math.tan(PITCH);
@@ -36,7 +35,6 @@ const THICK_KPC = 0.9;
 /** Closer than this, the views zoom in on the Sun and the star. */
 const CLOSE_UP_KPC = 5;
 const FULL_VIEW_KPC = 16.5;
-const LY_PER_KPC = LY_PER_PC * 1000;
 const SUN = { x: 0, y: -SUN_GALACTOCENTRIC_KPC };
 
 // Arms are placed to match the Milky Way along the Sun's line to the centre
@@ -60,6 +58,20 @@ export interface GalaxyLabels {
   /** "Galactic plane". */
   plane: string;
   arm: (name: ArmName) => string;
+}
+
+/** The galaxy views' labels in the visitor's language. */
+export function galaxyLabels(t: T, lang: string): GalaxyLabels {
+  const ly = (n: number) => new Intl.NumberFormat(lang).format(n);
+  return {
+    sun: t('cert.mw.sun'),
+    yourStar: t('chart.yourStar'),
+    centre: t('galaxy.centre'),
+    scale: n => t('fact.distance.value', { ly: ly(n) }),
+    ly: n => t('galaxy.ly', { ly: ly(n) }),
+    plane: t('galaxy.plane'),
+    arm: name => t(`arm.${name}`),
+  };
 }
 
 const armWidth = (r: number) => 0.3 + 0.04 * r;
@@ -248,7 +260,15 @@ function niceLy(target: number): number {
   return steps.reduce((best, s) => (Math.abs(Math.log(s / target)) < Math.abs(Math.log(best / target)) ? s : best));
 }
 
-function scaleBar(ctx: Ctx, x: number, y: number, kpcToPx: number, targetLy: number, label: (ly: number) => string, fontPx: number) {
+function scaleBar(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  kpcToPx: number,
+  targetLy: number,
+  label: (ly: number) => string,
+  fontPx: number,
+) {
   const ly = niceLy(targetLy);
   const w = (ly / LY_PER_KPC) * kpcToPx;
   ctx.save();
@@ -311,9 +331,12 @@ function labelArms(
       if (i === 0 || i === pts.length - 1) return;
       const [px, py] = toPx(x, y);
       // Keep the whole label inside, away from the edges, the marks and other labels.
-      if (px < b.x + tw / 2 + 8 || px > b.x + b.w - tw / 2 - 8 || py < b.y + fontPx * 1.6 || py > b.y + b.h - fontPx * 2.2) return;
+      if (px < b.x + tw / 2 + 8 || px > b.x + b.w - tw / 2 - 8 || py < b.y + fontPx * 1.6 || py > b.y + b.h - fontPx * 2.2)
+        return;
       const clear = [...avoid, ...placed].every(([ax, ay]) => Math.hypot(px - ax, py - ay) > Math.max(fontPx * 3, tw * 0.6));
-      const outside = keepOut.every(k => px + tw / 2 < k.x || px - tw / 2 > k.x + k.w || py + fontPx < k.y || py - fontPx > k.y + k.h);
+      const outside = keepOut.every(
+        k => px + tw / 2 < k.x || px - tw / 2 > k.x + k.w || py + fontPx < k.y || py - fontPx > k.y + k.h,
+      );
       if (!clear || !outside) return;
       const f = Math.max(Math.abs(px - cx) / (b.w / 2), Math.abs(py - cy) / (b.h / 2));
       const score = Math.abs(f - 0.55);
@@ -527,7 +550,7 @@ export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
   const nearestX = Math.max(0, Math.abs(midX) - H);
   const norm = 1 / Math.max(0.08, Math.exp(-nearestX / DISC_SCALE_KPC));
   for (let j = 0; j < Hh; j++) {
-    const Z = ((plot.h / 2 - (j + 0.5)) / sz);
+    const Z = (plot.h / 2 - (j + 0.5)) / sz;
     const sech = 1 / Math.cosh(Z / THIN_KPC);
     const vert = 0.88 * sech * sech + 0.12 * Math.exp(-Math.abs(Z) / THICK_KPC);
     for (let i = 0; i < W; i++) {

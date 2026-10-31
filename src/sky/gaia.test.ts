@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { parseCsv, parseTsv, radiusFor } from './gaia';
+import { parseCsv } from '../lib/csv';
+import { parseTsv, radiusFor } from './gaia';
 
 describe('parsers', () => {
   it('keeps full Gaia IDs from TAP CSV', () => {
     const rows = parseCsv('source_id,ra,dec,phot_g_mean_mag,bp_rp\n4057701830728920065,266.1,-29.2,5.1,\n');
     expect(rows[0].source_id).toBe('4057701830728920065');
     expect(rows[0].bp_rp).toBe('');
+  });
+  it('unquotes CSV text cells, including commas and doubled quotes', () => {
+    const rows = parseCsv('main_id,nbref\n"HD 1, ""A""",3\n');
+    expect(rows).toEqual([{ main_id: 'HD 1, "A"', nbref: '3' }]);
   });
   it('skips comments, units and dashes in ASU TSV', () => {
     const tsv = '#c\n\n_r\tSource\tGmag\narcsec\t \tmag\n---\t---\t---\n 0.1\t4057481992811289728\t17.3\n';

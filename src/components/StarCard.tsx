@@ -1,22 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Result } from '../App';
-import { drawGalaxyEdgeOn, drawGalaxyFaceOn, type GalaxyLabels } from '../certificate/galaxy';
-import { drawStarPortrait } from '../certificate/panels';
-import { formatRatio } from '../certificate/render';
-import { CREAM, GOLD, MUTED } from '../certificate/theme';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { LiteratureState, Result } from '../types';
+import { simbadUrl } from '../config';
+import { drawConstellation, type ChartGround } from '../draw/constellation';
+import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../draw/galaxy';
+import { drawStarPortrait } from '../draw/portrait';
+import { CREAM, GOLD, MUTED, SANS } from '../draw/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
+import { twoSigFigs } from '../format';
 import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
-import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, type SkyChartData } from '../sky/constellation';
+import { constellationOf, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import { countryAt, loadCountries, type Country } from '../sky/country';
 import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
-import type { Literature } from '../sky/simbad';
-import { galacticHeightKpc, starColor, visibility } from '../sky/physics';
+import { galacticHeightKpc, LY_PER_KPC, starColor, visibility } from '../sky/physics';
 import { formatMoment } from '../sky/time';
-import CanvasArt from './CanvasArt';
+import CanvasArt, { type Draw } from './CanvasArt';
 import Dr4Section from './Dr4Section';
+import Figure, { FIGURE_W } from './Figure';
 import NameDialog from './NameDialog';
 import ShareDialog from './ShareDialog';
 
@@ -24,39 +26,11 @@ interface Props {
   star: Star;
   result: Result;
   placeName: string | null;
-  literature: Literature | 'loading' | 'error' | null;
+  literature: LiteratureState;
   onBackToZenith: () => void;
   onMap: boolean;
   onToggleMap: () => void;
   onCertificate: () => void;
-}
-
-export function Figure({
-  n,
-  title,
-  children,
-  caption,
-  kicker,
-  className,
-}: {
-  n: number;
-  title: string;
-  children: ReactNode;
-  caption?: ReactNode;
-  kicker?: string;
-  className?: string;
-}) {
-  const { t } = useI18n();
-  return (
-    <figure className={className ? `fig ${className}` : 'fig'}>
-      {kicker && <p className="badge mono">{kicker}</p>}
-      <figcaption className="fig-title">
-        <span className="fig-num mono">{t('fig', { n })}</span> {title}
-      </figcaption>
-      {children}
-      {caption && <p className="fig-caption">{caption}</p>}
-    </figure>
-  );
 }
 
 function FirstLook({ literature, id }: { literature: Props['literature']; id: string }) {
@@ -86,7 +60,7 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
       <p className="first-title">{t('first.known.title', { name: literature.name })}</p>
       <p className="first-body">
         {t('first.known.body', { papers })}{' '}
-        <a href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${id}`)}`} target="_blank" rel="noreferrer">
+        <a href={simbadUrl(id)} target="_blank" rel="noreferrer">
           SIMBAD ↗
         </a>
       </p>
@@ -94,7 +68,16 @@ function FirstLook({ literature, id }: { literature: Props['literature']; id: st
   );
 }
 
-export default function StarCard({ star, result, placeName, literature, onBackToZenith, onMap, onToggleMap, onCertificate }: Props) {
+export default function StarCard({
+  star,
+  result,
+  placeName,
+  literature,
+  onBackToZenith,
+  onMap,
+  onToggleMap,
+  onCertificate,
+}: Props) {
   const { t, lang } = useI18n();
   const [sharing, setSharing] = useState(false);
   const isZenith = star.id === result.zenithId;
@@ -118,49 +101,50 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   const ground = useMemo<ChartGround | null>(
     () =>
       country
-        ? { rings: country.rings.map(r => r.map(([lon, lat]) => { const p = groundToSky(frame, lat, lon); return [p.ra, p.dec] as [number, number]; })), zenith: frame.zenith }
+        ? {
+            rings: country.rings.map(r =>
+              r.map(([lon, lat]) => {
+                const p = groundToSky(frame, lat, lon);
+                return [p.ra, p.dec] as [number, number];
+              }),
+            ),
+            zenith: frame.zenith,
+          }
         : null,
     [country, frame],
   );
   // The place's own name for its country ("Barcelona, España" → "España"), else Natural Earth's.
   const countryName = placeName?.includes(', ') ? placeName.split(', ').pop()! : (country?.name ?? '');
 
-  const drawPortrait = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) =>
-      drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
+  const drawPortrait = useCallback<Draw>(
+    (ctx, w, h) => drawStarPortrait(ctx, { x: 0, y: 0, w, h }, star, kind, { sun: t('kind.sun'), star: t('chart.yourStar') }),
     [star, kind, t],
   );
-  const galaxyLabels = useMemo<GalaxyLabels>(
-    () => ({
-      sun: t('cert.mw.sun'),
-      yourStar: t('chart.yourStar'),
-      centre: t('galaxy.centre'),
-      scale: ly => t('fact.distance.value', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      ly: ly => t('galaxy.ly', { ly: new Intl.NumberFormat(lang).format(ly) }),
-      plane: t('galaxy.plane'),
-      arm: name => t(`arm.${name}`),
-    }),
-    [t, lang],
+  const galaxyText = useMemo(() => galaxyLabels(t, lang), [t, lang]);
+  const drawFaceOn = useCallback<Draw>(
+    (ctx, w, h) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+    [star, galaxyText],
   );
-  const drawFaceOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyFaceOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
-    [star, galaxyLabels],
-  );
-  const drawEdgeOn = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyLabels),
-    [star, galaxyLabels],
+  const drawEdgeOn = useCallback<Draw>(
+    (ctx, w, h) => drawGalaxyEdgeOn(ctx, { x: 0, y: 0, w, h }, star, galaxyText),
+    [star, galaxyText],
   );
   const height = galacticHeightKpc(star);
-  const drawChart = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const drawChart = useCallback<Draw>(
+    (ctx, w, h) => {
       if (sky) {
-        drawConstellation(ctx, { x: 0, y: 0, w, h }, sky, abbr, { ra: star.ra, dec: star.dec, label: t('chart.yourStar') }, {
-          gold: GOLD,
-          cream: CREAM,
-          muted: MUTED,
-          font: '"Inter Variable", system-ui, sans-serif',
-          scale: 0.9,
-        }, ground, { north: t('chart.north'), east: t('chart.east') });
+        drawConstellation(
+          ctx,
+          { x: 0, y: 0, w, h },
+          {
+            sky,
+            abbr,
+            target: { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
+            style: { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 0.9 },
+            ground,
+            furniture: { north: t('chart.north'), east: t('chart.east') },
+          },
+        );
       }
     },
     [sky, abbr, star, t, ground],
@@ -182,6 +166,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
   };
 
   let fig = 0;
+  const nextFig = () => ++fig;
   return (
     <article className="dossier" ref={ref}>
       <header className="dossier-head">
@@ -227,16 +212,18 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
           {t('action.share')}
         </button>
       </div>
-      {sharing && <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />}
+      {sharing && (
+        <ShareDialog star={star} result={result} placeName={where} literature={literature} onClose={() => setSharing(false)} />
+      )}
 
       {kind && (
         <Figure
-          n={++fig}
+          n={nextFig()}
           title={t('card.kind')}
           caption={
             <>
               {kind.sure ? t(`kind.${kind.kind}.about` as Key) : t('kind.colourOnly')}
-              {kind.radiusSun !== null && <> {t('kind.size', { x: formatRatio(kind.radiusSun, lang) })}.</>}
+              {kind.radiusSun !== null && <> {t('kind.size', { x: twoSigFigs(kind.radiusSun, lang) })}.</>}
             </>
           }
         >
@@ -245,7 +232,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
       )}
 
       <Figure
-        n={++fig}
+        n={nextFig()}
         title={`${t('card.where')} — ${sky ? sky.constellations[abbr].names[lang] : '…'}`}
         caption={
           <>
@@ -255,7 +242,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
         }
       >
         <div className="plate">
-          <CanvasArt width={352} height={270} draw={drawChart} label={t('card.where')} />
+          <CanvasArt width={FIGURE_W} height={270} draw={drawChart} label={t('card.where')} />
         </div>
         <div className="fig-tools">
           <p className="hint">{t('map.hint')}</p>
@@ -266,19 +253,19 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
       </Figure>
 
       <Figure
-        n={++fig}
+        n={nextFig()}
         title={t('card.galaxy')}
         caption={
           height === null
             ? t('fact.height.unknown')
-            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: formatRatio(Math.abs(height) * 3261.56, lang) })
+            : t(height >= 0 ? 'fact.height.above' : 'fact.height.below', { ly: twoSigFigs(Math.abs(height) * LY_PER_KPC, lang) })
         }
       >
         <div className="plate galaxy">
           <p className="panel-label mono">a · {t('galaxy.above')}</p>
-          <CanvasArt width={352} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
+          <CanvasArt width={FIGURE_W} height={300} draw={drawFaceOn} label={t('card.galaxy')} />
           <p className="panel-label mono">b · {t('cert.edge')}</p>
-          <CanvasArt width={352} height={150} draw={drawEdgeOn} label={t('cert.edge')} />
+          <CanvasArt width={FIGURE_W} height={150} draw={drawEdgeOn} label={t('cert.edge')} />
         </div>
       </Figure>
 
@@ -304,7 +291,7 @@ export default function StarCard({ star, result, placeName, literature, onBackTo
             ← {t('result.backToZenith')}
           </button>
         )}
-        <a className="link" href={`https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(`Gaia DR3 ${star.id}`)}`} target="_blank" rel="noreferrer">
+        <a className="link" href={simbadUrl(star.id)} target="_blank" rel="noreferrer">
           {t('action.simbad')} ↗
         </a>
       </div>
