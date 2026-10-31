@@ -410,6 +410,8 @@ export const en = {
   'share.text.unknown.bright': '🔭 No paper has ever singled it out. I’m very likely the first person to look at it on its own.',
   'cert.firstLook.faint': 'Almost certainly, no one had looked at it on its own before.',
   'cert.firstLook.bright': 'Very likely, no one had looked at it on its own before.',
+  'go.choose.hint':
+    'Where you were born, the night of your wedding, the moment you met someone: find the star that was straight above it.',
 } as const;
 
 export type Key = keyof typeof en;

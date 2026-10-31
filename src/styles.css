@@ -370,6 +370,15 @@ a:hover {
   font-size: 14px;
 }
 
+.hint.moments {
+  font-style: italic;
+  text-wrap: pretty;
+}
+
+.query .hint.moments {
+  margin-top: -14px;
+}
+
 .cta .link.more {
   margin-top: 6px;
   font-size: 14px;

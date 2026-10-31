@@ -412,4 +412,6 @@ export const ca: Dict = {
     '🔭 Cap article no s’hi ha fixat mai. Molt probablement soc la primera persona que la mira per si mateixa.',
   'cert.firstLook.faint': 'Gairebé segur que ningú no l’havia mirada abans per si mateixa.',
   'cert.firstLook.bright': 'Molt probablement ningú no l’havia mirada abans per si mateixa.',
+  'go.choose.hint':
+    'On vas néixer, la nit del teu casament, el moment en què vas conèixer algú: troba l’estrella que hi havia just a sobre.',
 };

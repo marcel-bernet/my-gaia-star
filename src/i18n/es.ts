@@ -411,4 +411,6 @@ export const es: Dict = {
     '🔭 Ningún artículo se ha fijado nunca en ella. Muy probablemente soy la primera persona que la mira por sí misma.',
   'cert.firstLook.faint': 'Casi seguro que nadie la había mirado antes por sí misma.',
   'cert.firstLook.bright': 'Muy probablemente nadie la había mirado antes por sí misma.',
+  'go.choose.hint':
+    'Donde naciste, la noche de tu boda, el momento en que conociste a alguien: encuentra la estrella que estaba justo encima.',
 };
