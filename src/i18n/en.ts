@@ -254,6 +254,8 @@ export const en = {
   'map.show': 'Show on the map',
   'map.hide': 'Hide from the map',
   'map.hint': 'Lay the constellation on the map, at the size it spans in the sky.',
+  'reading.hide': 'Hide the map',
+  'reading.show': 'Show the map',
   'galaxy.ly': '{ly} ly',
   'galaxy.plane': 'Galactic plane',
   'galaxy.above': 'Seen from above',

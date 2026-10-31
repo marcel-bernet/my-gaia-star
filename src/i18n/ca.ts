@@ -254,6 +254,8 @@ export const ca: Dict = {
   'map.show': 'Veure al mapa',
   'map.hide': 'Treure del mapa',
   'map.hint': 'Posa la constel·lació sobre el mapa, a la mida que ocupa al cel.',
+  'reading.hide': 'Amagar el mapa',
+  'reading.show': 'Mostrar el mapa',
   'galaxy.ly': '{ly} a. l.',
   'galaxy.plane': 'Pla galàctic',
   'galaxy.above': 'Vista des de dalt',

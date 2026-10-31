@@ -1,5 +1,5 @@
 /** Small drawing helpers shared by the figures. */
-import { GOLD, SANS } from './theme';
+import { SIGNAL, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -37,12 +37,12 @@ export function haloText(ctx: Ctx, text: string, x: number, y: number, fill: str
 
 /** Marker plus a "Your star" label on a short leader line, pointing up-left or up-right. */
 export function markWithLabel(ctx: Ctx, x: number, y: number, size: number, label: string, fontPx: number, box: Box) {
-  drawTargetMarker(ctx, x, y, size, GOLD);
+  drawTargetMarker(ctx, x, y, size, SIGNAL);
   const right = x < box.x + box.w * 0.62;
   const lx = x + (right ? 1 : -1) * size * 3.2;
   const ly = Math.max(box.y + fontPx, y - size * 3.2);
   ctx.save();
-  ctx.strokeStyle = GOLD;
+  ctx.strokeStyle = SIGNAL;
   ctx.lineWidth = Math.max(1.5, size * 0.12);
   ctx.beginPath();
   ctx.moveTo(x + (right ? 1 : -1) * size * 1.7, y - size * 1.7);
@@ -51,7 +51,7 @@ export function markWithLabel(ctx: Ctx, x: number, y: number, size: number, labe
   ctx.font = `600 ${fontPx}px ${SANS}`;
   ctx.textAlign = right ? 'left' : 'right';
   ctx.textBaseline = 'bottom';
-  haloText(ctx, label, lx + (right ? 4 : -4), ly + fontPx * 0.35, GOLD);
+  haloText(ctx, label, lx + (right ? 4 : -4), ly + fontPx * 0.35, SIGNAL);
   ctx.restore();
 }
 

@@ -1,5 +1,5 @@
 /** The DR4 section's figures: pixels, passes, the path across the sky, and residuals. */
-import { CREAM, GOLD, MONO, PLOT_FAINT, PLOT_MUTED, PLOT_RULE } from './theme';
+import { CREAM, SIGNAL, MONO, PLOT_FAINT, PLOT_MUTED, PLOT_RULE } from './theme';
 import { parallaxDisplacement, predictAl, type EpochAstrometry, type Fit, type TransitPoint } from '../dr4/epoch';
 
 type Ctx = CanvasRenderingContext2D;
@@ -55,7 +55,7 @@ export function drawTimeline(ctx: Ctx, w: number, h: number, pts: TransitPoint[]
   const maxUsed = Math.max(...pts.map(p => p.nCcd), 1);
   pts.forEach((p, i) => {
     const hh = 6 + ((base - top - 6) * p.nUsed) / maxUsed;
-    ctx.fillStyle = i === selected ? GOLD : 'rgba(233, 231, 226, 0.55)';
+    ctx.fillStyle = i === selected ? SIGNAL : 'rgba(233, 231, 226, 0.55)';
     ctx.fillRect(Math.round(x(p.year)) - (i === selected ? 1 : 0.5), base - hh, i === selected ? 2.5 : 1.5, hh);
   });
 }
@@ -207,7 +207,7 @@ export function drawSkyPath(
   });
 
   // Model: the track, with a tick on each 1 January.
-  ctx.strokeStyle = GOLD;
+  ctx.strokeStyle = SIGNAL;
   ctx.lineWidth = 1.8;
   ctx.lineJoin = 'round';
   ctx.beginPath();
@@ -221,8 +221,8 @@ export function drawSkyPath(
   for (let yr = Math.ceil(range.from * 4) / 4; yr <= range.to; yr += 0.25) {
     const p = modelAt(ea, fit, yr, range.noPm);
     const whole = Math.abs(yr - Math.round(yr)) < 1e-6;
-    ctx.fillStyle = whole ? GOLD : 'rgba(10, 11, 13, 0.9)';
-    ctx.strokeStyle = GOLD;
+    ctx.fillStyle = whole ? SIGNAL : 'rgba(10, 11, 13, 0.9)';
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.arc(X(p.e), Y(p.n), whole ? 3 : 2, 0, Math.PI * 2);
@@ -253,7 +253,7 @@ export function drawSkyPath(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeText(String(yr), lx, ly);
-    ctx.fillStyle = GOLD;
+    ctx.fillStyle = SIGNAL;
     ctx.fillText(String(yr), lx, ly);
   }
 
@@ -301,13 +301,13 @@ export function drawResiduals(ctx: Ctx, w: number, h: number, fit: Fit, pts: Tra
     const v = Math.max(-R, Math.min(R, res[i]));
     const px = x(p.year);
     const on = i === selected;
-    ctx.strokeStyle = on ? GOLD : 'rgba(233, 231, 226, 0.35)';
+    ctx.strokeStyle = on ? SIGNAL : 'rgba(233, 231, 226, 0.35)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(px, y(Math.max(-R, v - p.e)));
     ctx.lineTo(px, y(Math.min(R, v + p.e)));
     ctx.stroke();
-    ctx.fillStyle = on ? GOLD : CREAM;
+    ctx.fillStyle = on ? SIGNAL : CREAM;
     ctx.beginPath();
     ctx.arc(px, y(v), on ? 3.5 : 2.2, 0, Math.PI * 2);
     ctx.fill();
@@ -367,7 +367,7 @@ export function drawPixels(ctx: Ctx, w: number, h: number, gClass: number, nCcd:
   const oy = 14 + profileH;
   if (!twoD) {
     // The light profile along the scan, as a line over the strip.
-    ctx.strokeStyle = GOLD;
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     for (let k = 0; k <= 120; k++) {

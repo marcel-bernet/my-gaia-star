@@ -42,6 +42,8 @@ export default function App() {
   const { result, selected, selectedId, setSelectedId, status, clearStatus, search } = useStarSearch(initial?.star ?? null);
   const literature = useLiterature(selected?.id);
   const [onMap, setOnMap] = useState(false);
+  // With a star on screen, the map can be put away so the panel reads as one column.
+  const [mapHidden, setMapHidden] = useState(false);
   const overlay = useConstellationOverlay(onMap, result, selected);
   useUrlSync(result, selectedId, mode === 'moment');
 
@@ -60,6 +62,7 @@ export default function App() {
   const run = () => {
     if (!place) return;
     const when = mode === 'now' || !zone ? new Date() : wallTimeToInstant(wall, zone);
+    setMapHidden(false);
     search(place, when, depth);
   };
 
@@ -72,6 +75,7 @@ export default function App() {
     setDepth('all');
     setMode(when ? 'moment' : 'now');
     if (when) setWall(instantToWallTime(when, timeZoneAt(p.lat, p.lon)));
+    setMapHidden(false);
     search(there, at, 'all', star.id);
   };
 
@@ -80,13 +84,16 @@ export default function App() {
     clearStatus();
   };
 
+  const reading = mapHidden && !!selected;
+
   // The result's place, with its name once geocoding has found one.
   const resultPlace = result && place && result.place.lat === place.lat && result.place.lon === place.lon ? place : result?.place;
 
   return (
-    <div className="app">
+    <div className={`app${reading ? ' reading' : ''}`}>
       <div className="stage">
         <SkyMap
+          visible={!reading}
           place={place}
           result={result}
           selectedId={selectedId}
@@ -112,6 +119,8 @@ export default function App() {
         onAbout={() => setAboutOpen(true)}
         onPoint={() => setPointOpen(true)}
         onFound={goToStar}
+        mapHidden={reading}
+        onToggleMapHidden={selected ? () => setMapHidden(h => !h) : undefined}
       >
         {result && selected && (
           <StarCard
@@ -121,7 +130,11 @@ export default function App() {
             literature={literature}
             onBackToZenith={() => setSelectedId(result.zenithId)}
             onMap={onMap}
-            onToggleMap={() => setOnMap(v => !v)}
+            onToggleMap={() => {
+              // Laying the constellation on the map needs the map.
+              if (!onMap) setMapHidden(false);
+              setOnMap(v => !v);
+            }}
             onCertificate={() => setCertOpen(true)}
           />
         )}

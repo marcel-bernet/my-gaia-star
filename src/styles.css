@@ -1,33 +1,33 @@
 /*
- * My Gaia Star — an observer's notebook set like a printed almanac, not a
- * landing page. Neutral graphite; the serif for anything you read, the mono
- * for anything measured, Plex Sans only for what you press; hairline rules
- * and leaders instead of boxes; gold reserved for one thing only: your star.
+ * My Gaia Star — Scan Law. Set like one of Gaia's own engineering documents:
+ * a cool white sheet, black ink, hard 1px rules. IBM Plex Mono for headings,
+ * labels and anything measured; IBM Plex Sans for reading. The map is a chart
+ * printed on the same sheet; the drawings are dark plates framed in ink.
+ * One colour, orange, and it means one thing: your star.
  * The zenith crosshair is the one symbol (wordmark, map, main action).
  *
  * Canvas drawings can't read these variables: src/draw/theme.ts
  * repeats the colours and fonts, so change both together.
  */
 :root {
-  --bg: #0c0d0f;
-  --surface: #131417;
-  --surface-2: #1b1c20;
-  --plate: #08090b;
-  --rule: rgba(233, 231, 226, 0.09);
-  --rule-2: rgba(233, 231, 226, 0.16);
-  --text: #e9e7e2;
-  --text-2: #a4a39e;
-  --text-3: #74736e;
-  --star: #e8c98f;
-  --danger: #ff9b8a;
-  --serif: 'Source Serif 4 Variable', 'Source Serif Pro', Georgia, serif;
+  --bg: #f3f4f1;
+  --surface: #e8eae6;
+  --surface-2: #dde0db;
+  --field: #fff;
+  --plate: #0b0c0e;
+  --rule: rgba(17, 19, 22, 0.13);
+  --rule-2: rgba(17, 19, 22, 0.3);
+  --text: #111316;
+  --text-2: #42464c;
+  --text-3: #5f646b;
+  --star: #c23b00;
+  --danger: #b00020;
   --sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  /* Square corners: printed forms, not app tiles. */
-  --radius: 2px;
+  --radius: 0;
   --panel-w: 480px;
   --pad: 32px;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -47,6 +47,11 @@ body {
   font: 15px/1.55 var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--star);
+  color: #fff;
 }
 
 button,
@@ -91,7 +96,7 @@ a:hover {
   grid-area: panel;
   height: 100%;
   overflow-y: auto;
-  border-right: 1px solid var(--rule);
+  border-right: 1px solid var(--text);
   background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--rule-2) transparent;
@@ -108,6 +113,31 @@ a:hover {
   min-width: 0;
 }
 
+/* With the map put away, the panel becomes one reading column. */
+.app.reading {
+  grid-template-columns: 1fr;
+  grid-template-areas: 'panel';
+}
+
+.app.reading .stage {
+  display: none;
+}
+
+.app.reading .panel {
+  border-right: 0;
+}
+
+.app.reading .panel > :not(.masthead) {
+  width: min(100%, 680px);
+  margin-inline: auto;
+}
+
+/* Drawings are made 352 units wide; past ~480px they only get soft. Text keeps the full column. */
+.app.reading .fig > canvas,
+.app.reading .fig > .plate {
+  max-width: 480px;
+}
+
 /* Map -------------------------------------------------------------------- */
 
 .map {
@@ -121,13 +151,15 @@ a:hover {
   background: var(--bg);
 }
 
-/* OSM tiles turned into a quiet monochrome night map. */
+/* OSM tiles printed in grey on the sheet: multiply lets the page colour show through. */
 .leaflet-tile-pane {
-  filter: invert(1) grayscale(1) brightness(0.62) contrast(1.2);
+  filter: grayscale(1) contrast(0.95) brightness(1.06);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
 }
 
 .leaflet-control-attribution {
-  background: rgba(12, 13, 15, 0.75) !important;
+  background: rgba(243, 244, 241, 0.9) !important;
   color: var(--text-3) !important;
   font: 10px var(--mono);
 }
@@ -140,13 +172,15 @@ a:hover {
   position: absolute;
   transform: translate(-50%, -50%);
   white-space: nowrap;
-  font: italic 500 15px var(--serif);
-  letter-spacing: 0.04em;
-  color: var(--star);
+  font: 500 13px var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--text);
   text-shadow:
-    0 0 4px #000,
-    0 0 10px #000;
+    0 0 3px var(--bg),
+    0 0 3px var(--bg),
+    0 0 6px var(--bg);
   pointer-events: none;
+  text-transform: uppercase;
 }
 
 .place-pin span,
@@ -216,9 +250,8 @@ a:hover {
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px;
-  background: rgba(12, 13, 15, 0.82);
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
+  background: var(--field);
+  border: 1px solid var(--text);
   font-size: 11.5px;
   color: var(--text-2);
   pointer-events: none;
@@ -228,6 +261,16 @@ a:hover {
   font-weight: 500;
   color: var(--text);
   margin-right: 6px;
+}
+
+.mag-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  color: var(--text);
 }
 
 /* Masthead & hero -------------------------------------------------------- */
@@ -242,16 +285,17 @@ a:hover {
   padding-top: 16px;
   padding-bottom: 14px;
   background: var(--bg);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--text);
 }
 
 .wordmark {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  font: 600 17px/1 var(--serif);
-  letter-spacing: -0.01em;
+  font: 500 13px/1 var(--mono);
+  letter-spacing: 0.14em;
   text-decoration: none;
+  text-transform: uppercase;
 }
 
 .wordmark .zenith-mark {
@@ -282,12 +326,28 @@ a:hover {
   text-underline-offset: 4px;
 }
 
+.map-toggle {
+  margin: 0 14px 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--text);
+  background: transparent;
+  font: 500 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.map-toggle:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
 .kicker {
   margin: 0;
   font: 500 11px/1.4 var(--mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 .hero {
@@ -297,9 +357,8 @@ a:hover {
 
 .hero h1 {
   margin: 14px 0 0;
-  font: 500 38px/1.08 var(--serif);
-  font-variation-settings: 'opsz' 60;
-  letter-spacing: -0.02em;
+  font: 500 31px/1.12 var(--mono);
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
@@ -309,14 +368,14 @@ a:hover {
 }
 
 .hero.compact h1 {
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1.2;
   margin-top: 8px;
 }
 
 .lede {
   margin: 18px 0 0;
-  font: 400 17px/1.55 var(--serif);
+  font: 400 16px/1.55 var(--sans);
   color: var(--text-2);
   text-wrap: pretty;
 }
@@ -353,9 +412,10 @@ a:hover {
 .stats dd {
   order: 2;
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text);
   white-space: nowrap;
+  font-weight: 500;
 }
 
 /* Query ------------------------------------------------------------------ */
@@ -366,7 +426,7 @@ a:hover {
   gap: 24px;
   padding-top: 28px;
   padding-bottom: 32px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--text);
 }
 
 .step {
@@ -376,19 +436,20 @@ a:hover {
 }
 
 .step-label {
-  font: 500 14px/1.3 var(--sans);
+  font: 500 11.5px/1.3 var(--mono);
   color: var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .step-label .num {
-  font: 400 11px var(--mono);
   color: var(--text-3);
-  margin-right: 8px;
+  margin-right: 10px;
 }
 
 .hint {
   margin: 0;
-  font: 400 14px/1.5 var(--serif);
+  font: 400 14px/1.5 var(--sans);
   color: var(--text-3);
 }
 
@@ -400,8 +461,8 @@ input,
 textarea,
 select {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--rule-2);
+  background: var(--field);
+  border: 1px solid var(--text);
   border-radius: var(--radius);
   padding: 10px 12px;
   outline: none;
@@ -411,7 +472,7 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--text-2);
+  box-shadow: inset 0 0 0 1px var(--text);
 }
 
 textarea {
@@ -435,7 +496,7 @@ textarea {
   align-items: baseline;
   gap: 10px;
   flex-wrap: wrap;
-  font: 500 17px/1.3 var(--serif);
+  font: 500 15px/1.3 var(--mono);
 }
 
 .place-current small {
@@ -447,7 +508,7 @@ textarea {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  border: 1px solid var(--rule-2);
+  border: 1px solid var(--text);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -458,12 +519,13 @@ textarea {
   padding: 9px 6px;
   cursor: pointer;
   color: var(--text-2);
-  font-weight: 500;
-  font-size: 14px;
+  font: 500 12.5px var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .segmented button + button {
-  border-left: 1px solid var(--rule-2);
+  border-left: 1px solid var(--text);
 }
 
 .segmented button[aria-checked='true'] {
@@ -476,7 +538,7 @@ textarea {
 .depths {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  border-top: 1px solid var(--rule-2);
+  border-top: 1px solid var(--text);
 }
 
 .depths button {
@@ -540,15 +602,17 @@ textarea {
   background: var(--text);
   color: var(--bg);
   padding: 12px 18px;
-  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  font: 500 13px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .primary:hover:not(:disabled) {
-  background: #fff;
+  background: #000;
 }
 
 .primary:disabled {
@@ -564,9 +628,12 @@ textarea {
 }
 
 .secondary {
-  border: 1px solid var(--rule-2);
-  background: transparent;
+  border: 1px solid var(--text);
+  background: var(--bg);
   padding: 11px 14px;
+  font: 500 13px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .secondary:hover:not(:disabled) {
@@ -579,8 +646,8 @@ textarea {
   height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--rule-2);
-  background: var(--surface);
+  border: 1px solid var(--text);
+  background: var(--field);
   color: var(--text);
 }
 
@@ -640,15 +707,14 @@ textarea {
   gap: 32px;
   padding-top: 32px;
   padding-bottom: 24px;
-  border-top: 1px solid var(--rule-2);
+  border-top: 1px solid var(--text);
   scroll-margin-top: 52px;
 }
 
 .dossier-head h2 {
   margin: 0;
-  font: 500 32px/1.1 var(--serif);
-  font-variation-settings: 'opsz' 48;
-  letter-spacing: -0.015em;
+  font: 500 34px/1.1 var(--mono);
+  letter-spacing: -0.03em;
 }
 
 .star-head {
@@ -705,13 +771,13 @@ textarea {
 
 .first-title {
   margin: 0;
-  font: 500 21px/1.25 var(--serif);
+  font: 500 18px/1.3 var(--mono);
   letter-spacing: -0.01em;
 }
 
 .first-body {
   margin: 8px 0 0;
-  font: 400 15px/1.5 var(--serif);
+  font: 400 14.5px/1.5 var(--sans);
   color: var(--text-2);
 }
 
@@ -735,7 +801,7 @@ textarea {
 
 .fig-title {
   margin: 0;
-  font: 500 17px/1.3 var(--serif);
+  font: 500 14px/1.35 var(--mono);
 }
 
 .fig-num {
@@ -746,16 +812,20 @@ textarea {
 
 .fig-caption {
   margin: 0;
-  font: 400 14.5px/1.5 var(--serif);
+  font: 400 14px/1.5 var(--sans);
   color: var(--text-2);
   text-wrap: pretty;
 }
 
 .plate {
-  border: 1px solid var(--rule);
-  border-radius: 3px;
+  border: 1px solid var(--text);
   background: var(--plate);
   overflow: hidden;
+}
+
+/* Drawings outside a framed plate still sit on the plate's dark ground. */
+.panel canvas {
+  background: var(--plate);
 }
 
 .plate.square {
@@ -783,8 +853,8 @@ textarea {
 .fig.hero {
   padding: 18px 18px 20px;
   margin: 0 -18px;
-  border-left: 2px solid var(--star);
-  background: var(--bg);
+  border-left: 3px solid var(--star);
+  background: var(--surface);
 }
 
 .fig.hero .badge {
@@ -796,7 +866,7 @@ textarea {
 }
 
 .fig.hero .fig-title {
-  font: 500 23px/1.2 var(--serif);
+  font: 500 18px/1.3 var(--mono);
   letter-spacing: -0.01em;
 }
 
@@ -805,7 +875,7 @@ textarea {
 }
 
 .fig.hero .plate {
-  border-color: rgba(232, 201, 143, 0.28);
+  border-color: var(--star);
 }
 
 .fig.hero .fig-caption {
@@ -839,17 +909,19 @@ textarea {
 .facts div {
   min-width: 0;
   padding: 9px 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--rule-2);
 }
 
 .facts dt {
-  font-size: 12px;
   color: var(--text-3);
+  font: 500 10.5px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .facts dd {
   margin: 2px 0 0;
-  font: 400 15.5px/1.4 var(--serif);
+  font: 400 15px/1.4 var(--sans);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -866,18 +938,18 @@ textarea {
   margin: 8px calc(-1 * var(--pad)) 0;
   padding: 32px var(--pad);
   background: var(--surface);
-  border-top: 1px solid var(--rule-2);
-  border-bottom: 1px solid var(--rule-2);
+  border-top: 1px solid var(--text);
+  border-bottom: 1px solid var(--text);
 }
 
 .dr4 .plate {
-  background: var(--bg);
+  background: var(--plate);
 }
 
 .dr4-head h2 {
   margin: 10px 0 0;
-  font: 500 30px/1.1 var(--serif);
-  letter-spacing: -0.015em;
+  font: 500 28px/1.12 var(--mono);
+  letter-spacing: -0.03em;
 }
 
 .countdown {
@@ -893,7 +965,7 @@ textarea {
   margin: 14px 0 0;
   padding-left: 12px;
   border-left: 2px solid var(--rule-2);
-  font: 400 15px/1.5 var(--serif);
+  font: 400 15px/1.5 var(--sans);
   color: var(--text);
 }
 
@@ -927,7 +999,7 @@ textarea {
   gap: 8px 18px;
   padding-top: 18px;
   padding-bottom: 24px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--text);
 }
 
 .credit {
@@ -939,7 +1011,7 @@ textarea {
 /* Dialogs ---------------------------------------------------------------- */
 
 .dialog {
-  border: 1px solid var(--rule-2);
+  border: 1px solid var(--text);
   border-radius: var(--radius);
   background: var(--bg);
   color: var(--text);
@@ -953,7 +1025,7 @@ textarea {
 }
 
 .dialog::backdrop {
-  background: rgba(4, 4, 6, 0.75);
+  background: rgba(17, 19, 22, 0.55);
 }
 
 .dialog-inner {
@@ -966,12 +1038,13 @@ textarea {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--text);
 }
 
 .dialog h2 {
   margin: 0;
-  font: 500 24px/1.2 var(--serif);
+  font: 500 20px/1.2 var(--mono);
+  letter-spacing: -0.02em;
 }
 
 .dialog .icon-btn {
@@ -983,7 +1056,7 @@ textarea {
 
 .prose p {
   margin: 0 0 14px;
-  font: 400 16px/1.55 var(--serif);
+  font: 400 15.5px/1.6 var(--sans);
   color: var(--text-2);
   text-wrap: pretty;
 }
@@ -1018,12 +1091,14 @@ textarea {
 }
 
 .label {
-  font: 500 14px var(--sans);
+  font: 500 11.5px var(--mono);
   color: var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .cert-preview {
-  background: var(--plate);
+  background: var(--surface);
   border: 1px solid var(--rule);
   aspect-ratio: 1654 / 2339;
   height: min(calc(100dvh - 160px), 1100px);
@@ -1065,7 +1140,7 @@ textarea {
     top: 0;
     z-index: 20;
     height: 40dvh;
-    border-bottom: 1px solid var(--rule-2);
+    border-bottom: 1px solid var(--text);
   }
 
   .panel {
@@ -1084,7 +1159,7 @@ textarea {
   }
 
   .hero h1 {
-    font-size: 30px;
+    font-size: 26px;
   }
 
   .dossier {
@@ -1105,6 +1180,11 @@ textarea {
   .credit {
     flex-basis: 100%;
     margin-left: 0;
+  }
+
+  /* The phone map is short; the readout keeps to its two lines so it doesn't cover the stars. */
+  .mag-key {
+    display: none;
   }
 
   .readout {
@@ -1149,7 +1229,7 @@ textarea {
 .secondary.small {
   flex: none;
   padding: 7px 12px;
-  font-size: 12.5px;
+  font-size: 11.5px;
   white-space: nowrap;
 }
 
@@ -1161,7 +1241,7 @@ textarea {
 /* Find a star by ID or name --------------------------------------------- */
 
 .finder {
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--text);
   padding-top: 18px;
   padding-bottom: 18px;
 }
@@ -1202,7 +1282,7 @@ textarea {
 /* The name as a sentence of choices. */
 .madlib {
   margin: 0;
-  font: 400 17px/2.1 var(--serif);
+  font: 400 17px/2.1 var(--sans);
   color: var(--text-2);
 }
 
@@ -1211,7 +1291,7 @@ textarea {
   position: relative;
   display: inline-block;
   color: var(--star);
-  border-bottom: 1px dashed rgba(232, 201, 143, 0.4);
+  border-bottom: 1px dashed rgba(194, 59, 0, 0.45);
   line-height: 1.35;
   cursor: pointer;
 }
@@ -1258,8 +1338,7 @@ textarea {
 
 .star-name {
   margin: 0;
-  font: italic 400 24px/1.35 var(--serif);
-  font-variation-settings: 'opsz' 36;
+  font: italic 500 22px/1.4 var(--sans);
   text-indent: -0.4em;
   color: var(--star);
   text-wrap: pretty;
@@ -1310,7 +1389,7 @@ textarea {
 }
 
 .name-table .word {
-  font: italic 400 15px var(--serif);
+  font: italic 400 15px var(--sans);
   color: var(--star);
 }
 
@@ -1324,7 +1403,7 @@ textarea {
 }
 
 .name-langs li {
-  font: italic 400 15px/1.45 var(--serif);
+  font: italic 400 15px/1.45 var(--sans);
   color: var(--text);
 }
 
@@ -1347,7 +1426,7 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--text-2);
-  font: italic 400 16px/44px var(--serif);
+  font: italic 400 15px/44px var(--sans);
   text-decoration: underline dotted var(--text-3);
   text-underline-offset: 4px;
   cursor: pointer;
@@ -1365,7 +1444,7 @@ textarea {
 }
 
 .point .point-lede {
-  font: italic 16px/1.55 var(--serif);
+  font: italic 400 16px/1.55 var(--sans);
   color: var(--text);
 }
 
@@ -1377,7 +1456,7 @@ textarea {
 
 .point h3 {
   margin: 0 0 10px;
-  font: 500 19px/1.25 var(--serif);
+  font: 500 16px/1.3 var(--mono);
   color: var(--text);
 }
 

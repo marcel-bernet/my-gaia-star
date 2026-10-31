@@ -3,7 +3,7 @@ import { once } from '../lib/cache';
 import type { Star } from '../sky/gaia';
 import { absoluteMag } from '../sky/physics';
 import { haloText, markWithLabel, type Box } from './canvas';
-import { GOLD, MUTED, SANS } from './theme';
+import { SIGNAL, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -106,7 +106,7 @@ export async function drawHr(ctx: Ctx, box: Box, star: Star, labels: HrLabels) {
     ctx.fillStyle = 'rgba(232,201,143,0.16)';
     ctx.fillRect(x - box.w / 60, plot.y, box.w / 30, plot.h);
     ctx.setLineDash([6, 6]);
-    ctx.strokeStyle = GOLD;
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = Math.max(1.5, box.w / 200);
     ctx.beginPath();
     ctx.moveTo(x, plot.y);
@@ -116,6 +116,6 @@ export async function drawHr(ctx: Ctx, box: Box, star: Star, labels: HrLabels) {
     ctx.font = `600 ${fontPx}px ${SANS}`;
     ctx.textAlign = x < box.x + box.w * 0.6 ? 'left' : 'right';
     ctx.textBaseline = 'top';
-    haloText(ctx, labels.yourStar, x + (ctx.textAlign === 'left' ? 8 : -8), plot.y + 6, GOLD);
+    haloText(ctx, labels.yourStar, x + (ctx.textAlign === 'left' ? 8 : -8), plot.y + 6, SIGNAL);
   }
 }

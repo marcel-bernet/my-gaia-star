@@ -3,7 +3,7 @@ import type { Classification } from '../sky/classify';
 import type { Star } from '../sky/gaia';
 import { starColor, temperatureToRgb } from '../sky/physics';
 import { rng, type Box } from './canvas';
-import { GOLD, MUTED, SANS } from './theme';
+import { SIGNAL, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -99,7 +99,7 @@ export function drawStarPortrait(ctx: Ctx, box: Box, star: Star, c: Classificati
     ctx.font = `600 ${fontPx}px ${SANS}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillStyle = GOLD;
+    ctx.fillStyle = SIGNAL;
     ctx.fillText(labels.star, box.x + box.w / 2, box.y + box.h - fontPx * 1.4);
     return;
   }
@@ -121,6 +121,6 @@ export function drawStarPortrait(ctx: Ctx, box: Box, star: Star, c: Classificati
   ctx.fillStyle = MUTED;
   ctx.fillText(labels.sun, sunX, ly);
   ctx.font = `600 ${fontPx}px ${SANS}`;
-  ctx.fillStyle = GOLD;
+  ctx.fillStyle = SIGNAL;
   ctx.fillText(labels.star, starX, ly);
 }

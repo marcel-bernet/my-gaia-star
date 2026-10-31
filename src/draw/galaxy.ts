@@ -20,7 +20,7 @@ import {
   toGalactic,
 } from '../sky/physics';
 import { haloText, markWithLabel, rng, type Box } from './canvas';
-import { CREAM, GOLD, MONO, MUTED, SANS } from './theme';
+import { CREAM, SIGNAL, MONO, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -405,7 +405,7 @@ export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
   if (!p) {
     // Distance unknown, direction known: a sight-line from the Sun to the edge.
     ctx.setLineDash([fontPx * 0.5, fontPx * 0.4]);
-    ctx.strokeStyle = GOLD;
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = Math.max(1.5, fontPx / 7);
     ctx.beginPath();
     ctx.moveTo(sx, sy);
@@ -480,7 +480,7 @@ export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
     let lx = sx + dir.x * reach - dir.y * side * fontPx;
     const ly = Math.min(box.y + box.h - fontPx, Math.max(box.y + fontPx, sy + dir.y * reach + dir.x * side * fontPx));
     lx = side > 0 ? Math.min(lx, box.x + box.w - tw - 6) : Math.max(lx, box.x + tw + 6);
-    haloText(ctx, labels.yourStar, lx, ly, GOLD);
+    haloText(ctx, labels.yourStar, lx, ly, SIGNAL);
     ctx.restore();
   }
 
@@ -506,7 +506,7 @@ export function drawGalaxyFaceOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
     const [vx, vy] = inset.toPx(view.x, view.y);
     const hw = Math.max(3, (box.w / 2 / s) * inset.s);
     const hh = Math.max(3, (box.h / 2 / s) * inset.s);
-    ctx.strokeStyle = GOLD;
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = 1.2;
     ctx.strokeRect(vx - hw, vy - hh, 2 * hw, 2 * hh);
     ctx.restore();
@@ -603,7 +603,7 @@ export function drawGalaxyEdgeOn(ctx: Ctx, box: Box, star: Star, labels: GalaxyL
     const dz = Math.sin(b * DEG) * sz;
     const n = Math.hypot(dx, dz) || 1;
     ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = GOLD;
+    ctx.strokeStyle = SIGNAL;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(sunX, sunY);
