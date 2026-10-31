@@ -8,6 +8,8 @@ Press *Find my star* (your location, right now), or pick a place (search, or tap
 
 It is a **static site**: no backend, no accounts, nothing to keep running.
 
+It can also run against **our own catalogue server** instead of the public services, for example a gateway in front of a Gaia database on a supercomputer. That server isn't built yet, but the site is ready for it: build with `VITE_API_BASE=https://…` and the star search, the lookup by Gaia number, the literature check and the DR4 data all go there instead. The contract, and the security and privacy rules the server must follow, are in [docs/BACKEND.md](docs/BACKEND.md).
+
 ## How it works
 
 | Job | Where it happens |
@@ -64,6 +66,8 @@ python3 scripts/dr4_prerelease.py path/to/GAIA_DR4_PRERELEASE_EPOCH_ASTROMETRY_R
 ## Deploy
 
 Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`). One-time setup: **Settings → Pages → Source: GitHub Actions**. The site is served from `/my-gaia-star/`; for a custom domain, build with `BASE_PATH=/`.
+
+Every build writes a Content-Security-Policy that allows only the services in `src/config.ts`, and refuses unsafe settings: a `VITE_*` variable that looks like a secret (they are public), or a server URL that isn't HTTPS. To use our own catalogue server, add `VITE_API_BASE=https://…` to the build (see [docs/BACKEND.md](docs/BACKEND.md)).
 
 ## Credits
 

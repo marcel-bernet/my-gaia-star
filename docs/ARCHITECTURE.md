@@ -9,7 +9,9 @@ Read this first, then [DATA_ACCESS.md](DATA_ACCESS.md) for the outside services 
   - files bundled in `public/`, built once by `scripts/*.py` and committed;
   - public astronomy services, called straight from the browser: CDS VizieR, GAVO and SIMBAD, plus OpenStreetMap for place names and map tiles;
   - after Gaia DR4 (2 December 2026), ESA's archive, through a small optional proxy in `proxy/`.
+  - later, optionally, our own catalogue server instead of VizieR/GAVO/SIMBAD: set `VITE_API_BASE` at build time. The contract, security and privacy rules are in [BACKEND.md](BACKEND.md).
 - **One settings file.** Every service URL, the repository link and the DR4 settings are in `src/config.ts`.
+- **Locked down by default.** The build writes a Content-Security-Policy listing exactly the services in `config.ts` (`src/csp.ts`), and refuses unsafe `VITE_*` settings.
 
 ## What happens when someone uses it
 
@@ -32,6 +34,8 @@ Read this first, then [DATA_ACCESS.md](DATA_ACCESS.md) for the outside services 
 src/
   main.tsx, App.tsx      entry point; App lays out map, panel and dialogs
   config.ts              outside services, repo URL, DR4 date and proxy  ← start here to change a provider
+  csp.ts                 Content-Security-Policy and build-setting checks (used by vite.config.ts)
+  api/                   our own catalogue server, when VITE_API_BASE is set: contract.ts (types + checks), client.ts
   types.ts               Place, Result, Status, LiteratureState
   state/                 React hooks holding the app's state (search, place, SIMBAD check, URL, map overlay)
   components/            React components; dialogs use the native <dialog> via Dialog.tsx
@@ -52,7 +56,7 @@ scripts/                 Python scripts that build the bundled data (run rarely;
 proxy/                   Cloudflare Worker for DR4 data (not deployed yet)
 ```
 
-The layers depend downwards only: `components` and `state` use everything; `certificate` uses `draw`, `sky` and `names`; `draw` uses `sky`; `sky`, `names` and `dr4` use only `lib`, `config` and the `Lang` type. Keep it that way: it is what lets the logic be tested without a browser.
+The layers depend downwards only: `components` and `state` use everything; `certificate` uses `draw`, `sky` and `names`; `draw` uses `sky`; `sky`, `names` and `dr4` use only `lib`, `config`, `api` and the `Lang` type; `api` uses only `config` (and `sky`'s types). Keep it that way: it is what lets the logic be tested without a browser.
 
 ## Bundled data
 
@@ -100,4 +104,5 @@ npm run build          # static site in dist/
   1. Set `ALLOWED_ORIGIN` in `proxy/wrangler.toml`.
   2. Run `cd proxy && npx wrangler deploy`.
   3. Rebuild the site with `VITE_DR4_PROXY=<the worker's URL>`.
+- **Our own catalogue server (optional, not built yet):** build with `VITE_API_BASE=https://…`. Read [BACKEND.md](BACKEND.md) first; it lists what the server must do for security and privacy.
 - **If you move the repository:** update `REPO_URL` in `src/config.ts` and the `User-Agent` in `proxy/worker.js`.

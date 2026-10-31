@@ -6,7 +6,14 @@
  * Build-time settings come from environment variables:
  *   BASE_PATH       URL path the site is served from (vite.config.ts; default /my-gaia-star/)
  *   VITE_DR4_PROXY  base URL of the DR4 epoch-data proxy (proxy/worker.js); unset = preview data only
+ *   VITE_API_BASE   base URL of our own catalogue server (docs/BACKEND.md); unset = the public services below
+ *
+ * VITE_* values are compiled into the public JavaScript: never put a key,
+ * token or password in one (vite.config.ts refuses to build if it looks like you did).
  */
+
+// Read defensively: vite.config.ts imports this file in Node, where import.meta.env does not exist.
+const env: Partial<ImportMetaEnv> = import.meta.env ?? {};
 
 /** The author, linked from the footer. */
 export const AUTHOR_URL = 'https://es.linkedin.com/in/marcel-bernet-marti';
@@ -39,4 +46,11 @@ export const simbadUrl = (gaiaDr3Id: string) =>
 export const DR4_RELEASE = new Date('2026-12-02T11:00:00Z');
 
 /** Base URL of the DR4 epoch-data proxy, if this build has one. */
-export const DR4_PROXY: string | undefined = import.meta.env.VITE_DR4_PROXY;
+export const DR4_PROXY: string | undefined = env.VITE_DR4_PROXY || undefined;
+
+/**
+ * Base URL of our own catalogue server, if this build has one. When set, the
+ * Gaia cone, star lookup, literature check and DR4 epoch data go there
+ * instead of to the public services (src/api/). HTTPS only, except localhost.
+ */
+export const API_BASE: string | undefined = env.VITE_API_BASE || undefined;

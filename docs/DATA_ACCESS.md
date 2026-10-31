@@ -2,6 +2,8 @@
 
 Status 23 October 2026. Gaia DR4 is announced for **2 December 2026, ~12:00 CET**.
 
+Replacing the public catalogue services with a database we host is planned for later; the site side is ready. See [BACKEND.md](BACKEND.md).
+
 ## 1. What each star needs, and where it comes from
 
 | What | Today (DR3 + pre-release) | After DR4 |
