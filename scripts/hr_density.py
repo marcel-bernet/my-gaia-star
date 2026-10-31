@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-# Axis ranges; keep in sync with HR_AXES in src/certificate/panels.ts.
+# Axis ranges; keep in sync with HR_AXES in src/draw/hr.ts.
 X_MIN, X_MAX, X_BINS = -0.6, 4.6, 520   # BP-RP colour
 Y_MIN, Y_MAX, Y_BINS = -4.0, 17.0, 700  # absolute G magnitude (bright at top)
 

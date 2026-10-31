@@ -13,7 +13,7 @@ import {
   timelineYearAt,
   WINDOWS,
   LOOP_PATH,
-} from '../dr4/plots';
+} from '../draw/dr4';
 import {
   closestPreview,
   daysToDr4,

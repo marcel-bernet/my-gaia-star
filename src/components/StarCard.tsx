@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LiteratureState, Result } from '../types';
-import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../certificate/galaxy';
-import { drawStarPortrait } from '../certificate/panels';
 import { simbadUrl } from '../config';
-import { CREAM, GOLD, MUTED, SANS } from '../certificate/theme';
+import { drawConstellation, type ChartGround } from '../draw/constellation';
+import { drawGalaxyEdgeOn, drawGalaxyFaceOn, galaxyLabels } from '../draw/galaxy';
+import { drawStarPortrait } from '../draw/portrait';
+import { CREAM, GOLD, MUTED, SANS } from '../draw/theme';
 import { starFacts } from '../facts';
 import { starName } from '../names/name';
 import { twoSigFigs } from '../format';
 import { useI18n, type Key } from '../i18n';
 import { classify } from '../sky/classify';
-import { constellationOf, drawConstellation, loadSkyChart, type ChartGround, type SkyChartData } from '../sky/constellation';
+import { constellationOf, loadSkyChart, type SkyChartData } from '../sky/constellation';
 import { countryAt, loadCountries, type Country } from '../sky/country';
 import { groundToSky } from '../sky/zenith';
 import type { Star } from '../sky/gaia';
@@ -136,18 +137,14 @@ export default function StarCard({
         drawConstellation(
           ctx,
           { x: 0, y: 0, w, h },
-          sky,
-          abbr,
-          { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
           {
-            gold: GOLD,
-            cream: CREAM,
-            muted: MUTED,
-            font: SANS,
-            scale: 0.9,
+            sky,
+            abbr,
+            target: { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
+            style: { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 0.9 },
+            ground,
+            furniture: { north: t('chart.north'), east: t('chart.east') },
           },
-          ground,
-          { north: t('chart.north'), east: t('chart.east') },
         );
       }
     },

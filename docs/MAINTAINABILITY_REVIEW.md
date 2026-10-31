@@ -217,7 +217,7 @@ Each phase is behaviour-preserving and can be checked the same way: `npm test`, 
 | Turn on real DR4 data | `cd proxy && npx wrangler deploy` (settings in `proxy/wrangler.toml`), then build with `VITE_DR4_PROXY` |
 | Edit or translate text | `src/i18n/en.ts` (reference), `es.ts`, `ca.ts` |
 | Change the certificate layout | `src/certificate/render.ts` (`renderCertificate`) |
-| Change colours or fonts | `src/styles.css` (page) and `src/certificate/theme.ts` (canvas): keep them in step |
+| Change colours or fonts | `src/styles.css` (page) and `src/draw/theme.ts` (canvas): keep them in step |
 | Change what happens on a search | `src/state/useStarSearch.ts` |
 | Change the search depths | `src/sky/gaia.ts` (cone constants), `Panel.tsx` (`DEPTH_MAG`), the `depth.*` strings |
 | Rebuild the bundled data | `pip install -r scripts/requirements.txt`, then `scripts/*.py` |

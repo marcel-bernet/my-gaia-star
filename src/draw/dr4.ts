@@ -1,6 +1,6 @@
-/** Canvas figures for a star's DR4 epoch astrometry. */
-import { CREAM, GOLD, MONO, PLOT_FAINT, PLOT_MUTED, PLOT_RULE } from '../certificate/theme';
-import { parallaxDisplacement, predictAl, type EpochAstrometry, type Fit, type TransitPoint } from './epoch';
+/** The DR4 section's figures: pixels, passes, the path across the sky, and residuals. */
+import { CREAM, GOLD, MONO, PLOT_FAINT, PLOT_MUTED, PLOT_RULE } from './theme';
+import { parallaxDisplacement, predictAl, type EpochAstrometry, type Fit, type TransitPoint } from '../dr4/epoch';
 
 type Ctx = CanvasRenderingContext2D;
 

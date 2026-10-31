@@ -13,14 +13,16 @@ import { formatLongDate, twoSigFigs } from '../format';
 import { starName } from '../names/name';
 import type { Lang, T } from '../i18n';
 import { classify } from '../sky/classify';
-import { constellationOf, drawConstellation, loadSkyChart } from '../sky/constellation';
+import { constellationOf, loadSkyChart } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import type { Literature } from '../sky/simbad';
 import { hasDistance, visibility } from '../sky/physics';
 import type { SkyFrame } from '../sky/zenith';
-import { drawGalaxyFaceOn, galaxyLabels, isCloseUp } from './galaxy';
-import { drawHr, drawStarPortrait } from './panels';
-import { BG, CREAM, FAINT, GOLD, MONO, MUTED, PLATE, RULE, SANS, SERIF } from './theme';
+import { drawConstellation } from '../draw/constellation';
+import { drawGalaxyFaceOn, galaxyLabels, isCloseUp } from '../draw/galaxy';
+import { drawHr } from '../draw/hr';
+import { drawStarPortrait } from '../draw/portrait';
+import { BG, CREAM, FAINT, GOLD, MONO, MUTED, PLATE, RULE, SANS, SERIF } from '../draw/theme';
 
 /** What DR4 showed for this star, when its own data was available. */
 export interface Dr4Summary {
@@ -296,10 +298,12 @@ export async function renderCertificate(input: CertificateInput): Promise<HTMLCa
   drawConstellation(
     ctx,
     { x: M, y: chartTop, w: W, h: chartBottom - chartTop },
-    sky,
-    abbr,
-    { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
-    { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 2.3 },
+    {
+      sky,
+      abbr,
+      target: { ra: star.ra, dec: star.dec, label: t('chart.yourStar') },
+      style: { gold: GOLD, cream: CREAM, muted: MUTED, font: SANS, scale: 2.3 },
+    },
   );
   caption(ctx, `${t('fact.see')}: ${t(`see.${visibility(star)}`)}.`, M, chartBottom + 36, W, 1);
 

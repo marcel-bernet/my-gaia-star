@@ -3,7 +3,7 @@
  * Neutral graphite, one serif for statements, a mono for anything measured,
  * and gold reserved for one thing only: your star.
  *
- * Canvas drawings can't read these variables: src/certificate/theme.ts
+ * Canvas drawings can't read these variables: src/draw/theme.ts
  * repeats the colours and fonts, so change both together.
  */
 :root {

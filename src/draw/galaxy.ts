@@ -19,7 +19,7 @@ import {
   SUN_HEIGHT_KPC,
   toGalactic,
 } from '../sky/physics';
-import { haloText, markWithLabel, rng, type Box } from './panels';
+import { haloText, markWithLabel, rng, type Box } from './canvas';
 import { CREAM, GOLD, MONO, MUTED, SANS } from './theme';
 
 type Ctx = CanvasRenderingContext2D;
