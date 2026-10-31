@@ -131,21 +131,35 @@ function ClickToPick({ onPick }: { onPick: Props['onPick'] }) {
   return null;
 }
 
+/**
+ * Whether the map can be moved: on a phone it is hidden (no size) until a
+ * place is being chosen or a star is found, and Leaflet can't fly a map with
+ * no size. Measures it again, since it may have just appeared.
+ */
+function ready(map: L.Map) {
+  if (map.getContainer().clientWidth === 0) return false;
+  map.invalidateSize({ pan: false });
+  return true;
+}
+
 function FollowView({
   place,
   result,
   radiusDeg,
   overlayOn,
+  visible,
 }: {
   place: Props['place'];
   result: Props['result'];
   radiusDeg: number;
   /** While the constellation is shown, FitOverlay frames the map instead. */
   overlayOn: boolean;
+  /** Changes when the map is shown or hidden, so the view is framed again once it is. */
+  visible: boolean;
 }) {
   const map = useMap();
   useEffect(() => {
-    if (result && !overlayOn) {
+    if (result && !overlayOn && ready(map)) {
       const { lat, lon } = result.frame;
       const r = radiusDeg * 1.08;
       const cos = Math.max(Math.cos((lat * Math.PI) / 180), 0.05);
@@ -158,11 +172,11 @@ function FollowView({
         { duration: 1.4, paddingTopLeft: [24, wide() ? 72 : 48], paddingBottomRight: [24, 24] },
       );
     }
-  }, [map, result, radiusDeg, overlayOn]);
+  }, [map, result, radiusDeg, overlayOn, visible]);
   useEffect(() => {
-    if (place && !result) map.flyTo([place.lat, place.lon], Math.max(map.getZoom(), 9), { duration: 1.2 });
+    if (place && !result && ready(map)) map.flyTo([place.lat, place.lon], Math.max(map.getZoom(), 9), { duration: 1.2 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, place?.lat, place?.lon]);
+  }, [map, place?.lat, place?.lon, visible]);
   return null;
 }
 
@@ -171,7 +185,7 @@ function FitOverlay({ overlay }: { overlay: Props['overlay'] }) {
   const map = useMap();
   const shown = overlay ? `${overlay.name} ${overlay.centre.map(v => v.toFixed(2))}` : null;
   useEffect(() => {
-    if (!overlay) return;
+    if (!overlay || !ready(map)) return;
     const pts = overlay.bounds.flat();
     map.flyToBounds(L.latLngBounds(pts.map(([lat, lon]) => L.latLng(Math.max(-85, Math.min(85, lat)), lon))), {
       duration: 1.4,
@@ -220,7 +234,7 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
       />
       <ClickToPick onPick={onPick} />
       <Remeasure visible={visible} />
-      <FollowView place={place} result={result} radiusDeg={radiusDeg} overlayOn={!!overlay} />
+      <FollowView place={place} result={result} radiusDeg={radiusDeg} overlayOn={!!overlay} visible={visible} />
       {result && (
         <Circle
           center={[result.frame.lat, result.frame.lon]}

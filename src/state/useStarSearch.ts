@@ -26,6 +26,7 @@ export function useStarSearch(initialSelection: string | null) {
       setStatus({ kind: 'loading' });
       try {
         const frame = skyFrame(at.lat, at.lon, when);
+        setStatus({ kind: 'loading', zenith: frame.zenith });
         const stars = await starsAround(frame.zenith.ra, frame.zenith.dec, depth, ctl.signal);
         if (ctl.signal.aborted) return;
         if (stars.length === 0) {

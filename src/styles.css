@@ -352,7 +352,109 @@ a:hover {
 
 .hero {
   padding-top: 40px;
+  padding-bottom: 36px;
+}
+
+/* Act 1: one button. The form is one link away. */
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.primary.big {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 14px;
+}
+
+.cta .link.more {
+  margin-top: 6px;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The search's real stages, ticked off as they happen. */
+.progress ol {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font: 400 12.5px/1.4 var(--mono);
+}
+
+.progress li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+}
+
+.progress li.done,
+.progress li.active {
+  color: var(--text);
+}
+
+.progress .spinner {
+  width: 11px;
+  height: 11px;
+}
+
+.progress .tick {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.progress li.done .tick {
+  background: currentColor;
+}
+
+.progress .hint {
+  margin-top: 8px;
+}
+
+.context {
   padding-bottom: 32px;
+}
+
+.context .stats {
+  margin-top: 0;
+}
+
+.again {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.again .link {
+  align-self: flex-start;
+  font-size: 13.5px;
+}
+
+.query-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.advanced summary {
+  cursor: pointer;
+  color: var(--text-2);
+}
+
+.advanced[open] summary {
+  margin-bottom: 12px;
 }
 
 .hero h1 {
@@ -360,17 +462,6 @@ a:hover {
   font: 500 31px/1.12 var(--mono);
   letter-spacing: -0.03em;
   text-wrap: balance;
-}
-
-.hero.compact {
-  padding-top: 24px;
-  padding-bottom: 20px;
-}
-
-.hero.compact h1 {
-  font-size: 19px;
-  line-height: 1.2;
-  margin-top: 8px;
 }
 
 .lede {
@@ -424,9 +515,10 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-top: 28px;
+  padding-top: 24px;
   padding-bottom: 32px;
   border-top: 1px solid var(--text);
+  border-bottom: 1px solid var(--text);
 }
 
 .step {
@@ -711,23 +803,89 @@ textarea {
   scroll-margin-top: 52px;
 }
 
-.dossier-head h2 {
-  margin: 0;
-  font: 500 34px/1.1 var(--mono);
-  letter-spacing: -0.03em;
+.dossier-head .kicker {
+  margin-bottom: 14px;
 }
 
-.star-head {
+/* Act 2: the literature check is the headline. */
+.verdict h2 {
+  margin: 0;
+  font: 500 27px/1.15 var(--mono);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.verdict.unknown h2 {
+  color: var(--star);
+}
+
+.verdict.pending h2 {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 12px;
+  font-size: 17px;
+  color: var(--text-3);
+}
+
+.verdict-body {
+  margin: 12px 0 0;
+  font: 400 15px/1.55 var(--sans);
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+.moment {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* Three facts to take away, as a ledger. */
+.key-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--text);
+  border-bottom: 1px solid var(--rule);
+}
+
+.key-facts > div {
+  padding: 12px 12px 14px 0;
+  min-width: 0;
+}
+
+.key-facts > div + div {
+  padding-left: 12px;
+  border-left: 1px solid var(--rule);
+}
+
+.key-facts dt {
+  font: 500 10.5px/1.3 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.key-facts dd {
+  margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 16px/1.25 var(--mono);
+  letter-spacing: -0.01em;
+}
+
+.key-facts dd.sub {
+  margin-top: 6px;
+  font: 400 12.5px/1.4 var(--sans);
+  letter-spacing: 0;
+  color: var(--text-2);
 }
 
 .swatch {
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
 }
 
@@ -738,47 +896,16 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.moment {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--text-3);
+/* Act 3: the way into the detail. */
+.act {
+  padding-top: 28px;
+  border-top: 1px solid var(--text);
 }
 
-.first-look {
-  padding: 2px 0 2px 18px;
-  border-left: 2px solid var(--rule-2);
-}
-
-.first-look.pending {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13.5px;
-  color: var(--text-3);
-}
-
-.first-look.unknown {
-  border-left-color: var(--star);
-}
-
-.first-look .badge {
-  margin: 0 0 6px;
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--star);
-}
-
-.first-title {
-  margin: 0;
-  font: 500 18px/1.3 var(--mono);
-  letter-spacing: -0.01em;
-}
-
-.first-body {
+.act h2 {
   margin: 8px 0 0;
-  font: 400 14.5px/1.5 var(--sans);
-  color: var(--text-2);
+  font: 500 22px/1.2 var(--mono);
+  letter-spacing: -0.02em;
 }
 
 .actions {
@@ -853,7 +980,7 @@ textarea {
 .fig.hero {
   padding: 18px 18px 20px;
   margin: 0 -18px;
-  border-left: 3px solid var(--star);
+  border-left: 3px solid var(--text);
   background: var(--surface);
 }
 
@@ -862,7 +989,7 @@ textarea {
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--star);
+  color: var(--text-2);
 }
 
 .fig.hero .fig-title {
@@ -872,10 +999,6 @@ textarea {
 
 .fig.hero .fig-num {
   font: 400 11px var(--mono);
-}
-
-.fig.hero .plate {
-  border-color: var(--star);
 }
 
 .fig.hero .fig-caption {
@@ -970,14 +1093,26 @@ textarea {
 }
 
 .sample {
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.sample summary {
+  cursor: pointer;
+}
+
+.sample label {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .sample-id {
+  margin: 10px 0 0;
   font-size: 11.5px;
   color: var(--text-3);
+  overflow-wrap: anywhere;
 }
 
 .transit-readout {
@@ -994,18 +1129,41 @@ textarea {
 
 .colophon {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 18px;
+  flex-direction: column;
+  gap: 10px;
   padding-top: 18px;
   padding-bottom: 24px;
   border-top: 1px solid var(--text);
 }
 
+.colophon-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.colophon .byline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
 .credit {
-  margin-left: auto;
-  font: 11px var(--mono);
+  margin: 0;
+  font: 11px/1.5 var(--mono);
   color: var(--text-3);
+}
+
+.method section {
+  margin-top: 18px;
+}
+
+.method h3 {
+  margin: 0 0 6px;
+}
+
+.method .lede {
+  margin-top: 0;
 }
 
 /* Dialogs ---------------------------------------------------------------- */
@@ -1150,6 +1308,25 @@ textarea {
     border-bottom: 1px solid var(--text);
   }
 
+  /* Before a place is being chosen or a star is found, the phone shows the words first. */
+  .app.idle .stage {
+    display: none;
+  }
+
+  .key-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .key-facts > div + div {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .verdict h2 {
+    font-size: 23px;
+  }
+
   .panel {
     height: auto;
     overflow: visible;
@@ -1215,11 +1392,6 @@ textarea {
     padding-left: 8px;
   }
 
-  .credit {
-    flex-basis: 100%;
-    margin-left: 0;
-  }
-
   /* The phone map is short; the readout keeps to its two lines so it doesn't cover the stars. */
   .mag-key {
     display: none;
@@ -1277,34 +1449,6 @@ textarea {
 }
 
 /* Find a star by ID or name --------------------------------------------- */
-
-.finder {
-  border-top: 1px solid var(--text);
-  padding-top: 18px;
-  padding-bottom: 18px;
-}
-
-.finder summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.finder summary::-webkit-details-marker {
-  display: none;
-}
-
-.finder summary::after {
-  content: '+';
-  font: 400 18px var(--mono);
-  color: var(--text-3);
-}
-
-.finder[open] summary::after {
-  content: '−';
-}
 
 .finder-body {
   display: flex;
@@ -1376,7 +1520,7 @@ textarea {
 
 .star-name {
   margin: 0;
-  font: italic 500 22px/1.4 var(--sans);
+  font: italic 500 19px/1.4 var(--sans);
   text-indent: -0.4em;
   color: var(--star);
   text-wrap: pretty;

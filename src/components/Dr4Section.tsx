@@ -25,6 +25,7 @@ import {
   type PreviewEntry,
 } from '../dr4/source';
 import { DR4_RELEASE } from '../config';
+import { EXAMPLE, SIGNAL } from '../draw/theme';
 import { formatLongDate } from '../format';
 import { useI18n } from '../i18n';
 import type { Star } from '../sky/gaia';
@@ -55,11 +56,13 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   const picked = entries?.find(e => e.meta.id === pickedId) ?? standIn;
   const data: EpochAstrometry | null = live ?? picked?.data ?? null;
 
+  // Orange means your star: a stand-in's figures are drawn in white.
+  const accent = live ? SIGNAL : EXAMPLE;
   const pts = useMemo(() => (data ? transitPoints(data) : []), [data]);
   const fit = useMemo(() => (data ? fitFiveParameters(data) : null), [data]);
   useEffect(() => setSel(null), [data]);
 
-  const drawPassTimeline = useCallback<Draw>((ctx, w, h) => drawTimeline(ctx, w, h, pts, sel), [pts, sel]);
+  const drawPassTimeline = useCallback<Draw>((ctx, w, h) => drawTimeline(ctx, w, h, pts, sel, accent), [pts, sel, accent]);
   const selPt = sel !== null ? pts[sel] : null;
   const zoomed = fit !== null && needsZoom(fit);
   const fullH = useMemo(
@@ -72,26 +75,26 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
   );
   const drawFullPath = useCallback<Draw>(
     (ctx, w, h) => {
-      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, FULL_PATH);
+      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, FULL_PATH, accent);
     },
-    [data, fit, pts, sel],
+    [data, fit, pts, sel, accent],
   );
   const drawLoopPath = useCallback<Draw>(
     (ctx, w, h) => {
-      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, LOOP_PATH);
+      if (data && fit) drawSkyPath(ctx, w, h, data, fit, pts, sel, LOOP_PATH, accent);
     },
-    [data, fit, pts, sel],
+    [data, fit, pts, sel, accent],
   );
   const drawResidualPlot = useCallback<Draw>(
     (ctx, w, h) => {
-      if (fit) drawResiduals(ctx, w, h, fit, pts, sel);
+      if (fit) drawResiduals(ctx, w, h, fit, pts, sel, accent);
     },
-    [fit, pts, sel],
+    [fit, pts, sel, accent],
   );
   const shown = selPt ?? pts[0];
   const gClass = shown?.gClass ?? 3;
   const nCcd = shown?.nCcd ?? 9;
-  const drawPixelWindows = useCallback<Draw>((ctx, w, h) => drawPixels(ctx, w, h, gClass, nCcd), [gClass, nCcd]);
+  const drawPixelWindows = useCallback<Draw>((ctx, w, h) => drawPixels(ctx, w, h, gClass, nCcd, accent), [gClass, nCcd, accent]);
 
   const pickTransit = (x: number) => {
     const year = timelineYearAt(x, FIGURE_W);
@@ -134,22 +137,12 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
                 ? t('dr4.error')
                 : t(out ? 'dr4.standin.out' : 'dr4.standin')}
         </p>
+        {!live && picked && (
+          <p className="mono sample-id">
+            {t('dr4.example')}: {sampleLabel(picked)} · Gaia DR4 {picked.meta.id}
+          </p>
+        )}
       </header>
-
-      {!live && entries && (
-        <label className="sample">
-          <span className="step-label">{t('dr4.sample')}</span>
-          <select value={picked?.meta.id ?? ''} onChange={e => setPickedId(e.target.value)}>
-            {entries.map(e => (
-              <option key={e.meta.id} value={e.meta.id}>
-                {sampleLabel(e)}
-                {e === standIn ? ' ←' : ''}
-              </option>
-            ))}
-          </select>
-          {picked && <span className="mono sample-id">Gaia DR4 {picked.meta.id}</span>}
-        </label>
-      )}
 
       {!data && <span className="spinner" aria-hidden />}
 
@@ -160,7 +153,11 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             className="hero"
             kicker={t('dr4.pixels.kicker')}
             title={t('dr4.pixels')}
-            caption={t('dr4.pixels.caption', { n: nCcd, window: WINDOWS[gClass]?.label ?? WINDOWS[3].label, date: releaseDate })}
+            caption={t(live ? 'dr4.pixels.caption.live' : 'dr4.pixels.caption', {
+              n: nCcd,
+              window: WINDOWS[gClass]?.label ?? WINDOWS[3].label,
+              date: releaseDate,
+            })}
           >
             <div className="plate pixels">
               <CanvasArt width={FIGURE_W} height={pixelsHeight(gClass)} draw={drawPixelWindows} label={t('dr4.pixels')} />
@@ -232,6 +229,23 @@ export default function Dr4Section({ star, firstFig }: { star: Star; firstFig: n
             </Figure>
           )}
         </>
+      )}
+
+      {!live && entries && (
+        <details className="sample">
+          <summary className="step-label">{t('dr4.sample.more')}</summary>
+          <label>
+            <span className="hint">{t('dr4.sample')}</span>
+            <select value={picked?.meta.id ?? ''} onChange={e => setPickedId(e.target.value)}>
+              {entries.map(e => (
+                <option key={e.meta.id} value={e.meta.id}>
+                  {sampleLabel(e)}
+                  {e === standIn ? ' ←' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        </details>
       )}
     </section>
   );

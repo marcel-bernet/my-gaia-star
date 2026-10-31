@@ -74,12 +74,18 @@ function byColour(c: number): Kind {
   return 'red-star';
 }
 
-function dwarfByColour(c: number): Kind {
-  if (c < -0.05) return 'blue-ms';
-  if (c < 0.4) return 'white-ms';
-  if (c < 0.72) return 'yellow-white';
-  if (c < 1.0) return 'yellow-dwarf';
-  if (c < 1.75) return 'orange-dwarf';
+/**
+ * Main-sequence stars are named by temperature — the same one the
+ * measurements table turns into a spectral type (physics.temperature: Gaia's
+ * GSP-Phot value, else one from the colour) — so "Orange dwarf" never sits
+ * beside "type M1".
+ */
+function dwarfByTemperature(t: number): Kind {
+  if (t >= 10000) return 'blue-ms';
+  if (t >= 7500) return 'white-ms';
+  if (t >= 6000) return 'yellow-white';
+  if (t >= 5200) return 'yellow-dwarf';
+  if (t >= 3700) return 'orange-dwarf';
   return 'red-dwarf';
 }
 
@@ -92,7 +98,7 @@ export function classify(star: Pick<Star, 'bpRp' | 'plx' | 'plxErr' | 'g' | 'tef
   // Thresholds checked against 40 stars of known spectral type
   // (src/sky/classify.calibration.test.ts).
   const dM = M - mainSequenceMag(c); // > 0: fainter than the main sequence
-  let kind: Kind;
+  let kind: Kind | undefined;
   if (dM > 3.5) kind = 'white-dwarf';
   // Very luminous *and* far above the main sequence: hot O dwarfs reach
   // M ≈ −3.5 too, but sit on their (steep) part of the main sequence.
@@ -105,10 +111,11 @@ export function classify(star: Pick<Star, 'bpRp' | 'plx' | 'plxErr' | 'g' | 'tef
   // Ageing dwarfs drift up to ~1.5 mag above this (zero-age-ish) ridge — β Vir
   // (F9 V) sits 1.4 above — so only flag stars clearly beyond that.
   else if (dM < -1.5 && c >= 0.4 && c < 1.1) kind = 'subgiant';
-  else kind = dwarfByColour(c);
+  // Otherwise a main-sequence star, named below by its temperature.
+  const T = temperature(star)!; // known: the star has a colour
+  kind ??= dwarfByTemperature(T);
 
   const L = luminositySun(star);
-  const T = temperature(star);
-  const radiusSun = L !== null && T !== null ? Math.sqrt(L) * Math.pow(5772 / T, 2) : null;
+  const radiusSun = L !== null ? Math.sqrt(L) * Math.pow(5772 / T, 2) : null;
   return { kind, radiusSun, sure: true };
 }

@@ -7,4 +7,5 @@ export default defineConfig({
   plugins: [react()],
   // React + Leaflet + astronomy-engine is ~180 kB gzipped; jsPDF loads only on download.
   build: { chunkSizeWarningLimit: 700 },
+  server: { port: Number(process.env.PORT) || 5173 },
 });

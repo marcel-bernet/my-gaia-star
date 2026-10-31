@@ -24,7 +24,11 @@ export interface Result {
 }
 
 /** Progress of a network request shown in the UI. */
-export type Status = { kind: 'idle' } | { kind: 'loading' } | { kind: 'error'; message: string };
+export type Status =
+  | { kind: 'idle' }
+  /** `zenith` is set once it is computed and the catalogue is being asked. */
+  | { kind: 'loading'; zenith?: { ra: number; dec: number } }
+  | { kind: 'error'; message: string };
 
 /** The SIMBAD check for the selected star: null before it starts. */
 export type LiteratureState = Literature | 'loading' | 'error' | null;

@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { LiteratureState, Result } from '../types';
 import { twoSigFigs } from '../format';
+import { firstLookTier } from '../facts';
 import { useI18n } from '../i18n';
 import { starName } from '../names/name';
 import { classify } from '../sky/classify';
@@ -96,7 +97,9 @@ export default function ShareDialog({ star, result, placeName, literature, onClo
       }),
     ];
     if (literature && typeof literature === 'object') {
-      lines.push(literature.known ? t('share.text.known', { name: literature.name }) : t('share.text.unknown'));
+      lines.push(
+        literature.known ? t('share.text.known', { name: literature.name }) : t(`share.text.unknown.${firstLookTier(star)}`),
+      );
     }
     lines.push(t('share.text.cta'));
     return lines.join('\n');

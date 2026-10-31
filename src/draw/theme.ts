@@ -9,6 +9,8 @@
 export const PLATE = '#0b0c0e'; // --plate
 export const SIGNAL = '#ff7a3d'; // your star, on a dark plate (--star, brightened for the dark ground)
 export const CREAM = '#e9e7e2';
+/** A stand-in star's data (DR4 pre-release) on a dark plate: white, because orange means only your star. */
+export const EXAMPLE = '#ffffff';
 export const MUTED = '#9a9993';
 export const FAINT = '#74736e';
 

@@ -13,21 +13,18 @@ Read this first, then [DATA_ACCESS.md](DATA_ACCESS.md) for the outside services 
 
 ## What happens when someone uses it
 
-1. **Pick a place and a moment.** The form is in `components/Panel.tsx`. A map tap or a shared link gives a point without a name, and `state/usePlace.ts` asks Nominatim for one (`geo.ts`).
+1. **Pick a place and a moment.** `components/Panel.tsx` leads with one button, *Find my star* (the browser's location, right now, every star Gaia saw: `findHere` in `App.tsx`). The place-and-moment form, with the depth under *Advanced*, opens from a link or a map tap. A map tap or a shared link gives a point without a name, and `state/usePlace.ts` asks Nominatim for one (`geo.ts`). While the search runs, `Progress` in `Panel.tsx` ticks off its real stages (zenith, catalogue, literature).
 2. **Find the zenith.** `sky/zenith.ts` turns place and time into the sky coordinates straight overhead. It uses astronomy-engine, adds aberration, and is checked against astropy in `zenith.test.ts`. `sky/time.ts` handles "14:30 on Lima's clocks".
 3. **Ask Gaia for the stars around it.** `sky/gaia.ts` queries VizieR first and falls back to GAVO, nearest star first. The "Eye" depth reads the bundled `public/naked-eye.json` instead. `state/useStarSearch.ts` runs the search, cancels a previous one, and picks "your star": the nearest one with a distance and a colour.
 4. **Draw them on the map.** `components/SkyMap.tsx` uses Leaflet. One degree of sky from the zenith is drawn one degree of ground from the place (`starToLatLng` in `sky/zenith.ts`).
-5. **Show the star.** `components/StarCard.tsx` shows:
-   - its generated name (`names/`);
-   - the SIMBAD literature check (`sky/simbad.ts` via `state/useLiterature.ts`);
-   - the figures (`draw/`);
-   - the facts table (`facts.ts`);
-   - the DR4 section (`components/Dr4Section.tsx`, data from `dr4/`).
-6. **Share or keep it.**
-   - The address bar always holds a link that reproduces the screen (`urlState.ts`, `state/useUrlSync.ts`).
+5. **Show the star.** `components/StarCard.tsx` reads in two acts:
+   - *the reveal*: the SIMBAD literature check as the headline (`sky/simbad.ts` via `state/useLiterature.ts`), three key facts (kind, when its light left, where to look), its Gaia number in words (`names/`), and the record and share buttons;
+   - *in detail*: the figures (`draw/`), the facts table (`facts.ts`, with distance uncertainties from the parallax error) and the DR4 section (`components/Dr4Section.tsx`, data from `dr4/`).
+6. **Share or keep it.** (The footer also opens `MethodDialog.tsx`, *Method & limitations*: how each number is made, for astronomers. Keep it true when the method changes.)
+   - The address bar always holds a link that reproduces the screen (`urlState.ts`, `state/useUrlSync.ts`). It always carries the moment and the star: the zenith crosses the 400″ search circle in about a minute, so a link without them would show another star.
    - `components/ShareDialog.tsx` pre-fills posts.
    - `certificate/render.ts` draws an A4 page on a canvas, and `certificate/download.ts` saves it as PNG or PDF. The certificate makes no network requests of its own.
-7. **Find a star again.** `components/StarFinder.tsx` takes a Gaia ID or a name, looks the star up (`starById`), and goes to wherever on Earth it is overhead (`subStellarPoint`).
+7. **Find a star again.** `components/StarFinder.tsx`, in a dialog from the footer (`FindDialog.tsx`), takes a Gaia ID or its words, looks the star up (`starById`), and goes to wherever on Earth it is overhead (`subStellarPoint`).
 
 ## Where things are
 

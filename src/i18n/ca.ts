@@ -2,9 +2,9 @@ import type { Dict } from './en';
 
 export const ca: Dict = {
   brand: 'My Gaia Star',
-  tagline: 'Damunt teu hi ha una estrella que ningú no ha mirat mai de prop.',
+  tagline: 'Sobre teu hi ha una estrella sobre la qual ningú no ha escrit mai. Gairebé segur.',
   intro:
-    'La nau Gaia de l’ESA ha mesurat gairebé dos mil milions d’estrelles. Gairebé totes són punts en un catàleg —comptades en estadístiques, representades per milions— i només una part petitíssima s’ha estudiat per si mateixa. Tria un lloc i un moment: busquem l’estrella que hi havia just a sobre i comprovem si algú s’hi ha fixat mai.',
+    'La nau Gaia de l’ESA ha mesurat gairebé dos mil milions d’estrelles. Com a molt una de cada cent s’ha estudiat per si mateixa. Trobem la que és just a sobre teu i la busquem a la literatura astronòmica.',
   'mode.now': 'Ara mateix',
   'mode.moment': 'Un moment',
   place: 'Lloc',
@@ -29,7 +29,7 @@ export const ca: Dict = {
   'depth.faint.hint': 'Els 400 estels més propers fins a la magnitud 19, territori de telescopi.',
   'depth.all.hint': 'Tot el que Gaia va veure a menys de 400″ del zenit: l’estel exacte damunt teu.',
   go: 'Busca l’estrella del zenit',
-  'go.again': 'Torna a cercar',
+  'go.again': 'Un altre lloc o un altre moment',
   loading: 'Preguntant a Gaia…',
   'error.catalogue': 'El catàleg de Gaia (CDS VizieR) no ha respost. Torna-ho a provar d’aquí a un minut.',
   'error.none': 'No hi ha estels aquí a aquesta profunditat. Prova una cerca més profunda.',
@@ -66,7 +66,7 @@ export const ca: Dict = {
   'fact.rv.towards': 'apropant-se',
   'fact.position': 'Posició',
   'fact.id': 'Gaia DR3',
-  'action.certificate': 'Certificat',
+  'action.certificate': 'Registre d’observació',
   'action.share': 'Comparteix',
   'share.title': 'Comparteix el teu estel',
   'share.message': 'Missatge',
@@ -76,23 +76,21 @@ export const ca: Dict = {
   'share.copied': 'Copiat!',
   'share.subject': 'He trobat el meu estel ✨',
   'share.aStar': 'Un estel',
-  'share.text.name': '✨ Aquest és el meu estel: «{name}» (Gaia DR3 {id})',
+  'share.text.name': '✨ L’estrella sobre meu: Gaia DR3 {id}, «{name}»',
   'share.text.what': '{what}, just a sobre de {place} el {moment}.',
   'share.text.whatFar': '{what}, a {ly} anys llum, just a sobre de {place} el {moment}.',
-  'share.text.unknown':
-    '🔭 Pel que consta, ningú no l’ha estudiat per si mateix: probablement soc la primera persona que mira aquest estel individualment.',
   'share.text.known': '🔭 Els astrònoms el coneixen com a {name}.',
   'share.text.cta': 'Troba l’estel que tens a sobre amb Gaia, de l’ESA 👇',
   'action.simbad': 'Més a SIMBAD',
-  'cert.title': 'Crea un certificat',
+  'cert.title': 'Crea un registre d’observació',
   'cert.field.title': 'Títol',
   'cert.field.dedication': 'Dedicatòria (opcional)',
-  'cert.defaultTitle': 'Un estel nostre',
+  'cert.defaultTitle': 'L’estrella de dalt',
   'cert.pdf': 'Descarrega el PDF',
   'cert.png': 'Descarrega la imatge',
   'cert.making': 'Dibuixant…',
   'cert.narrative':
-    'En aquest moment, aquesta estrella brillava just damunt d’aquest lloc. Gaia la va mesurar entre dos mil milions més; pel que consta, ningú no l’havia mirada mai per si mateixa.',
+    'En aquest moment, aquesta estrella brillava just a sobre d’aquest lloc. Gaia la va mesurar entre gairebé dos mil milions més.',
   'cert.hr': 'Entre els seus veïns',
   'cert.hr.caption':
     'Color i brillantor real d’1,9 milions d’estels a menys de 650 anys llum, mesurats per Gaia. El teu està marcat.',
@@ -183,11 +181,9 @@ export const ca: Dict = {
   'readout.sources': '{n} fonts',
   'first.badge': 'Primera mirada',
   'first.checking': 'Consultant la literatura astronòmica…',
-  'first.unknown.title': 'Ningú no s’ha fixat en aquesta estrella.',
-  'first.unknown.body':
-    'Gaia la va mesurar, i segur que és un punt entre milions als gràfics d’algú. Però cap article no l’ha anomenada: no és a SIMBAD, la base de dades de tots els objectes estudiats a la literatura astronòmica. Pel que consta, ets la primera persona que la mira per si mateixa.',
+  'first.unknown.title': 'Cap article no s’ha fixat en aquesta estrella.',
   'first.known.title': 'L’astronomia la coneix com a {name}.',
-  'first.known.body': 'SIMBAD recull {papers} que l’esmenten: altres persones hi han passat abans que tu.',
+  'first.known.body': 'SIMBAD la recull en {papers}: d’altres hi han passat abans que tu.',
   'first.error': 'Ara mateix no s’ha pogut consultar SIMBAD.',
   'papers.one': 'un article',
   'papers.many': '{n} articles',
@@ -197,16 +193,16 @@ export const ca: Dict = {
   'dr4.kicker': 'Gaia DR4 · vista prèvia',
   'dr4.title': 'Cada cop que Gaia va mirar',
   'dr4.lead':
-    'El {date} l’ESA publica les observacions en brut de Gaia: cada pas de la nau per sobre de cada estrella, la posició mesurada a cada CCD i els píxels mateixos. Per a gairebé totes les estrelles, la primera persona que els vegi serà qui els obri primer.',
+    'El {date} l’ESA publica les observacions en brut de Gaia: cada passada de la nau sobre cada estrella i la posició que va mesurar a cada CCD. Per a gairebé totes les estrelles, ningú no les haurà mirat encara.',
   'dr4.countdown': 'D’aquí a {n} dies',
   'dr4.today': 'Avui',
   'dr4.kicker.out': 'Gaia DR4',
   'dr4.lead.out':
-    'El {date} l’ESA va publicar les observacions en brut de Gaia: cada pas de la nau per sobre de cada estrella, la posició mesurada a cada CCD i els píxels mateixos. Per a gairebé totes les estrelles, la primera persona que els vegi serà qui els obri primer.',
+    'El {date} l’ESA va publicar les observacions en brut de Gaia: cada passada de la nau sobre cada estrella i la posició que va mesurar a cada CCD. Per a gairebé totes les estrelles, ningú no les ha mirat encara.',
   'dr4.standin.out':
-    'Aquest lloc encara no està connectat a l’arxiu de Gaia DR4; aquí tens una estrella real de la prepublicació de l’ESA de juny de 2026, d’una brillantor semblant a la teva.',
+    'Aquest web encara no està connectat a l’arxiu de Gaia DR4, així que les figures mostren una estrella real de l’avançament de juny de 2026 de l’ESA, d’una brillantor semblant a la de la teva, dibuixada en blanc.',
   'dr4.standin':
-    'Mentrestant, aquí tens una estrella real de la prepublicació de l’ESA de juny de 2026, d’una brillantor semblant a la teva. Les mesures de la teva estrella apareixeran al seu lloc.',
+    'Fins aleshores, les figures mostren una estrella real de l’avançament de juny de 2026 de l’ESA, d’una brillantor semblant a la de la teva, dibuixada en blanc. Les mesures de la teva estrella la substituiran, en taronja.',
   'dr4.live': 'Aquestes són les mesures de la teva estrella a Gaia DR4.',
   'dr4.notFound':
     'Gaia DR4 no té astrometria per època d’aquesta estrella; aquí tens una de la prepublicació amb una brillantor semblant.',
@@ -222,7 +218,7 @@ export const ca: Dict = {
   'dr4.transit': '{date} · angle d’escombratge {psi}° · {used} de {ccd} CCD usats',
   'dr4.wobble': 'El seu camí pel cel',
   'dr4.wobble.caption':
-    'Tot el que Gaia va mesurar, sense treure res: l’estrella es desplaça pel cel (el seu moviment propi) mentre traça un bucle cada any, l’òrbita de la Terra reflectida en la seva posició (la seva paral·laxi). En daurat, el camí ajustat, amb un punt cada tres mesos; cada línia grisa és un pas. Gaia fixa la posició només al llarg del seu escombratge, així que l’estrella és en algun punt d’aquesta línia.',
+    'Tot el que va mesurar Gaia, sense treure res: l’estrella es desplaça pel cel (el seu moviment propi) mentre traça un bucle cada any, l’òrbita de la Terra reflectida en la seva posició (la seva paral·laxi). La línia gruixuda és la trajectòria ajustada, amb un punt cada tres mesos; cada línia grisa és una passada. Gaia només fixa l’estrella al llarg del seu escombratge, així que l’estrella és en algun punt d’aquesta línia.',
   'dr4.wobble.qso':
     'Un quàsar és a milers de milions d’anys llum: no hi ha desplaçament ni bucle, només soroll de mesura al voltant d’un punt fix. Gaia en fa servir mig milió per ancorar el seu mapa del cel.',
   'dr4.residuals': 'El que el model no explica',
@@ -230,9 +226,9 @@ export const ca: Dict = {
     'Després d’ajustar posició, paral·laxi i moviment propi, la dispersió és de {rms} mas: el que correspon a una estrella sola.',
   'dr4.residuals.wobble':
     'Després d’ajustar posició, paral·laxi i moviment propi, l’estrella encara es desvia {uwe} vegades més del que permeten els seus errors: probablement alguna cosa invisible l’estira.',
-  'dr4.pixels': 'Els píxels: l’estrella mateixa',
+  'dr4.pixels': 'Els píxels darrere de cada número',
   'dr4.pixels.caption':
-    'Això és el que Gaia va guardar realment de la teva estrella. No una foto del cel que l’envolta, sinó una petita finestra de píxels llegida al seu voltant a cadascun dels {n} CCD que va creuar en aquest pas ({window}). Cada nombre d’aquesta pàgina es va mesurar a partir de finestres com aquestes. DR4 les publica totes, 113 TB, i el {date} les reals substitueixen aquest esquema: qui les obri serà la primera persona que vegi l’estrella mateixa.',
+    'Un esquema, no dades reals: Gaia no guarda imatges del cel. A cada passada llegeix una petita finestra de píxels al voltant de l’estrella a cadascun dels {n} CCD que travessa ({window}), i cada número d’aquesta pàgina es mesura en finestres com aquestes. Gaia DR4 publica les reals a partir del {date}.',
   'cert.record': 'Registre d’observació',
   'cert.firstLook.body':
     'No figura a SIMBAD, la base de dades dels objectes estudiats individualment a la literatura astronòmica, segons la consulta del {date}.',
@@ -246,7 +242,7 @@ export const ca: Dict = {
     'Aquesta estrella es desplaça tant que el seu bucle anual es perd en la línia, així que el panell b treu el desplaçament: el que queda és el bucle sol, l’òrbita de la Terra traçada en la posició de l’estrella.',
   'dr4.wobble.full': '2014–2020',
   'dr4.wobble.year': 'Sense el desplaçament: el bucle anual',
-  'dr4.pixels.kicker': 'La veritable primera mirada',
+  'dr4.pixels.kicker': 'Com veu Gaia una estrella',
   'chart.north': 'N',
   'chart.east': 'E',
   'card.where.ground':
@@ -259,28 +255,28 @@ export const ca: Dict = {
   'galaxy.ly': '{ly} a. l.',
   'galaxy.plane': 'Pla galàctic',
   'galaxy.above': 'Vista des de dalt',
-  'card.name': 'El seu nom',
-  'find.title': 'Cerca una estrella per ID o per nom',
+  'card.name': 'El seu número de Gaia, en paraules',
+  'find.title': 'Cerca una estrella pel seu número de Gaia',
   'find.lede':
-    'Cada estrella de Gaia té un número i, aquí, també un nom: una frase feta a partir d’aquest número, la mateixa estrella en anglès, castellà i català. Escriu qualsevol dels dos i et portem al lloc de la Terra on és just a sobre.',
-  'find.byName': 'Nom',
+    'Cada estrella de Gaia té un número, que aquest web també escriu com una frase, en anglès, castellà o català. Escriu qualsevol dels dos i et portem al lloc de la Terra on aquella estrella és just a sobre.',
+  'find.byName': 'En paraules',
   'find.byId': 'ID de Gaia',
   'find.id.placeholder': 'p. ex. 4057491453829461504',
   'find.id.bad': 'Un ID de Gaia és un nombre enter de fins a 19 xifres.',
-  'find.paste': 'O enganxa un nom…',
-  'find.paste.bad': 'Això encara no es llegeix com un nom d’estrella.',
+  'find.paste': 'O enganxa les paraules…',
+  'find.paste.bad': 'Aquestes paraules encara no es llegeixen com el número d’una estrella.',
   'find.when.zone': 'Data i hora d’on ets ara.',
   'find.go': 'Porta-m’hi',
   'find.looking': 'Cercant-la…',
   'find.none.id': 'Cap estrella de Gaia DR3 no té aquest ID.',
   'find.none.name':
-    'Cap estrella de Gaia DR3 no té aquest nom. Només 1.800 milions dels 9,2 trilions de noms possibles pertanyen a una estrella, així que copia’l exactament.',
-  'action.copy.name': 'Copia el nom',
-  'action.copied.name': 'Nom copiat',
+    'Cap estrella de Gaia DR3 no té aquestes paraules. Només 1.800 milions dels 9,2 trilions de frases possibles corresponen a una estrella, així que copia-les exactament.',
+  'action.copy.name': 'Copia les paraules',
+  'action.copied.name': 'Paraules copiades',
   'action.copy.id': 'Copia l’ID',
   'action.copied.id': 'ID copiat',
-  'name.how': 'Com es calcula el nom?',
-  'name.how.title': 'Com rep una estrella el seu nom',
+  'name.how': 'Com es formen les paraules?',
+  'name.how.title': 'Com un número de Gaia es converteix en paraules',
   'name.how.p1':
     'Gaia dona a cada font un número: el d’aquesta és {id}. No és un número qualsevol: les primeres xifres codifiquen en quin punt del cel Gaia va trobar l’estrella, i la resta la distingeix de les veïnes. Hi cap en 63 bits, una mica més de nou trilions de possibilitats.',
   'name.how.p2':
@@ -290,9 +286,9 @@ export const ca: Dict = {
   'name.how.p4':
     'El nom són les eleccions, no les paraules. Per això la mateixa estrella té el mateix nom en tots els idiomes, i la gramàtica s’adapta: en català i en castellà, nombres, adjectius i articles concorden en gènere i nombre amb el substantiu.',
   'name.how.p5':
-    'I funciona a l’inrevés: escriu o enganxa un nom, en qualsevol dels tres idiomes, a «Cerca una estrella per ID o per nom», i es torna a convertir en el número, i el número en l’estrella.',
+    'I funciona al revés: escriu o enganxa les paraules, en qualsevol de les tres llengües, a «Cerca una estrella pel seu número de Gaia», i es tornen a convertir en el número, i el número en l’estrella.',
   'name.how.p6':
-    'Hi ha 9,2 trilions de noms possibles i només 1.800 milions d’estrelles a Gaia DR3, així que gairebé cap frase no correspon a cap estrella. Copia els noms exactament. Aquests noms són d’aquest lloc, no designacions oficials.',
+    'Hi ha 9,2 trilions de frases possibles i només 1.800 milions d’estrelles a Gaia DR3, així que gairebé cap frase no correspon a una estrella. Copia les paraules exactament. Són una codificació del número pròpia d’aquest web, no un nom: només la Unió Astronòmica Internacional posa nom a les estrelles, i els noms d’estrelles no es poden comprar.',
   'name.slot.count': 'Quants',
   'name.slot.creature': 'Qui',
   'name.slot.trait': 'Com són',
@@ -315,7 +311,7 @@ export const ca: Dict = {
   'point.a.tldr.1':
     'Ara mateix, just a sobre del teu cap, hi ha una estrella. Una de debò, amb un nom fet de números, mesurada per una nau espacial. I gairebé segur que cap astrònom de la història no n’ha escrit ni una frase.',
   'point.a.tldr.2':
-    'Aquesta web troba aquella estrella, t’explica què és, comprova si algú li ha fet cas mai… i et deixa ser el primer.',
+    'Aquest web troba aquella estrella, et diu què és, comprova si algú n’ha escrit mai res i et deixa ser la primera persona a mirar-la per si mateixa.',
   'point.q.zenith': 'Què dimonis és el «zenit»?',
   'point.a.zenith.1':
     'És el punt del cel que és exactament a sobre del teu cap. No «més o menys amunt»: estira’t panxa enlaire, mira perfectament recte cap amunt i aquí el tens. Cada persona de la Terra té el seu, i va lliscant entre les estrelles mentre el planeta gira: l’estrella del teu zenit ara no és la de fa una hora.',
@@ -346,7 +342,7 @@ export const ca: Dict = {
   'point.a.lonely.2':
     'Així que aquestes estrelles existeixen com una fila en una taula i un punt al gràfic d’un milió de punts d’algú. Cadascuna és un sol, potser amb planetes, i ningú no l’ha mirada mai per ella mateixa. Gairebé tot el cel és així. Les estrelles famoses són l’excepció.',
   'point.a.lonely.3':
-    'Quan la web diu «ets el primer a mirar aquesta estrella per ella mateixa», no és màrqueting. Consulta SIMBAD en directe, i normalment és veritat.',
+    'Quan el web diu que gairebé segur ets la primera persona que mira aquesta estrella per si mateixa, no és màrqueting. Consulta SIMBAD en directe, i Gaia, com tot gran cens, mesura les seves estrelles de manera automàtica: el seu programari va veure aquesta, però cap persona no va tenir cap motiu per fer-ho.',
   'point.fig.studied': 'estudiada en un article',
   'point.fig.yours': 'la teva (probablement no)',
   'point.fig.zenith': 'zenit',
@@ -356,8 +352,64 @@ export const ca: Dict = {
     'El 2 de desembre de 2026 surt la quarta publicació de dades de Gaia (DR4). Per primer cop publica les observacions en brut, no només els números finals: cada vegada que la càmera de Gaia va passar per sobre de cada estrella. Són uns 130.000 milions de passos. La pàgina de la teva estrella ja té una secció esperant els seus.',
   'point.q.get': 'D’acord, i què m’emporto?',
   'point.a.get.1':
-    'La teva estrella: a quina distància és, quan va sortir la llum que veuries, quin tipus d’estrella és dibuixada al costat del Sol, on és a la Via Làctia i en quina constel·lació. I un nom: una frase absurda i única generada a partir del seu número de Gaia, perquè la puguis tornar a trobar.',
+    'La teva estrella: a quina distància és, quan va sortir la llum que veuries, quin tipus d’estrella és dibuixada al costat del Sol, on és a la Via Làctia i en quina constel·lació. I el seu número de Gaia escrit com una frase, absurda i única, perquè la puguis tornar a trobar.',
   'point.a.get.2':
-    'I un certificat per imprimir o enviar. A diferència d’aquestes webs de «compra una estrella», no costa res i no fa veure que cap organisme oficial n’hagi aprovat el nom. Simplement és veritat: aquesta estrella era sobre teu, en aquell moment, i això és el que és.',
+    'I un registre d’observació per imprimir o enviar. A diferència dels webs de «compra una estrella», no costa res i no posa nom a res. Simplement és veritat: aquesta estrella era sobre teu, en aquell moment, i això és el que és.',
   'point.go': 'Va, ensenya’m la meva estrella',
+  'fact.distance.valueErr': '{ly} ± {err} anys llum',
+  'fact.light.err': '{when}, amb un marge de {err} anys',
+  'go.here': 'Troba la meva estrella',
+  'go.here.hint': 'Fa servir la teva ubicació i l’hora actual. Sense comptes, no es guarda res.',
+  'go.choose': 'Tria un lloc o un moment',
+  'depth.advanced': 'Avançat: fins a quina brillantor',
+  'stage.zenith.pending': 'Calculant el teu zenit…',
+  'stage.zenith': 'Zenit trobat: {pos}',
+  'stage.catalogue': 'Cercant entre els 1.800 milions d’estrelles de Gaia al seu voltant…',
+  'stage.literature': 'Consultant la literatura astronòmica',
+  'stage.slow': 'Els servidors del catàleg van lents ara mateix. Continuem cercant.',
+  'key.what': 'Què és',
+  'key.where': 'On mirar',
+  'kind.unknown': 'Una estrella',
+  'detail.kicker': 'En detall',
+  'detail.title': 'El que va mesurar Gaia',
+  'dr4.example': 'Estrella d’exemple',
+  'dr4.sample.more': 'Altres estrelles de l’avançament',
+  'dr4.pixels.caption.live':
+    'Un esquema: Gaia no guarda imatges del cel. A cada passada va llegir una petita finestra de píxels al voltant de la teva estrella a cadascun dels {n} CCD que va travessar ({window}), i cada número de més amunt es va mesurar en finestres com aquestes. Les reals són a Gaia DR4, publicat el {date}.',
+  'footer.by': 'Fet per Marcel Bernet',
+  'footer.credit': 'Dades: ESA/Gaia/DPAC · CDS · OSM. Independent; sense vincle amb l’ESA.',
+  method: 'Mètode i limitacions',
+  'method.lede': 'Com s’obté cada número d’aquest web, i el que no et pot dir.',
+  'method.zenith': 'El zenit',
+  'method.zenith.body':
+    'Es calcula al navegador amb astronomy-engine, incloent-hi precessió, nutació i aberració, i està comprovat amb astropy fins a uns 5″. El zenit es mou uns 15′ pel cel cada minut, així que l’estrella sobre un lloc canvia més o menys un cop per minut.',
+  'method.catalogue': 'Les estrelles',
+  'method.catalogue.body':
+    'Gaia DR3, consultat en directe a CDS VizieR (I/355/gaiadr3), amb el servei TAP de GAVO com a alternativa. La cerca per defecte pren totes les fonts a menys de 400″ del zenit. Les estrelles visibles a ull nu (G < 6) vénen incloses al web.',
+  'method.star': 'La teva estrella',
+  'method.star.body':
+    'La font més propera al zenit amb la paral·laxi mesurada al 20 % o millor i amb color BP−RP. Les distàncies són 1/paral·laxi amb una incertesa de primer ordre; no s’aplica cap correcció del punt zero de la paral·laxi ni cap distribució prèvia de distàncies, així que són orientatives.',
+  'method.kind': 'Tipus i mida',
+  'method.kind.body':
+    'A partir de la posició de l’estrella respecte a una seqüència principal de referència (Pecaut i Mamajek) al diagrama color–magnitud absoluta, sense corregir l’extinció, i comprovat amb 40 estrelles de tipus espectral conegut. Les estrelles de la seqüència principal s’anomenen després per la temperatura (la GSP-Phot de Gaia o, si no n’hi ha, una d’estimada a partir del color), la mateixa d’on surt el tipus espectral de la taula. Una etiqueta per al públic, no una classificació espectral.',
+  'method.literature': 'La consulta a la literatura',
+  'method.literature.body':
+    'Es consulta SIMBAD (CDS) en directe per l’identificador «Gaia DR3 <id>». No ser a SIMBAD vol dir que cap article indexat allà no s’ha fixat en aquesta font. Gaia, com tot gran cens, processa les seves estrelles de manera automàtica, i els estudis del catàleg complet les tracten estadísticament; una persona mira una font concreta quan alguna cosa la fa destacar, i això és el que la porta a un article. Per això, per a una estrella en què cap article no s’ha fixat, el web diu que gairebé segur ets la primera persona que la mira per si mateixa si és més feble que G = 17, on hi ha la majoria de les estrelles de Gaia, i que molt probablement si és més brillant, perquè les estrelles brillants es miren de passada (en cartes de cerca, en nits d’observació) sense que se’n publiqui res.',
+  'method.dr4': 'Gaia DR4',
+  'method.dr4.body':
+    'Fins que surti Gaia DR4 (2 de desembre de 2026), la seva secció mostra una estrella real de l’avançament de juny de 2026 de l’ESA, d’una brillantor semblant, indicada com a tal i dibuixada en blanc. La figura de píxels és sempre un esquema de les finestres de lectura de Gaia. La trajectòria és un ajust de cinc paràmetres (posició, paral·laxi i moviment propi) a l’astrometria per èpoques, calculat al navegador.',
+  'method.names': 'Les paraules',
+  'method.names.body':
+    'La frase és una codificació reversible del source_id de Gaia, de 63 bits, que fa aquest web perquè el número d’una estrella sigui més fàcil de recordar. No és un nom: només la Unió Astronòmica Internacional posa nom a les estrelles, i els noms d’estrelles no es poden comprar.',
+  'method.code': 'Tot funciona al navegador, sense servidor propi, i la part astronòmica té proves unitàries.',
+  'first.unknown.body.faint':
+    'El programari de Gaia la va mesurar de manera automàtica, juntament amb gairebé dos mil milions més, però no és a SIMBAD, la base de dades dels objectes estudiats a la literatura astronòmica. Amb magnitud {g}, és una dels centenars de milions d’estrelles que ningú no ha tingut cap motiu per mirar una a una. Gairebé segur que ets la primera persona que la mira per si mateixa.',
+  'first.unknown.body.bright':
+    'El programari de Gaia la va mesurar de manera automàtica, juntament amb gairebé dos mil milions més, però no és a SIMBAD, la base de dades dels objectes estudiats a la literatura astronòmica. Amb magnitud {g} és prou brillant perquè algú la veiés de passada, però mai no se n’ha publicat res. Molt probablement ets la primera persona que la mira per si mateixa.',
+  'share.text.unknown.faint':
+    '🔭 Cap article no s’hi ha fixat mai. Gairebé segur que soc la primera persona que la mira per si mateixa.',
+  'share.text.unknown.bright':
+    '🔭 Cap article no s’hi ha fixat mai. Molt probablement soc la primera persona que la mira per si mateixa.',
+  'cert.firstLook.faint': 'Gairebé segur que ningú no l’havia mirada abans per si mateixa.',
+  'cert.firstLook.bright': 'Molt probablement ningú no l’havia mirada abans per si mateixa.',
 };

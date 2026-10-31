@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classify, mainSequenceMag } from './classify';
+import { spectralClass } from './physics';
 
 // Absolute magnitude M at 10 pc: parallax 100 mas, so G = M.
 const at10pc = (g: number, bpRp: number | null, teff: number | null = null) => ({ g, bpRp, plx: 100, plxErr: 0.1, teff });
@@ -10,6 +11,28 @@ describe('classify', () => {
     const c = classify(at10pc(4.67, 0.82, 5772))!;
     expect(c.kind).toBe('yellow-dwarf');
     expect(c.radiusSun).toBeCloseTo(1, 1);
+  });
+
+  it('names a dwarf by the same temperature its spectral type comes from', () => {
+    // A reddened G star: its raw colour reads F, its Gaia temperature says G4.
+    expect(classify(at10pc(4.4, 0.7, 5600))!.kind).toBe('yellow-dwarf');
+    expect(classify(at10pc(4.4, 0.7, 6300))!.kind).toBe('yellow-white');
+  });
+
+  it('never names a dwarf against its spectral type, with or without a Gaia temperature', () => {
+    const letter: Record<string, string> = {
+      'blue-ms': 'OB',
+      'white-ms': 'A',
+      'yellow-white': 'F',
+      'yellow-dwarf': 'G',
+      'orange-dwarf': 'K',
+      'red-dwarf': 'M',
+    };
+    for (let c = -0.2; c <= 3.6; c += 0.05) {
+      const star = at10pc(mainSequenceMag(c), c);
+      const kind = classify(star)!.kind;
+      expect([c, letter[kind]]).toEqual([c, expect.stringContaining(spectralClass(star)![0])]);
+    }
   });
 
   it('recognises the classic types', () => {

@@ -11,6 +11,19 @@ export function twoSigFigs(n: number, locale: string): string {
   return new Intl.NumberFormat(locale, { maximumSignificantDigits: 2 }).format(n);
 }
 
+/**
+ * A value and its uncertainty, the uncertainty to one significant figure
+ * (two when it starts with a 1) and the value rounded to the same place:
+ * 2,700 ± 400 · 1,850 ± 120 · 14 ± 3.
+ */
+export function roundToError(value: number, err: number): { value: number; err: number; digits: number } {
+  const exp = Math.floor(Math.log10(err));
+  const place = 10 ** (err / 10 ** exp < 2 ? exp - 1 : exp);
+  const digits = Math.max(0, -Math.floor(Math.log10(place)));
+  const round = (n: number) => Number((Math.round(n / place) * place).toFixed(digits));
+  return { value: round(value), err: round(err), digits };
+}
+
 /** "2 December 2026", in the locale's own order. */
 export function formatLongDate(d: Date, locale: string): string {
   return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);

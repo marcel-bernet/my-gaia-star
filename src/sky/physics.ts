@@ -51,6 +51,16 @@ export function distanceLy(star: WithParallax): number | null {
   return pc === null ? null : pc * LY_PER_PC;
 }
 
+/**
+ * One-sigma uncertainty of distanceLy, from the parallax error to first
+ * order (the parallax is good to 20% or better whenever there is a distance).
+ */
+export function distanceLyError(star: WithParallax): number | null {
+  const ly = distanceLy(star);
+  if (ly === null || !star.plxErr) return null;
+  return (ly * star.plxErr) / star.plx!;
+}
+
 /** Calendar year in which the light we see from it set off, given when we look. */
 export function lightDepartureYear(star: WithParallax, seenAt: Date): number | null {
   const ly = distanceLy(star);
