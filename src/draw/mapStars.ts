@@ -6,16 +6,21 @@
  * only coloured one.
  */
 
-/** Dot radius (px) for each class, faintest first. */
-export const STAR_RADII = [1.75, 2.4, 3.2, 4.2, 5.4, 6.8];
+/** Dot radius (px) for each class, faintest first. The faint end stays big enough to see at a glance. */
+export const STAR_RADII = [2.4, 2.9, 3.6, 4.5, 5.6, 7];
 
 /**
  * The classes are drawn for a search circle about 300 px in radius. A smaller
- * circle (a phone, or zoomed out) shrinks the dots with it, down to 55%, so a
- * crowded field doesn't turn into one black mass.
+ * circle (a phone, or zoomed out) shrinks the dots with it, down to 60%, so a
+ * crowded field doesn't turn into one black mass. A bigger one (zoomed in)
+ * grows them, but much more slowly than the map: the stars spread apart and
+ * have room, yet stay points rather than discs. Each zoom level doubles the
+ * circle and grows the dots by ~27%, up to 2.5×.
  */
 export function dotScale(circleRadiusPx: number) {
-  return Math.min(1, Math.max(0.55, circleRadiusPx / 300));
+  const ratio = circleRadiusPx / 300;
+  if (ratio <= 1) return Math.max(0.6, ratio);
+  return Math.min(2.5, ratio ** 0.35);
 }
 
 export interface MagnitudeScale {

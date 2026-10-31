@@ -16,8 +16,11 @@ export const SERVICES = {
   vizier: 'https://vizier.cds.unistra.fr/viz-bin/asu-tsv',
   /** Gaia DR3 via GAVO TAP (Heidelberg), used when VizieR is down. */
   gavoTap: 'https://dc.g-vo.org/tap/sync',
-  /** SIMBAD TAP: has anyone written about this star? */
-  simbadTap: 'https://simbad.cds.unistra.fr/simbad/sim-tap/sync',
+  /**
+   * SIMBAD TAP: has anyone written about this star? Strasbourg first, then
+   * the CfA mirror (same database, also with CORS) when CDS is down.
+   */
+  simbadTap: ['https://simbad.cds.unistra.fr/simbad/sim-tap/sync', 'https://simbad.harvard.edu/simbad/sim-tap/sync'],
   /** Place search and reverse geocoding. Limited to 1 request/s for the whole site. */
   nominatim: 'https://nominatim.openstreetmap.org',
   /** Map tiles. Swap for a provider with a free tier before a big launch (DATA_ACCESS.md §2). */
