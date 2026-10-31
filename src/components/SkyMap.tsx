@@ -6,8 +6,9 @@ import { SERVICES } from '../config';
 import type { GroundShape } from '../sky/constellation';
 import type { Star } from '../sky/gaia';
 import { starToLatLng } from '../sky/zenith';
-import { dotScale, magnitudeScale, STAR_RADII } from '../draw/mapStars';
-import { INK, INK_3, SHEET, SIGNAL_INK } from '../draw/theme';
+import { dotScale, magnitudeScale, STAR_RADII, starTint } from '../draw/mapStars';
+import { INK, MAP_LINE, MAP_SKY_OPACITY, PLATE, SIGNAL } from '../draw/theme';
+import { starColor } from '../sky/physics';
 import type { Result } from '../types';
 
 interface Props {
@@ -52,14 +53,14 @@ function StarDots({
   return placed.map(({ s, pos, r }) => (
     <CircleMarker
       key={s.id}
-      // An ink dot with a ring of paper around it, so overlapping stars stay apart. Yours is the one in colour.
+      // A point of light tinted with the star's own colour; a ring of the plate keeps neighbours apart. Yours is the orange one.
       center={pos}
-      radius={r * k + 0.75}
+      radius={r * k + 0.5}
       pathOptions={{
-        color: SHEET,
-        weight: 1.5,
+        color: PLATE,
+        weight: 1,
         opacity: 1,
-        fillColor: s.id === zenithId ? SIGNAL_INK : INK,
+        fillColor: s.id === zenithId ? SIGNAL : starTint(starColor(s)),
         fillOpacity: 1,
       }}
       eventHandlers={{ click: e => (L.DomEvent.stopPropagation(e), onSelectStar(s.id)) }}
@@ -186,7 +187,8 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
         <Circle
           center={[result.frame.lat, result.frame.lon]}
           radius={radiusDeg * KM_PER_DEG * 1000}
-          pathOptions={{ color: INK, weight: 1, opacity: 0.5, dashArray: '2 5', fill: false }}
+          // The sky overhead: a dark plate framed in ink, laid over the map.
+          pathOptions={{ color: INK, weight: 1, opacity: 1, fillColor: PLATE, fillOpacity: MAP_SKY_OPACITY }}
           interactive={false}
         />
       )}
@@ -206,12 +208,17 @@ export default function SkyMap({ place, result, selectedId, onPick, onSelectStar
             <Polyline
               key={`b${i}`}
               positions={b}
-              pathOptions={{ color: INK_3, weight: 1, opacity: 0.8, dashArray: '3 5' }}
+              pathOptions={{ color: MAP_LINE, weight: 1, opacity: 0.9, dashArray: '3 5' }}
               interactive={false}
             />
           ))}
           {overlay.lines.map((l, i) => (
-            <Polyline key={`l${i}`} positions={l} pathOptions={{ color: INK, weight: 1.5, opacity: 0.9 }} interactive={false} />
+            <Polyline
+              key={`l${i}`}
+              positions={l}
+              pathOptions={{ color: MAP_LINE, weight: 1.5, opacity: 1 }}
+              interactive={false}
+            />
           ))}
           <Marker
             position={overlay.centre}

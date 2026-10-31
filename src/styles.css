@@ -21,6 +21,8 @@
   --text-2: #42464c;
   --text-3: #5f646b;
   --star: #c23b00;
+  /* Your star on a dark plate (the map's sky, the drawings): SIGNAL in theme.ts. */
+  --star-on-plate: #ff7a3d;
   --danger: #b00020;
   --sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -175,12 +177,11 @@ a:hover {
   font: 500 13px var(--mono);
   letter-spacing: 0.08em;
   color: var(--text);
-  text-shadow:
-    0 0 3px var(--bg),
-    0 0 3px var(--bg),
-    0 0 6px var(--bg);
   pointer-events: none;
   text-transform: uppercase;
+  padding: 3px 6px;
+  background: var(--field);
+  border: 1px solid var(--text);
 }
 
 .place-pin span,
@@ -195,20 +196,26 @@ a:hover {
   inset: 9px;
   border: 1.5px solid var(--text);
   background: radial-gradient(circle, var(--text) 0 2px, transparent 2.5px);
+  box-shadow:
+    0 0 0 1.5px var(--field),
+    inset 0 0 0 1.5px var(--field);
 }
 
 .selected-pin span {
   border: 1.5px solid var(--text);
+  box-shadow:
+    0 0 0 1.5px var(--field),
+    inset 0 0 0 1.5px var(--field);
 }
 
 .zenith-pin span {
   inset: 8px;
-  border: 1.5px solid var(--star);
+  border: 1.5px solid var(--star-on-plate);
 }
 
 .zenith-pin i {
   position: absolute;
-  background: var(--star);
+  background: var(--star-on-plate);
 }
 
 .zenith-pin i:nth-of-type(1),
@@ -271,6 +278,13 @@ a:hover {
   padding-top: 6px;
   border-top: 1px solid var(--rule);
   color: var(--text);
+}
+
+/* The key is a strip of the same plate the stars sit on. */
+.mag-key svg {
+  background: var(--plate);
+  padding: 3px 6px;
+  box-sizing: content-box;
 }
 
 /* Masthead & hero -------------------------------------------------------- */

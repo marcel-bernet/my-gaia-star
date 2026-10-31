@@ -13,7 +13,9 @@ My Gaia Star is set like one of Gaia's own engineering documents: a cool white s
 
 ## The map
 
-OSM tiles are turned grey by CSS and multiplied onto the sheet, so the map is printed on the page rather than set in a window. Stars keep their real colour inside a thin ink outline, so pale stars still show on white. The search circle and the constellation are drawn in ink, and only your star's reticle is orange. Colours for the vector layers live in `theme.ts` (`INK`, `INK_3`).
+OSM tiles are turned grey by CSS and multiplied onto the sheet, so the map is printed on the page. Once there is a result, the search circle becomes the sky overhead: a dark plate framed in ink, laid over the map and see-through enough (`MAP_SKY_OPACITY`) to show the ground beneath. That's what lets anyone read the points as stars at a glance.
+
+Stars are points of light in six size classes by G magnitude (`src/draw/mapStars.ts`), keyed in the readout on a strip of the same plate. Each point is tinted with the star's real colour mixed halfway to white (`starTint`), the way stars look to the eye, so blue and red stars still differ while full orange stays with your star and its reticle. A ring of plate colour keeps neighbouring stars apart, and the dots shrink with the circle on small screens (`dotScale`). Pins and the constellation overlay sit on paper or plate, so they are two-tone or boxed (`MAP_LINE`, `.constellation-label`).
 
 Once a star is shown, **Hide the map** (in the masthead) turns the panel into one reading column, about 65 characters wide. Figures stay at most 480px wide there, because they are drawn 352 units wide and only get softer past that. A new search, or **Show on the map** for the constellation, brings the map back.
 

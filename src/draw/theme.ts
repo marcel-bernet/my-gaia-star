@@ -25,5 +25,10 @@ export const INK_3 = '#5f646b'; // --text-3
 export const INK_RULE = 'rgba(17, 19, 22, 0.3)'; // --rule-2
 export const SIGNAL_INK = '#c23b00'; // --star: your star, on the sheet
 
+// The map: the sky overhead is a plate laid over the paper map, see through enough to show the ground.
+export const MAP_SKY_OPACITY = 0.9;
+/** Constellation lines cross both the plate and the paper, so they take a grey that reads on each. */
+export const MAP_LINE = '#8a8f96';
+
 export const SANS = '"IBM Plex Sans", system-ui, sans-serif';
 export const MONO = '"IBM Plex Mono", ui-monospace, monospace';

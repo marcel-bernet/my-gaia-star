@@ -1,5 +1,6 @@
 import type { Result } from '../types';
 import { magnitudeScale, STAR_RADII } from '../draw/mapStars';
+import { CREAM } from '../draw/theme';
 import { formatDec, formatRa } from '../format';
 import { useI18n } from '../i18n';
 
@@ -15,7 +16,7 @@ function MagnitudeKey({ faintest, brightest, lang }: { faintest: number; brighte
       G {nf.format(faintest)}
       <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`}>
         {STAR_RADII.map((r, i) => (
-          <circle key={i} cx={xs[i]} cy={h / 2} r={r} fill="currentColor" />
+          <circle key={i} cx={xs[i]} cy={h / 2} r={r} fill={CREAM} />
         ))}
       </svg>
       {nf.format(brightest)}
