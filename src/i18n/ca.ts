@@ -2,7 +2,7 @@ import type { Dict } from './en';
 
 export const ca: Dict = {
   brand: 'My Gaia Star',
-  tagline: 'Sobre teu hi ha una estrella sobre la qual ningú no ha escrit mai. Gairebé segur.',
+  tagline: 'Sobre teu hi ha una estrella que ningú no ha mirat mai. Gairebé segur.',
   intro:
     'La nau Gaia de l’ESA ha mesurat gairebé dos mil milions d’estrelles. Com a molt una de cada cent s’ha estudiat per si mateixa. Trobem la que és just a sobre teu i la busquem a la literatura astronòmica.',
   'mode.now': 'Ara mateix',
@@ -301,7 +301,7 @@ export const ca: Dict = {
   'name.slot.realmLook': 'Com és',
   'name.slot.time': 'Quan',
   'name.how.col.part': 'Part',
-  'name.how.col.choice': 'Elecció',
+  'name.how.col.choice': 'Valor',
   'name.how.col.word': 'Paraula',
   point: 'A veure… i tot això per a què serveix?',
   'point.title': 'D’acord, però quin sentit té això?',
@@ -412,4 +412,28 @@ export const ca: Dict = {
     '🔭 Cap article no s’hi ha fixat mai. Molt probablement soc la primera persona que la mira per si mateixa.',
   'cert.firstLook.faint': 'Gairebé segur que ningú no l’havia mirada abans per si mateixa.',
   'cert.firstLook.bright': 'Molt probablement ningú no l’havia mirada abans per si mateixa.',
+  'go.choose.hint':
+    'On vas néixer, la nit del teu casament, el moment en què vas conèixer algú: troba l’estrella que hi havia just a sobre.',
+  'name.how.step.id': 'El seu número de Gaia, en binari',
+  'name.how.step.mix': 'Barrejat',
+  'name.how.step.cut': 'Tallat en onze eleccions',
+  'name.how.fig.caption':
+    'Cada quadrat és un dels 63 bits (ple = 1), començant pel més baix. La barreja canvia gairebé tots els bits; el tall no en canvia cap. Cada tram és una elecció, numerada com a la taula de sota: 5 bits per a 32 quantitats, 4 bits per a 16 preposicions, 6 bits per a cada llista de 64.',
+  'name.how.code.title': 'Reprodueix-ho tu',
+  'name.how.code.lede':
+    'Aquest Python converteix el número de Gaia d’aquesta estrella en les seves eleccions i les seves paraules en anglès. Només necessita les llistes de paraules, i cada número que imprimeix apareix més amunt.',
+  'name.how.code.download': 'Descarrega les llistes de paraules (JSON)',
+  'name.how.code.back':
+    'Per tornar de les eleccions al número, reconstrueix x a partir de les eleccions (començant per l’última: x = x × mida + elecció) i desfés cada pas en ordre invers: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. El castellà i el català llegeixen les mateixes eleccions, amb concordança de gènere i nombre.',
+  'name.how.mix.mul': 'multiplicar per un nombre senar gran: cada bit es vessa sobre els de sobre',
+  'name.how.mix.fold': 'doblegar els bits de dalt sobre els de baix',
+  'name.how.mix.mul2': 'multiplicar un altre cop, per un segon nombre senar',
+  'name.how.mix.fold2': 'doblegar un altre cop',
+  'name.how.mix.note':
+    'Tot mòdul 2⁶³, així que el número continua tenint 63 bits, i cada pas es pot desfer. C₁ i C₂ apareixen complets a la recepta de sota.',
+  'name.how.try':
+    'Escriu qualsevol número de Gaia, o toca un quadrat per canviar un bit, i mira com tot el que hi ha a sota el segueix. Canvia un sol bit i canvia més o menys la meitat dels bits barrejats: per això estrelles veïnes reben paraules sense relació. Qualsevol número de 63 bits té paraules; només 1.800 milions són estrelles.',
+  'name.how.reset': 'Torna a aquesta estrella',
+  'name.how.changed': 'han canviat {n} de 63 bits',
+  'name.how.bit': 'Bit',
 };

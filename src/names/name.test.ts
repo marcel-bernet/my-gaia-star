@@ -1,6 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { ADJECTIVES, CREATURES, MANNERS, PLACES, PREPOSITIONS, REALMS, TIMES, VERBS } from './lexicon';
-import { digitsToId, idToDigits, normalize, parseName, sentence, slotOptions, SLOTS, slotSize, starName } from './name';
+import {
+  digitsToId,
+  englishWordLists,
+  idToDigits,
+  normalize,
+  parseName,
+  scramble,
+  SCRAMBLE,
+  sentence,
+  slotBits,
+  slotOptions,
+  SLOTS,
+  slotSize,
+  starName,
+} from './name';
 import type { Lang } from '../i18n';
 
 const LANGS: Lang[] = ['en', 'es', 'ca'];
@@ -73,5 +87,40 @@ describe('names', () => {
     const name = starName('4057491453829461504', 'es');
     const plain = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[.,]/g, '');
     expect(digitsToId(parseName(plain)!.digits)).toBe('4057491453829461504');
+  });
+});
+
+// The recipe printed in "How are the words made?", checked against values
+// computed independently in Python from that recipe alone.
+describe('the published recipe', () => {
+  const id = 790953210070223488n;
+
+  it('scrambles a source_id as the page says', () => {
+    const M = 1n << 63n;
+    let x = (id * SCRAMBLE.C1) % M;
+    x ^= x >> SCRAMBLE.S1;
+    x = (x * SCRAMBLE.C2) % M;
+    x ^= x >> SCRAMBLE.S2;
+    expect(x).toBe(2937386670698878221n);
+    expect(scramble(id)).toBe(x);
+    expect((SCRAMBLE.C1 * SCRAMBLE.C1_INV) % M).toBe(1n);
+    expect((SCRAMBLE.C2 * SCRAMBLE.C2_INV) % M).toBe(1n);
+  });
+
+  it('reads the choices off the scrambled number, lowest bits first', () => {
+    const d = idToDigits(id);
+    expect(SLOTS.map(s => d[s])).toEqual([13, 40, 42, 60, 37, 9, 14, 35, 29, 24, 20]);
+    expect(SLOTS.reduce((n, s) => n + slotBits(s), 0)).toBe(63);
+  });
+
+  it('builds the English sentence from the downloadable lists', () => {
+    const w = englishWordLists();
+    const d = idToDigits(id);
+    const pl = d.count > 0 ? 1 : 0;
+    const a = w.adjective;
+    const s =
+      `${w.count[d.count]} ${a[d.trait]} ${w.creature[d.creature][pl]} ${w.verb[d.verb][pl]} ${w.manner[d.manner]} ` +
+      `${w.preposition[d.preposition]} the ${a[d.look]} ${w.place[d.place]} of the ${a[d.realmLook]} ${w.realm[d.realm]}, ${w.time[d.time]}.`;
+    expect(s.charAt(0).toUpperCase() + s.slice(1)).toBe(sentence(d, 'en'));
   });
 });

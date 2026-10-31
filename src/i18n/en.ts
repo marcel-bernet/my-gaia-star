@@ -5,7 +5,7 @@
  */
 export const en = {
   brand: 'My Gaia Star',
-  tagline: 'Above you is a star no one has ever written about. Almost certainly.',
+  tagline: 'Above you is a star no one has ever looked at. Almost certainly.',
   intro:
     'ESA’s Gaia spacecraft has measured almost two billion stars. At most one in a hundred has ever been studied on its own. We find the one straight above you, then check the astronomical literature for it.',
   'mode.now': 'Right now',
@@ -301,7 +301,7 @@ export const en = {
   'name.slot.realmLook': 'What that is like',
   'name.slot.time': 'When',
   'name.how.col.part': 'Part',
-  'name.how.col.choice': 'Choice',
+  'name.how.col.choice': 'Value',
   'name.how.col.word': 'Word',
   point: 'Wait — what’s the point?',
   'point.title': 'Okay, but what’s the point?',
@@ -410,6 +410,30 @@ export const en = {
   'share.text.unknown.bright': '🔭 No paper has ever singled it out. I’m very likely the first person to look at it on its own.',
   'cert.firstLook.faint': 'Almost certainly, no one had looked at it on its own before.',
   'cert.firstLook.bright': 'Very likely, no one had looked at it on its own before.',
+  'go.choose.hint':
+    'Where you were born, the night of your wedding, the moment you met someone: find the star that was straight above it.',
+  'name.how.step.id': 'Its Gaia number, in binary',
+  'name.how.step.mix': 'Scrambled',
+  'name.how.step.cut': 'Cut into eleven choices',
+  'name.how.fig.caption':
+    'Each square is one of the 63 bits (filled = 1), lowest bit first. The scramble changes almost every bit; the cut changes none. Each field is one choice, numbered as in the table below: 5 bits for 32 counts, 4 bits for 16 prepositions, 6 bits for each list of 64.',
+  'name.how.code.title': 'Reproduce it yourself',
+  'name.how.code.lede':
+    'This Python turns this star’s Gaia number into its choices and its English words. It needs nothing but the word lists, and every number it prints is shown above.',
+  'name.how.code.download': 'Download the word lists (JSON)',
+  'name.how.code.back':
+    'To go back from the choices to the number, rebuild x from the choices (last slot first: x = x × size + choice), then undo each step in reverse: x ^= x >> 32; x = x × {c2inv} mod 2⁶³; x ^= (x >> 29) ^ (x >> 58); x = x × {c1inv} mod 2⁶³. Spanish and Catalan read the same choices, with gender and number agreement.',
+  'name.how.mix.mul': 'multiply by a large odd number: each bit spills into the ones above it',
+  'name.how.mix.fold': 'fold the top bits back down onto the bottom ones',
+  'name.how.mix.mul2': 'multiply again, by a second odd number',
+  'name.how.mix.fold2': 'fold again',
+  'name.how.mix.note':
+    'All modulo 2⁶³, so the number stays 63 bits long, and every step can be undone. C₁ and C₂ are written out in the recipe below.',
+  'name.how.try':
+    'Type any Gaia number, or tap a square to flip one bit, and watch everything below follow. Flip a single bit and about half of the scrambled bits change: that is why neighbouring stars get unrelated words. Any 63-bit number has words; only 1.8 billion of them are stars.',
+  'name.how.reset': 'Back to this star',
+  'name.how.changed': '{n} of 63 bits changed',
+  'name.how.bit': 'Bit',
 } as const;
 
 export type Key = keyof typeof en;

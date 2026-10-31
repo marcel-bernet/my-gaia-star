@@ -148,6 +148,7 @@ export default function Panel(p: Props) {
           {t('close')}
         </button>
       </div>
+      <p className="hint moments">{t('go.choose.hint')}</p>
       <div className="step">
         <label className="step-label" htmlFor="place-search">
           <span className="num">01</span> {t('place')}
@@ -289,6 +290,7 @@ export default function Panel(p: Props) {
                   <button className="link more" onClick={() => p.onFormOpen(true)}>
                     {t('go.choose')} →
                   </button>
+                  <p className="hint moments">{t('go.choose.hint')}</p>
                 </>
               )}
               <Progress status={p.status} locating={locating} />
