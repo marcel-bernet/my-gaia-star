@@ -6,6 +6,7 @@ import MethodDialog from './components/MethodDialog';
 import Panel, { type Mode } from './components/Panel';
 import PointDialog from './components/PointDialog';
 import Readout from './components/Readout';
+import SiteShareDialog from './components/SiteShareDialog';
 import SkyMap from './components/SkyMap';
 import StarCard from './components/StarCard';
 import { useI18n } from './i18n';
@@ -57,6 +58,7 @@ export default function App() {
   const [pointOpen, setPointOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // A shared link runs its search straight away. Only on load: `search`
   // changes with the language, and switching language must not search again.
@@ -145,6 +147,7 @@ export default function App() {
         onMethod={() => setMethodOpen(true)}
         onPoint={() => setPointOpen(true)}
         onFind={() => setFindOpen(true)}
+        onShare={() => setShareOpen(true)}
         mapHidden={reading}
         onToggleMapHidden={selected ? () => setMapHidden(h => !h) : undefined}
       >
@@ -177,6 +180,7 @@ export default function App() {
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
       {pointOpen && <PointDialog onClose={() => setPointOpen(false)} />}
       {methodOpen && <MethodDialog onClose={() => setMethodOpen(false)} />}
+      {shareOpen && <SiteShareDialog onClose={() => setShareOpen(false)} />}
       {findOpen && <FindDialog current={selected?.id ?? null} onFound={goToStar} onClose={() => setFindOpen(false)} />}
     </div>
   );

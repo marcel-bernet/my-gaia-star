@@ -53,6 +53,8 @@ interface Props {
   onMethod: () => void;
   onPoint: () => void;
   onFind: () => void;
+  /** Share the site itself (the masthead button). */
+  onShare: () => void;
   mapHidden: boolean;
   /** Present once a star is on screen. */
   onToggleMapHidden?: () => void;
@@ -263,6 +265,12 @@ export default function Panel(p: Props) {
             {t(p.mapHidden ? 'reading.show' : 'reading.hide')}
           </button>
         )}
+        <button className="share-btn" onClick={p.onShare} aria-label={t('site.share')}>
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path d="M12 3 7.5 7.5l1 1 2.8-2.8V15h1.4V5.7l2.8 2.8 1-1L12 3ZM5 11v9h14v-9h-3v1.4h1.6v6.2H6.4v-6.2H8V11H5Z" />
+          </svg>
+          <span>{t('site.share')}</span>
+        </button>
         <LangSwitch />
       </header>
 

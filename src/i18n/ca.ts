@@ -74,6 +74,16 @@ export const ca: Dict = {
   'share.email': 'Correu',
   'share.copy': 'Copia text + enllaç',
   'share.copied': 'Copiat!',
+  'site.share': 'Comparteix',
+  'site.share.title': 'Comparteix My Gaia Star',
+  'site.share.preview': 'Així es veu l’enllaç quan el publiques',
+  'site.share.text':
+    'Sobre teu hi ha una estrella que ningú no ha mirat mai. Gairebé segur. Troba la teva al catàleg Gaia de l’ESA ✨',
+  'site.share.subject': 'Sobre teu hi ha una estrella que ningú no ha mirat mai',
+  'share.copyLink': 'Copia l’enllaç',
+  'share.instagram.hint':
+    'Instagram no té enllaç per compartir, així que aquí tens una història: la imatge s’ha desat i l’enllaç s’ha copiat. Afegeix-lo a la teva història amb un adhesiu d’enllaç.',
+  'share.instagram.shared': 'Tria Instagram i afegeix l’enllaç copiat amb un adhesiu d’enllaç.',
   'share.subject': 'He trobat el meu estel ✨',
   'share.aStar': 'Un estel',
   'share.text.name': '✨ L’estrella sobre meu: Gaia DR3 {id}, «{name}»',

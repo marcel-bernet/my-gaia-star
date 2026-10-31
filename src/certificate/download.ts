@@ -13,14 +13,14 @@ export async function downloadPdf(canvas: HTMLCanvasElement, filename: string) {
 }
 
 /** On phones, hand the file to the share sheet (save to Photos/Files, send…); elsewhere, download it. */
-async function save(blob: Blob, filename: string, type: string) {
+export async function save(blob: Blob, filename: string, type: string): Promise<'shared' | 'downloaded' | 'cancelled'> {
   const file = new File([blob], filename, { type });
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
-      return;
+      return 'shared';
     } catch (e) {
-      if ((e as DOMException).name === 'AbortError') return; // user closed the sheet
+      if ((e as DOMException).name === 'AbortError') return 'cancelled'; // user closed the sheet
     }
   }
   const url = URL.createObjectURL(blob);
@@ -31,4 +31,5 @@ async function save(blob: Blob, filename: string, type: string) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return 'downloaded';
 }
